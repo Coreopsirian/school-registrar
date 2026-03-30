@@ -13,12 +13,15 @@ try {
 
     $pdo->exec("USE `$dbname`;");
 
-    $sql = "CREATE TABLE IF NOT EXISTS users (
+    $sql = "CREATE TABLE IF NOT EXISTS students (
+
         id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        student_name VARCHAR(50) NOT NULL,
+        grade_and_section VARCHAR(100) NOT NULL UNIQUE,
+        city VARCHAR(255) NOT NULL,
+        student_status VARCHAR(255) NOT NULL,
+        student_action VARCHAR(255) NOT NULL,
+        photo varchar(255)
     ) ENGINE=InnoDB;";
 
     $pdo->exec($sql);
