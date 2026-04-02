@@ -55,7 +55,7 @@ require_once './mysql/db.php';
 
           <a href="#" class="forgot">Forgot password?</a>
 
-          <button type="submit" class="btn-login">Log In</button>
+          <button type="submit" class="btn-login" name="submit">Log In</button>
 
           <p class="signup-link">
             Don't have an account? <a href="signup.html">Sign Up</a>
