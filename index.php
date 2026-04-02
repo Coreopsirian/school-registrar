@@ -36,10 +36,10 @@ elseif(empty($password)){
             //email is correct
             $row =$result->fetch_assoc(); //gets pass from db
             $db_password = $row['password'];
-            if (password_verify($password,$db_password)) {
+            if (password_verify($password, $db_password)) {
               //former is the types password, cross check if same on db
               $_SESSION['name'] = $row["name"];
-              header("location:./pages/dashboard.php"); //redirect to the dashboard
+              header("location: pages/dashboard.php"); //redirect to the dashboard
 
             }
             else{

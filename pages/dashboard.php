@@ -1,10 +1,7 @@
 <?php
 session_start();
-require_once '../mysql/db.php'; 
-if (!isset($_SESSION['user'])) {
-  header('Location: ../index.php');
-  exit();
-}
+
+
 ?>
 
 
@@ -38,32 +35,31 @@ if (!isset($_SESSION['user'])) {
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-item active" data-href="dashboard.html" data-label="Dashboard">
+      <div class="nav-item active" data-href="dashboard.php" data-label="Dashboard">
         <span class="nav-icon"><i class="bi bi-bar-chart-fill"></i></span>
         <span class="nav-text">Dashboard</span>
       </div>
-      <div class="nav-item" data-href="students.html" data-label="Students">
+      <div class="nav-item" data-href="students.php" data-label="Students">
         <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
         <span class="nav-text">Students</span>
       </div>
-      <div class="nav-item" data-href="attendance.html" data-label="Attendance">
+      <div class="nav-item" data-href="attendance.php" data-label="Attendance">
         <span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span>
         <span class="nav-text">Attendance</span>
       </div>
-      <div class="nav-item" data-href="reports.html" data-label="Reports">
+      <div class="nav-item" data-href="reports.php" data-label="Reports">
         <span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
         <span class="nav-text">Reports</span>
       </div>
-      <div class="nav-item" data-href="notes.html" data-label="Notes">
+      <div class="nav-item" data-href="notes.php" data-label="Notes">
         <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
         <span class="nav-text">Notes</span>
       </div>
     </nav>
 
     <div class="sidebar-footer">
-      <button class="logout-btn" onclick="window.location.href='../index.html'">
         <span class="logout-icon"><i class="bi bi-box-arrow-right"></i></span>
-        <span class="btn-text">Log out</span>
+        <span class="btn-text"><a href = "logout.php">Log out</a></span>
       </button>
     </div>
   </aside>
