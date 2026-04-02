@@ -1,10 +1,36 @@
   
 <?php
 session_start();
-require_once './mysql/db.php'; 
+//initialize variables
+$email = "";
+$password = "";
+$email_err =  "";
+$password_err = "";
+// database connection
+
+
+if($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+//for processing form submissionn
+if(isset($_POST['submit'])){
+     $email = trim($_POST['email']);
+     $password = trim($_POST['password']);
+
+     //check for empty values
+     if(empty($email)){
+          $email_err = "Please enter your email";
+     }
+     elseif(empty($password)){
+          $password_err = "Please enter your password";
+     }
+     else{
+          //process inputs
+     }
+
+}
 
 ?>
-  
   
   
   <!DOCTYPE html>
@@ -36,13 +62,13 @@ require_once './mysql/db.php';
         <h2>Welcome back, Admin!</h2>
         <p class="subtitle">REGISTRAR PORTAL</p>
 
-        <form id="login-form" method="POST"acton="">
+        <form id="login-form" method="POST" action="">
           <div class="field">
             <label for="email">Email Address</label>
             <div class="input-wrap">
               <span><i class="bi bi-envelope"></i></span>
               <input id="email" type="email" name="email" placeholder="admin@gmail.com">
-              <div class="text-danger"><?= $email_err?></div>
+              <div class="text-danger"><?= $email_err ?></div>
             </div>
           </div>
 
@@ -51,7 +77,7 @@ require_once './mysql/db.php';
             <div class="input-wrap">
               <span><i class="bi bi-lock-fill"></i></span>
               <input id="password" type="password" name="password" placeholder="Enter your password">
-               <div class="text-danger"><?= $password_err?></div>
+               <div class="text-danger"><?= $password_err ?></div>
 
             </div>
           </div>
