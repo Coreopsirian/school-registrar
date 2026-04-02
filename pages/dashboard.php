@@ -61,10 +61,11 @@ if (!isset($_SESSION['name'])) {
       </div>
     </nav>
 
-    <div class="sidebar-footer">
+     <div class="sidebar-footer">
+          <a href="../logout.php" class="logout-btn">
         <span class="logout-icon"><i class="bi bi-box-arrow-right"></i></span>
-        <span class="btn-text"><a href = "logout.php">Log out</a></span>
-      </button>
+        <span class="btn-text">Log out</span>
+      </a>
     </div>
   </aside>
 
