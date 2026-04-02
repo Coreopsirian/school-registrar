@@ -7,6 +7,15 @@ if (!isset($_SESSION['user'])) {
 }
 ?>
 
+<?php
+session_start();
+
+if (!isset($_SESSION['name'])) {
+  header('Location: ../index.php');
+  exit();
+}
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">

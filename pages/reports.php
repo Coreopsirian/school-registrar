@@ -1,12 +1,12 @@
-<?php //reused code
+<?php
 session_start();
-require_once '../mysql/db.php'; 
-if (!isset($_SESSION['user'])) {
+
+if (!isset($_SESSION['name'])) {
   header('Location: ../index.php');
   exit();
 }
-?>
 
+?>
 
 
 
