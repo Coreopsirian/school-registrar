@@ -34,6 +34,15 @@ elseif(empty($password)){
           //check number of rows
           if($result->num_rows > 0){
             //email is correct
+            $row =$result->fetch_assoc(); //gets pass from db
+            $db_password = $row['password'];
+            if (password_verify($password,$db_password)) {
+              //former is the types password, cross check if same on db
+
+            }
+            else{
+              $password_err = "Incorrect password";
+            }
           }
           else{
             $email_err = "Email is not registered";
@@ -79,7 +88,7 @@ elseif(empty($password)){
             <label for="email">Email Address</label>
             <div class="input-wrap">
               <span><i class="bi bi-envelope"></i></span>
-              <input id="email" type="email" name="email" placeholder="admin@gmail.com">
+              <input id="email" value="<?=$email?>"  type="email" name="email" placeholder="admin@gmail.com">
              
             </div>
              <div class="text-danger"  style="color:red;font-size:10px;" ><?= $email_err ?></div>
