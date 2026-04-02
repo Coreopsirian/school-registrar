@@ -49,7 +49,7 @@ require_once './mysql/db.php';
             <label for="password">Password</label>
             <div class="input-wrap">
               <span><i class="bi bi-lock-fill"></i></span>
-              <input id="password" type="password" placeholder="Enter your password" required>
+              <input id="password" type="password" name="password" placeholder="Enter your password" required>
             </div>
           </div>
 
