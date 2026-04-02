@@ -38,6 +38,8 @@ elseif(empty($password)){
             $db_password = $row['password'];
             if (password_verify($password,$db_password)) {
               //former is the types password, cross check if same on db
+              $_SESSION['name'] = $row["name"];
+              header("location:./pages/dashboard.php"); //redirect to the dashboard
 
             }
             else{
