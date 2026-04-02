@@ -1,6 +1,7 @@
   
 <?php
 session_start();
+require_once './mysql/db.php';  //defines conenction
 //initialize variables
 $email = "";
 $password = "";
@@ -9,20 +10,35 @@ $password_err = "";
 
 
 //for processing form submissionn
-if(isset($_POST['submit'])){
-     $email = trim($_POST['email']);
-     $password = trim($_POST['password']);
+if(isset($_POST['submit']))
+{
+$email = trim($_POST['email']);
+$password = trim($_POST['password']);
 
-     //check for empty values
-     if(empty($email)){
-          $email_err = "Please enter your email";
-     }
-     elseif(empty($password)){
-          $password_err = "Please enter your password";
+ //check for empty values
+if(empty($email)){
+  $email_err = "Please enter your email";
+}
+elseif(empty($password)){
+    $password_err = "Please enter your password";
      }
      else{
           //process inputs
-     }
+          $sql = "select * from users where email = ?";
+          $stmt = $conn->prepare($sql);
+          $stmt -> bind_param("s", $email);
+          //statement execute
+          $stmt ->execute();
+
+          $result = $stmt->get_result();
+          //check number of rows
+          if($result->num_rows > 0){
+            //email is correct
+          }
+          else{
+            $email_err = "Email is not registered";
+          }
+    }
 
 }
 
