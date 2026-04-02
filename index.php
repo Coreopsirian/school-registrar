@@ -60,7 +60,7 @@
     document.getElementById('login-form').addEventListener('submit', function(e) {
       e.preventDefault();
       // TODO: Replace with real auth
-      window.location.href = 'pages/dashboard.html';
+      window.location.href = 'pages/dashboard.php';
     });
   </script>
 </body>

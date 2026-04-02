@@ -42,7 +42,7 @@
     <div id="topbar">
       <div class="topbar-left">
         <div class="page-title">Attendance</div>
-        <div class="page-sub">Track daily student attendance</div>
+        <div class="page-sub">Track daily faculty attendance</div>
       </div>
       <div class="topbar-search">
         <span class="menu-icon">&#9776;</span>
