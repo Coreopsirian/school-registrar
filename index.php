@@ -6,12 +6,8 @@ $email = "";
 $password = "";
 $email_err =  "";
 $password_err = "";
-// database connection
 
 
-if($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
 //for processing form submissionn
 if(isset($_POST['submit'])){
      $email = trim($_POST['email']);
@@ -68,8 +64,9 @@ if(isset($_POST['submit'])){
             <div class="input-wrap">
               <span><i class="bi bi-envelope"></i></span>
               <input id="email" type="email" name="email" placeholder="admin@gmail.com">
-              <div class="text-danger"><?= $email_err ?></div>
+             
             </div>
+             <div class="text-danger"  style="color:red;font-size:10px;" ><?= $email_err ?></div>
           </div>
 
           <div class="field">
@@ -77,9 +74,10 @@ if(isset($_POST['submit'])){
             <div class="input-wrap">
               <span><i class="bi bi-lock-fill"></i></span>
               <input id="password" type="password" name="password" placeholder="Enter your password">
-               <div class="text-danger"><?= $password_err ?></div>
 
             </div>
+            <div class="text-danger" style="color:red;font-size:10px;"><?= $password_err ?></div>
+
           </div>
 
           <a href="#" class="forgot">Forgot password?</a>
