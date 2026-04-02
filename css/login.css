@@ -1,5 +1,5 @@
 /* ==========================================================
-   login.css — Login page styles
+login.css — Login page styles
    ========================================================== */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -136,9 +136,18 @@ body {
 }
 .btn-login:hover { background: #dc2626; }
 
-.signup-link {
+.signup-link 
+{
   font-family: 'Roboto', sans-serif;
   text-align: center; font-size: 0.78rem; color: #6b7280; margin-top: 12px;
 }
-.signup-link a { color: #ef4444; font-weight: 700; text-decoration: none; }
-.signup-link a:hover { text-decoration: underline; }
+.signup-link a 
+{ color: #ef4444; 
+  font-weight: 700;
+  text-decoration: none;
+  }
+
+.signup-link a:hover
+{ 
+  text-decoration: underline;
+}
