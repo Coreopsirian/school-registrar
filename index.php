@@ -1,67 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>COJ Registrar Portal — Login</title>
-  <link rel="icon" type="image/x-icon" href="./images/COJ.png">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700;1,800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/login.css">
-</head>
-<body>
+  
+<?php
+session_start();
+require_once './mysql/db.php'; 
 
-  <div class="card">
+?>
+  
+  
+  
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>COJ Registrar Portal — Login</title>
+    <link rel="icon" type="image/x-icon" href="./images/COJ.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700;1,800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/login.css">
+  </head>
+  <body>
 
-    <!-- LEFT PANEL -->
-    <div class="left">
+    <div class="card">
 
-      <h1>Manage your<br>school with</h1>
-      <h1 class="accent">ease</h1>
-      <p>Access your student's enrollment<br>records and student data in an<br>organized and secured way.</p>
+      <!-- LEFT PANEL -->
+      <div class="left">
+
+        <h1>Manage your<br>school with</h1>
+        <h1 class="accent">ease</h1>
+        <p>Access your student's enrollment<br>records and student data in an<br>organized and secured way.</p>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right">
+        <img src="./images/COJ.png" class="logo" alt="COJ Logo">
+        <h2>Welcome back, Admin!</h2>
+        <p class="subtitle">REGISTRAR PORTAL</p>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="email">Email Address</label>
+            <div class="input-wrap">
+              <span><i class="bi bi-envelope"></i></span>
+              <input id="email" type="email" placeholder="admin@gmail.com" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <span><i class="bi bi-lock-fill"></i></span>
+              <input id="password" type="password" placeholder="Enter your password" required>
+            </div>
+          </div>
+
+          <a href="#" class="forgot">Forgot password?</a>
+
+          <button type="submit" class="btn-login">Log In</button>
+
+          <p class="signup-link">
+            Don't have an account? <a href="signup.html">Sign Up</a>
+          </p>
+        </form>
+      </div>
+
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="right">
-      <img src="./images/COJ.png" class="logo" alt="COJ Logo">
-      <h2>Welcome back, Admin!</h2>
-      <p class="subtitle">REGISTRAR PORTAL</p>
-
-      <form id="login-form" novalidate>
-        <div class="field">
-          <label for="email">Email Address</label>
-          <div class="input-wrap">
-            <span><i class="bi bi-envelope"></i></span>
-            <input id="email" type="email" placeholder="admin@gmail.com" required>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="password">Password</label>
-          <div class="input-wrap">
-            <span><i class="bi bi-lock-fill"></i></span>
-            <input id="password" type="password" placeholder="Enter your password" required>
-          </div>
-        </div>
-
-        <a href="#" class="forgot">Forgot password?</a>
-
-        <button type="submit" class="btn-login">Log In</button>
-
-        <p class="signup-link">
-          Don't have an account? <a href="signup.html">Sign Up</a>
-        </p>
-      </form>
-    </div>
-
-  </div>
-
-  <script>
-    document.getElementById('login-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      // TODO: Replace with real auth
-      window.location.href = 'pages/dashboard.php';
-    });
-  </script>
-</body>
-</html>
+    <script>
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // TODO: Replace with real auth
+        window.location.href = 'pages/dashboard.php';
+      });
+    </script>
+  </body>
+  </html>

@@ -1,3 +1,14 @@
+<?php
+session_start();
+require_once '../mysql/db.php'; 
+if (!isset($_SESSION['user'])) {
+  header('Location: ../index.php');
+  exit();
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

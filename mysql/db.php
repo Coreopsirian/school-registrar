@@ -1,6 +1,6 @@
 <?php
 $host = 'localhost';
-$db   = 'COJ_Database';
+$db   = 'school-registrar';
 $user = 'root';
 $pass = 'password';
 $charset = 'utf8mb4';
