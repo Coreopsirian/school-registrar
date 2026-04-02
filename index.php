@@ -36,12 +36,12 @@ require_once './mysql/db.php';
         <h2>Welcome back, Admin!</h2>
         <p class="subtitle">REGISTRAR PORTAL</p>
 
-        <form id="login-form" novalidate>
+        <form id="login-form" method="POST"acton="">
           <div class="field">
             <label for="email">Email Address</label>
             <div class="input-wrap">
               <span><i class="bi bi-envelope"></i></span>
-              <input id="email" type="email" name="email" placeholder="admin@gmail.com" required>
+              <input id="email" type="email" name="email" placeholder="admin@gmail.com">
               <div class="text-danger"><?= $email_err?></div>
             </div>
           </div>
@@ -50,7 +50,7 @@ require_once './mysql/db.php';
             <label for="password">Password</label>
             <div class="input-wrap">
               <span><i class="bi bi-lock-fill"></i></span>
-              <input id="password" type="password" name="password" placeholder="Enter your password" required>
+              <input id="password" type="password" name="password" placeholder="Enter your password">
                <div class="text-danger"><?= $password_err?></div>
 
             </div>
