@@ -138,8 +138,22 @@ if (!isset($_SESSION['name'])) {
                 <th>Action</th>
               </tr>
             </thead>
-            <a class = 'btn btn-primary btn-sm' href='/'>Edit</a>
-            <a class = 'btn btn-danger btn-sm' href='/'>Delete</a>
+            <tr>
+              <td>Photo</td>
+              <td>Darla Nova Sumanting</td>
+              <td>202411360</td>
+              <td>Metro Manila</td>
+              <td>Grade 10 - Sampaguita</td>
+              <td>09762965854</td>
+              <td>Old</td>
+              <td>Birth cert</td>
+              <td>
+                <a class = 'btn btn-primary btn-sm' href='edit.php'>Edit</a>
+            <a class = 'btn btn-danger btn-sm' href='delete.php'>Delete</a>
+              </td>
+       
+            </tr>
+            
 
             <tbody id="students-tbody"></tbody>
           </table>
