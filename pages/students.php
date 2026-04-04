@@ -189,7 +189,9 @@ if (!isset($_SESSION['name'])) {
               <!-- Grade & Section -->
               <td><?= htmlspecialchars($row['grade_name'] . ' - ' . $row['section_name']) ?></td>
               <!-- City -->
-              <td><?= htmlspecialchars($row['lrn']) ?></td>
+              <td><?= htmlspecialchars($row['city']) ?></td>
+                 <!-- contact -->
+              <td><?= htmlspecialchars($row['contact_number']) ?></td>
               <!-- Status -->
               <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
               <!-- Action -->
