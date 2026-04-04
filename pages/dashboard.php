@@ -75,13 +75,10 @@ if (!isset($_SESSION['name'])) {
     <div id="topbar">
       <div class="topbar-left">
         <div class="page-title">Dashboard</div>
-        <div class="page-sub">Welcome back Admin/Teacher!</div>
-        <?php
-          if(isset($_SESSION['name'])){  ?>
-              <a href = dashboard.php class="btn-logout">Logout</a>
-          <?php
-          }
-        ?>
+        <div class="page-sub">Welcome back, 
+          <!-- display user's name on dashboard -->
+        <?php echo htmlspecialchars($_SESSION['name']); ?>!</div>
+       
       </div>
       <div class="topbar-search">
         <span class="menu-icon">&#9776;</span>
