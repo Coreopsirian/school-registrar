@@ -16,13 +16,15 @@ $email = trim($_POST['email']);
 $password = trim($_POST['password']);
 
  //check for empty values
-if(empty($email)){
+if(empty($email))
+{
   $email_err = "Please enter your email";
 }
-elseif(empty($password)){
+elseif(empty($password))
+{
     $password_err = "Please enter your password";
-     }
-     else{
+}
+else{
           //process inputs
           $sql = "select * from users where email = ?";
           $stmt = $conn->prepare($sql);
@@ -49,7 +51,7 @@ elseif(empty($password)){
           else{
             $email_err = "Email is not registered";
           }
-    }
+}
 
 }
 

@@ -76,6 +76,12 @@ if (!isset($_SESSION['name'])) {
       <div class="topbar-left">
         <div class="page-title">Dashboard</div>
         <div class="page-sub">Welcome back Admin/Teacher!</div>
+        <?php
+          if(isset($_SESSION['name'])){  ?>
+              <a href = dashboard.php class="btn-logout">Logout</a>
+          <?php
+          }
+        ?>
       </div>
       <div class="topbar-search">
         <span class="menu-icon">&#9776;</span>
