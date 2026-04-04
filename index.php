@@ -41,6 +41,18 @@ else{
             if (password_verify($password, $db_password)) {
               //former is the types password, cross check if same on db
               $_SESSION['name'] = $row["name"];
+              if(isset($_POST['remember'])){
+                $remember = $_POST['remember'];
+                //create two cookies (email and remember checkbox)
+                //  email is displayed and checbox is checed
+                setcookie("cookie_email", $email, time() + 60*60*24*30, '/'); //lasts for 30days only
+                 setcookie("cookie_remember", $remember, time() + 60*60*24*30, '/');
+              }
+              else{
+                if(isset($_COOKIE['cookie_email'])){
+                  setcookie("cookie_email", $email, time() + 60*60*24*30, '/'); //delete cookie
+                }
+              }
               header("location: pages/dashboard.php"); //redirect to the dashboard
 
             }
@@ -87,12 +99,18 @@ else{
         <h2>Welcome back, Admin!</h2>
         <p class="subtitle">REGISTRAR PORTAL</p>
 
+        <?php
+        //check if email is avaialble then display on textbox
+        $disp_email = !empty($email) ? $email : (isset($_COOKIE['cookie_email']) ? $_COOKIE['cookie_email'] : "");
+        $checked = !empty($remember) ? "checked" : (isset($_COOKIE['cookie_remember']) ? "checked" : "");
+        ?>
+       
         <form id="login-form" method="POST" action="">
           <div class="field">
             <label for="email">Email Address</label>
             <div class="input-wrap">
               <span><i class="bi bi-envelope"></i></span>
-              <input id="email" value="<?=$email?>"  type="email" name="email" placeholder="admin@gmail.com">
+              <input id="email" value="<?=$disp_email?>"  type="email" name="email" placeholder="admin@gmail.com">
              
             </div>
              <div class="text-danger"  style="color:red;font-size:10px;" ><?= $email_err ?></div>
@@ -106,9 +124,9 @@ else{
 
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+              <input class="form-check-input" type="checkbox" value="1" <?=$checked?> id="flexCheckDefault" name="remember">
               <label class="form-check-label" for="flexCheckDefault">
-                Default checkbox
+                Remember Me
               </label>
            </div>
             <div class="text-danger" style="color:red;font-size:10px;"><?= $password_err ?></div>
