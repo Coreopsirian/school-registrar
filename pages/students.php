@@ -167,7 +167,8 @@ if (!isset($_SESSION['name'])) {
                 <!-- photo of students -->
               <td>
                 <?php if(!empty($row['photo'])): ?>
-                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" class="student-pics";/>
+                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" class="student-pics"/>
+                  <?php endif; ?>
               </td>
               <!-- students name -->
             
@@ -195,9 +196,9 @@ if (!isset($_SESSION['name'])) {
             </tr>
 
               <?php
-              {
               }
-              
+              ?>
+           
             </tbody>
           
             
