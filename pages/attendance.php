@@ -24,11 +24,11 @@
       <button class="toggle-btn" id="toggleBtn">&#9664;</button>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-item" data-href="dashboard.html"  data-label="Dashboard"><span class="nav-icon"><i class="bi bi-bar-chart-fill"></i></span><span class="nav-text">Dashboard</span></div>
-      <div class="nav-item" data-href="students.html"   data-label="Students"><span class="nav-icon"><i class="bi bi-people-fill"></i></span><span class="nav-text">Students</span></div>
-      <div class="nav-item active" data-href="attendance.html" data-label="Attendance"><span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span><span class="nav-text">Attendance</span></div>
-      <div class="nav-item" data-href="reports.html"    data-label="Reports"><span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span><span class="nav-text">Reports</span></div>
-      <div class="nav-item" data-href="notes.html"      data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
+      <div class="nav-item" data-href="dashboard.php"  data-label="Dashboard"><span class="nav-icon"><i class="bi bi-bar-chart-fill"></i></span><span class="nav-text">Dashboard</span></div>
+      <div class="nav-item" data-href="students.php"   data-label="Students"><span class="nav-icon"><i class="bi bi-people-fill"></i></span><span class="nav-text">Students</span></div>
+      <div class="nav-item active" data-href="attendance.php" data-label="Attendance"><span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span><span class="nav-text">Attendance</span></div>
+      <div class="nav-item" data-href="reports.php"    data-label="Reports"><span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span><span class="nav-text">Reports</span></div>
+      <div class="nav-item" data-href="notes.php"      data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="window.location.href='../index.html'">
@@ -45,9 +45,7 @@
         <div class="page-sub">Track daily student attendance</div>
       </div>
       <div class="topbar-search">
-        <span class="menu-icon">&#9776;</span>
-        <input type="text" placeholder="Search students ..." />
-        <span class="search-icon">&#128269;</span>
+      
       </div>
     </div>
 
