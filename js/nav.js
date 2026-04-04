@@ -5,7 +5,6 @@
 
 // Initialization for ES Users
 
-
 (function () {
 //for sidebar toggle
   const sidebar   = document.getElementById('sidebar');

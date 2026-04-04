@@ -6,9 +6,8 @@
 .topbar-searchh {
   display: flex;
   align-items: center;
-  background: #ffffff;
   border-radius: 50px;
-  padding: 8px 18px;
+  padding: 8px 15px;
   gap: 10px;
   min-width: 260px;
 }

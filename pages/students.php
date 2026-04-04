@@ -20,6 +20,7 @@ if (!isset($_SESSION['name'])) {
   <link rel="icon" type="image/png" href="../images/COJ.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="../css/students.css">
@@ -303,8 +304,8 @@ if (!isset($_SESSION['name'])) {
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="../js/nav.js"></script>
-  <script type="module" src="../js/students.js"></script>
+  <script  src="../js/nav.js"></script>
+  <script  src="../js/students.js"></script>
 
 </body>
 </html>
