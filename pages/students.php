@@ -133,7 +133,6 @@ if (!isset($_SESSION['name'])) {
                 <th>City</th> 
                 <th>Contact</th>
                 <th>Status</th> <!-- old student, new-->
-                <th>Requirement</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -147,20 +146,25 @@ if (!isset($_SESSION['name'])) {
             $database = "school_registrar";
 
             $conn = new mysqli($servername, $email, $password, $database);
+
+            if ($conn->connect_error) {
+              die("Connection failed: " . $conn->connect_error);
+            }
+
              //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
               LEFT JOIN grade_levels  g ON s.grade_level_id = g.id
               LEFT JOIN sections sec ON s.section_id = sec.id
               ORDER BY s.last_name ASC";
 
-          $result = $conn-> query($sql);
+            $result = $conn-> query($sql);
              //check if query executed prperly
             if(!$result){
-              die("Error executing query: " . $conn->error);
+              die("Invalid query: " . $conn->error);
             }
               //read data of each row
               //uses internal id for edit/delete links
-              while($row= $result -> fetch_assoc()) {
+              while($row= $result->fetch_assoc()) {
                 $status = $row['is_active'] ? "Active" : "Inactive";
                 //badge used for identification
                 $badge = $row['is_active'] ? 'badge_active' : 'badge_inactive';
