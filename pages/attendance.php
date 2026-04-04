@@ -51,17 +51,21 @@ if (!isset($_SESSION['name'])) {
   </aside>
 
   <div id="main">
+
     <div id="topbar">
       <div class="topbar-left">
         <div class="page-title">Attendance</div>
         <div class="page-sub">Track daily faculty attendance</div>
       </div>
+
       <div class="topbar-searchh">
+        
         <div class="input-group">
           <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search" aria-describedby="search-addon" />
           <button type="button" class="btn btn-outline-primary" data-mdb-ripple-init>search</button>
         </div>
         </div>
+
       </div>
 
     <div id="page-container">
