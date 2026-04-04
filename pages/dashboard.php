@@ -1,8 +1,12 @@
 <?php
-session_start();
+if(session_id() == "") {
+  session_start();
+}
 
+
+//ensures only the logged in user can see dasbaord
 if (!isset($_SESSION['name'])) {
-  header('Location: ../index.php');
+  header('location: ../index.php');
   exit();
 }
 

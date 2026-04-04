@@ -8,7 +8,7 @@ $password = "";
 $email_err =  "";
 $password_err = "";
 
-
+//stores name in session
 //for processing form submissionn
 if(isset($_POST['submit']))
 {
@@ -105,6 +105,12 @@ else{
               <input id="password" type="password" name="password" placeholder="Enter your password">
 
             </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+              <label class="form-check-label" for="flexCheckDefault">
+                Default checkbox
+              </label>
+           </div>
             <div class="text-danger" style="color:red;font-size:10px;"><?= $password_err ?></div>
 
           </div>
