@@ -6,6 +6,7 @@
 
 #main {
   display:flex;
+   min-width: 0; 
   flex-direction: column;
   flex: 1;
   height: 100vh;
