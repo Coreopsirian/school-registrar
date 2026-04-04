@@ -129,7 +129,7 @@ if (!isset($_SESSION['name'])) {
             <thead>
               <tr>
                 <th>Photo</th>
-                 <th>Name</th>
+                <th>Name</th>
                 <th>LRN</th>
                 <th>Grade &amp; Section</th>
                 <th>City</th> 
@@ -140,24 +140,24 @@ if (!isset($_SESSION['name'])) {
               </tr>
             </thead>
             <tbody>
-             <?
+            <?
              //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
-             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
+            $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
               LEFT JOIN grade_levels  g ON s.grade_level_id = g.id
               LEFT JOIN sections sec ON s.section_id = sec.id
               ORDER BY s.last_name ASC";
 
 
-             $result = $conn-> query($sql);
+          $result = $conn-> query($sql);
 
              //check if query executed prperly
-             if(!$result){
+            if(!$result){
               die("Error executing query: " . $conn->error);
-             }
+            }
 
               //read data of each row
               //uses internal id for edit/delete links
-              while($row= $result -> fetch_assoc()){
+              while($row= $result -> fetch_assoc()) {
                 $status = $row['is_active'] ? "Active" : "Inactive";
                 //badge used for identification
                 $badge = $row['is_active'] ? 'badge_active' : 'badge_inactive';
@@ -166,30 +166,37 @@ if (!isset($_SESSION['name'])) {
 
                 <!-- photo of students -->
               <td>
-                 <?php if(!empty($row['photo'])): ?>
-                  <img scr = "images/<?= htmlspecialchars($row['photo'])?>" class="student-pics";/>
-                  </td>
-
-
-              <! -- students name -- >
-              <td>$row[last_name] $row[first_name]. $row[middle_name]. </td>
-              <td>$row[lrn]</td>
-              <td>$row[city]</td>
-              <td>$row[grade] $row[section]</td>
-              <td>$row[contact]</td>
-              <td>$row[student_type]</td>
-              <td>$row[requirement]</td>
+                <?php if(!empty($row['photo'])): ?>
+                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" class="student-pics";/>
+              </td>
+              <!-- students name -->
+            
               <td>
-             
-                <a class = 'btn btn-primary btn-sm' href='edit.php?id={$row['id']}'>Edit</a>
-            <a class = 'btn btn-danger btn-sm' href='delete.php?id={$row['id']}'>Delete</a>
+                <div class="student-name">
+                  <?= htmlspecialchars($row['last_name'].', '. $row['first_name'].' '. $row['middle_name']) ?>
+                </div>
+                <div class="student-type"><?= $row['student_type']?> Student</div>
+              </td>
+
+              <!-- LRN -->
+              <td><?= htmlspecialchars($row['lrn']) ?></td>
+
+              <!-- Grade & Section -->
+              <td><?= htmlspecialchars($row['grade_name'] . ' - ' . $row['section_name']) ?></td>
+
+              <!-- Status -->
+              <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
+
+              <!-- Action -->
+              <td>
+                <a class="btn-edit" href="edit.php?id=<?= $row['id'] ?>">Edit</a>
+                <a class="btn-delete" href="delete.php?id=<?= $row['id'] ?>">Delete</a>
               </td>
             </tr>
-              
-              ";
-             
-             }
-              ?>
+
+              <?php
+              {
+              }
               
             </tbody>
           
