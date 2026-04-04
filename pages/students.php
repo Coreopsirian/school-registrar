@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once './mysql/db.php';  //defines conenction
 
 if (!isset($_SESSION['name'])) {
   header('Location: ../index.php');
@@ -138,7 +139,18 @@ if (!isset($_SESSION['name'])) {
                 <th>Action</th>
               </tr>
             </thead>
-            <tr>
+            <tbody>
+             <?
+             //query db
+             $sql = "SELECT * FROM students";
+             $result = $conn-> query($sql);
+
+             //check if query executed prperly
+             if(!result){
+              die("Error executing query: " . $conn->error);
+             }
+              ?>
+                <tr>
               <td>Photo</td>
               <td>Darla Nova Sumanting</td>
               <td>202411360</td>
@@ -151,8 +163,10 @@ if (!isset($_SESSION['name'])) {
                 <a class = 'btn btn-primary btn-sm' href='edit.php'>Edit</a>
             <a class = 'btn btn-danger btn-sm' href='delete.php'>Delete</a>
               </td>
-       
             </tr>
+              
+            </tbody>
+          
             
 
             <tbody id="students-tbody"></tbody>
