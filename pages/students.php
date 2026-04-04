@@ -1,6 +1,5 @@
 <?php
 session_start();
-require_once './mysql/db.php';  //defines conenction
 
 if (!isset($_SESSION['name'])) {
   header('Location: ../index.php');
