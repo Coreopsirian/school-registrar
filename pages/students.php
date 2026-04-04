@@ -140,22 +140,20 @@ if (!isset($_SESSION['name'])) {
                 <th>Action</th>
               </tr>
             </thead>
+
             <tbody>
-            <?
+            <?php
              //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
               LEFT JOIN grade_levels  g ON s.grade_level_id = g.id
               LEFT JOIN sections sec ON s.section_id = sec.id
               ORDER BY s.last_name ASC";
 
-
           $result = $conn-> query($sql);
-
              //check if query executed prperly
             if(!$result){
               die("Error executing query: " . $conn->error);
             }
-
               //read data of each row
               //uses internal id for edit/delete links
               while($row= $result -> fetch_assoc()) {
@@ -164,7 +162,6 @@ if (!isset($_SESSION['name'])) {
                 $badge = $row['is_active'] ? 'badge_active' : 'badge_inactive';
               ?>
                 <tr>
-
                 <!-- photo of students -->
               <td>
                 <?php if(!empty($row['photo'])): ?>
@@ -172,7 +169,6 @@ if (!isset($_SESSION['name'])) {
                   <?php endif; ?>
               </td>
               <!-- students name -->
-            
               <td>
                 <div class="student-name">
                   <?= htmlspecialchars($row['last_name'].', '. $row['first_name'].' '. $row['middle_name']) ?>
@@ -185,7 +181,7 @@ if (!isset($_SESSION['name'])) {
               <!-- Grade & Section -->
               <td><?= htmlspecialchars($row['grade_name'] . ' - ' . $row['section_name']) ?></td>
               <!-- City -->
-                 <td><?= htmlspecialchars($row['lrn']) ?></td>
+              <td><?= htmlspecialchars($row['lrn']) ?></td>
               <!-- Status -->
               <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
               <!-- Action -->
@@ -199,11 +195,9 @@ if (!isset($_SESSION['name'])) {
               }
               ?>
           
-          
-            
-
-            <tbody id="students-tbody"></tbody>
+            </tbody>
           </table>
+
           <div class="pagination-row" id="pagination-row">
             <span id="pagination-info">Showing 0–0 of 0 students</span>
             <div class="pagination-btns" id="pagination-btns"></div>
