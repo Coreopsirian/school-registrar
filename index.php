@@ -46,11 +46,14 @@ else{
                 //create two cookies (email and remember checkbox)
                 //  email is displayed and checbox is checed
                 setcookie("cookie_email", $email, time() + 60*60*24*30, '/'); //lasts for 30days only
-                 setcookie("cookie_remember", $remember, time() + 60*60*24*30, '/');
+                setcookie("cookie_remember", $remember, time() + 60*60*24*30, '/');
               }
-              else{
+              else{ //if cookie is beyond 30 days; automatically deleted
                 if(isset($_COOKIE['cookie_email'])){
-                  setcookie("cookie_email", $email, time() + 60*60*24*30, '/'); //delete cookie
+                  setcookie("cookie_email", $email, time() - 60*60*24*30, '/'); 
+                }
+                if(isset($_COOKIE['cookie_remember'])){
+                  setcookie("cookie_remember", $remember, time() - 60*60*24*30, '/');
                 }
               }
               header("location: pages/dashboard.php"); //redirect to the dashboard

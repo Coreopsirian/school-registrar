@@ -30,15 +30,17 @@ body {
 .left {
   width: 41.66%;
   background-image: url('../images/login-bg.png');
-  background-size: cover;
+  background-size: 115% 115%;
   background-position: center;
-  min-height: 100%;
+  background-repeat: no-repeat;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 60px 40px;
+  overflow: hidden;
 
-  
+
 }
 
 .left h1 {
