@@ -134,10 +134,13 @@ if (!isset($_SESSION['name'])) {
                 <th>City</th> 
                 <th>Contact</th>
                 <th>Status</th> <!-- old student, new-->
-          
+                <th>Requirement</th>
                 <th>Action</th>
               </tr>
             </thead>
+            <a class = 'btn btn-primary btn-sm' href='/'>Edit</a>
+            <a class = 'btn btn-danger btn-sm' href='/'>Delete</a>
+
             <tbody id="students-tbody"></tbody>
           </table>
           <div class="pagination-row" id="pagination-row">
