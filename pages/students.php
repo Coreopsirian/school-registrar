@@ -128,12 +128,13 @@ if (!isset($_SESSION['name'])) {
             <thead>
               <tr>
                 <th>Photo</th>
-                <th>Student ID</th>
-                <th>Name</th>
+                 <th>Name</th>
+                <th>LRN</th>
                 <th>Grade &amp; Section</th>
-                <th>City</th>
+                <th>City</th> 
                 <th>Contact</th>
-                <th>Status</th>
+                <th>Status</th> <!-- old student, new-->
+          
                 <th>Action</th>
               </tr>
             </thead>
