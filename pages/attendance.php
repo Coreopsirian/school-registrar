@@ -42,10 +42,10 @@ if (!isset($_SESSION['name'])) {
       <div class="nav-item" data-href="notes.php"      data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
     </nav>
     <div class="sidebar-footer">
-      <button class="logout-btn" onclick="window.location.href='../index.html'">
+          <a href="../logout.php" class="logout-btn">
         <span class="logout-icon"><i class="bi bi-box-arrow-right"></i></span>
         <span class="btn-text">Log out</span>
-      </button>
+      </a>
     </div>
   </aside>
 
