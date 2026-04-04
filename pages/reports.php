@@ -67,6 +67,6 @@ if (!isset($_SESSION['name'])) {
     </div>
   </div>
 
-  <script src="../js/nav.js"></script>
+  <script  type="module" src="../js/nav.js"></script>
 </body>
 </html>

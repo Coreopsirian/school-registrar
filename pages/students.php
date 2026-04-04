@@ -198,7 +198,7 @@ if (!isset($_SESSION['name'])) {
               <?php
               }
               ?>
-           
+      
             </tbody>
           
             
@@ -303,11 +303,8 @@ if (!isset($_SESSION['name'])) {
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script src="../js/nav.js"></script>
+  <script type="module" src="../js/nav.js"></script>
   <script type="module" src="../js/students.js"></script>
-  <script type="module">
-    import { initStudents } from '../js/students.js';
-    initStudents();
-  </script>
+
 </body>
 </html>
