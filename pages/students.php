@@ -155,20 +155,19 @@ if (!isset($_SESSION['name'])) {
               die("Error executing query: " . $conn->error);
              }
 
-             //read data of each row
+              //read data of each row
               //uses internal id for edit/delete links
               while($row= $result -> fetch_assoc()){
                 $status = $row['is_active'] ? "Active" : "Inactive";
                 //badge used for identification
                 $badge = $row['is_active'] ? 'badge_active' : 'badge_inactive';
-
               ?>
                 <tr>
-                <!-- photo of students -- >
 
+                <!-- photo of students -->
               <td>
                  <?php if(!empty($row['photo'])): ?>
-                  <img scr = images/<? =  htmlspecialchars($row['photo'])?>" class="student-pics";/>
+                  <img scr = "images/<?= htmlspecialchars($row['photo'])?>" class="student-pics";/>
                   </td>
 
 
