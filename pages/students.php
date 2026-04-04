@@ -140,6 +140,13 @@ if (!isset($_SESSION['name'])) {
 
             <tbody>
             <?php
+            //for connection
+            $servername = "localhost";
+            $email = "root";
+            $password = "";
+            $database = "school_registrar";
+
+            $conn = new mysqli($servername, $email, $password, $database);
              //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
               LEFT JOIN grade_levels  g ON s.grade_level_id = g.id
