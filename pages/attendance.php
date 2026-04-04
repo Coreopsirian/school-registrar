@@ -16,6 +16,7 @@ if (!isset($_SESSION['name'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Attendance — School Portal</title>
   <link rel="icon" type="image/png" href="../images/COJ.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/styles.css">
@@ -55,10 +56,13 @@ if (!isset($_SESSION['name'])) {
         <div class="page-title">Attendance</div>
         <div class="page-sub">Track daily faculty attendance</div>
       </div>
-      <div class="topbar-search">
-        <span class="menu-icon">&#9776;</span>
-        <input type="text" placeholder="Search students ..." />
-        <span class="search-icon">&#128269;</span>
+      <div class="topbar-searchh">
+        <div class="input-group">
+          <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search" aria-describedby="search-addon" />
+          <button type="button" class="btn btn-outline-primary" data-mdb-ripple-init>search</button>
+        </div>
+        </div>
+       
       </div>
     </div>
 

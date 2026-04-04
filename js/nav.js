@@ -3,6 +3,11 @@
 
    ========================================================== */
 
+// Initialization for ES Users
+import { Ripple, initMDB } from "mdb-ui-kit";
+
+initMDB({ Ripple });
+
 (function () {
 //for sidebar toggle
   const sidebar   = document.getElementById('sidebar');
