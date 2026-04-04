@@ -182,13 +182,12 @@ if (!isset($_SESSION['name'])) {
 
               <!-- LRN -->
               <td><?= htmlspecialchars($row['lrn']) ?></td>
-
               <!-- Grade & Section -->
               <td><?= htmlspecialchars($row['grade_name'] . ' - ' . $row['section_name']) ?></td>
-
+              <!-- City -->
+                 <td><?= htmlspecialchars($row['lrn']) ?></td>
               <!-- Status -->
               <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
-
               <!-- Action -->
               <td>
                 <a class="btn-edit" href="edit.php?id=<?= $row['id'] ?>">Edit</a>
@@ -199,8 +198,7 @@ if (!isset($_SESSION['name'])) {
               <?php
               }
               ?>
-      
-            </tbody>
+          
           
             
 
