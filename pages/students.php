@@ -119,11 +119,8 @@ if (!isset($_SESSION['name'])) {
           </div>
         </div>
 
-        <!-- Search -->
-        <div class="search-bar-row">
-          <input type="text" class="student-search-input" id="student-search"
-                 placeholder="Search by name, ID, grade, city..." />
-        </div>
+  
+      
 
         <!-- Table -->
         <div class="table-card">
