@@ -62,9 +62,7 @@ if (!isset($_SESSION['name'])) {
           <button type="button" class="btn btn-outline-primary" data-mdb-ripple-init>search</button>
         </div>
         </div>
-       
       </div>
-    </div>
 
     <div id="page-container">
       <div id="page-attendance">

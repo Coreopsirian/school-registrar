@@ -4,7 +4,13 @@
 
 /* ===== ATTENDANCE ===== */
 
-
+#main {
+  display:flex;
+  flex-direction: column;
+    flex: 1;
+  height: 100vh;
+  overflow: hidden;
+}
 
 #page-attendance .page-section-title {
   font-size: 22px;
