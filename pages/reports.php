@@ -57,11 +57,8 @@ if (!isset($_SESSION['name'])) {
         <div class="page-title">Reports</div>
         <div class="page-sub">View and export school reports</div>
       </div>
-      <div class="topbar-search">
-        <span class="menu-icon">&#9776;</span>
-        <input type="text" placeholder="Search students ..." />
-        <span class="search-icon">&#128269;</span>
-      </div>
+      
+    <div class="topbar-spacer"></div>
     </div>
 
     <div id="page-container">

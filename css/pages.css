@@ -7,7 +7,7 @@
 #main {
   display:flex;
   flex-direction: column;
-    flex: 1;
+  flex: 1;
   height: 100vh;
   overflow: hidden;
 }
@@ -65,6 +65,9 @@
 }
 
 /* ===== REPORTS ===== */
+.topbar-spacer {
+  flex: 1;
+}
 .reports-title {
   font-size: 22px;
   font-weight: 700;
