@@ -141,29 +141,56 @@ if (!isset($_SESSION['name'])) {
             </thead>
             <tbody>
              <?
-             //query db
-             $sql = "SELECT * FROM students";
+             //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
+             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
+              LEFT JOIN grade_levels  g ON s.grade_level_id = g.id
+              LEFT JOIN sections sec ON s.section_id = sec.id
+              ORDER BY s.last_name ASC";
+
+
              $result = $conn-> query($sql);
 
              //check if query executed prperly
-             if(!result){
+             if(!$result){
               die("Error executing query: " . $conn->error);
              }
+
+             //read data of each row
+              //uses internal id for edit/delete links
+              while($row= $result -> fetch_assoc()){
+                $status = $row['is_active'] ? "Active" : "Inactive";
+                //badge used for identification
+                $badge = $row['is_active'] ? 'badge_active' : 'badge_inactive';
+
               ?>
                 <tr>
-              <td>Photo</td>
-              <td>Darla Nova Sumanting</td>
-              <td>202411360</td>
-              <td>Metro Manila</td>
-              <td>Grade 10 - Sampaguita</td>
-              <td>09762965854</td>
-              <td>Old</td>
-              <td>Birth cert</td>
+                <!-- photo of students -- >
+
               <td>
-                <a class = 'btn btn-primary btn-sm' href='edit.php'>Edit</a>
-            <a class = 'btn btn-danger btn-sm' href='delete.php'>Delete</a>
+                 <?php if(!empty($row['photo'])): ?>
+                  <img scr = images/<? =  htmlspecialchars($row['photo'])?>" class="student-pics";/>
+                  </td>
+
+
+              <! -- students name -- >
+              <td>$row[last_name] $row[first_name]. $row[middle_name]. </td>
+              <td>$row[lrn]</td>
+              <td>$row[city]</td>
+              <td>$row[grade] $row[section]</td>
+              <td>$row[contact]</td>
+              <td>$row[student_type]</td>
+              <td>$row[requirement]</td>
+              <td>
+             
+                <a class = 'btn btn-primary btn-sm' href='edit.php?id={$row['id']}'>Edit</a>
+            <a class = 'btn btn-danger btn-sm' href='delete.php?id={$row['id']}'>Delete</a>
               </td>
             </tr>
+              
+              ";
+             
+             }
+              ?>
               
             </tbody>
           
