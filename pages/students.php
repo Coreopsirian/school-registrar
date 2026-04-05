@@ -321,13 +321,22 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <div class="form-group">
             <!-- to follow setion from COJ -->
+                           
+            <!-- Grade -->
             <label class="form-label">Grade &amp; Section *</label>
             <select class="form-select" name="grade_level_id" id="field-grade">
-              <option value="">Select Grade &amp; Section</option>
-              <option>Grade 7 – Sampaguita</option>
-              <option>Grade 7 – Rosal</option>
-              <option>Grade 8 – Sampaguita</option>
+              <option value="">Select Grade /option>
+              <option>Grade 1</option>
+              <option>Grade 2</option>
+              <option>Grade 3</option>
             </select>
+                <!-- Section -->
+              <select class="form-select" name="section_id" id="field-sectionn">
+              <option value="">Select Section/option>
+              <option>Sampaguita</option>
+              <option>Rosas</option>
+            </select>
+
            <!-- to follow setion from COJ (AS IS STILL)-->
 
           </div>
