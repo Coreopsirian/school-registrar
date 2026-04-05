@@ -60,7 +60,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $sql = "INSERT INTO students (photo, first_name, middle_name, last_name, lrn, grade_level_id, section_id, city, contact_number, student_type) 
     VALUES ('$photo', '$first_name', '$middle_name', '$last_name', '$lrn', '$grade_level_id', '$section_id', '$city', '$contact_number', '$student_type')";
-    //add student to database
+    $result = $conn->query($sql);
+
+    //catch error if query is not executed properly
+    if(!$result){
+      $error_message = "Invalid query: " . $conn->error;
+      break;
+    }
+   //add student to database
       $first_name= "";
       $middle_name= "";
       $last_name= "";
@@ -73,6 +80,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
       $photo = "";
 
       $success_message = "Student added successfully";
+
+      header("location: students.php"); //after added registrar will see the table list
+      exit;
 
   } while(false);
 }
