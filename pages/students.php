@@ -6,6 +6,8 @@ if (!isset($_SESSION['name'])) {
   exit();
 }
 
+$first_name= "";
+
 ?>
 
 <!DOCTYPE html>
@@ -276,7 +278,7 @@ if (!isset($_SESSION['name'])) {
             <input type="text" class="form-input" id="field-city" placeholder="e.g. Quezon City" />
           </div>
           <div class="form-group">
-            <label class="form-label">Contact Number</label>
+            <label class="form-label">Contact</label>
             <input type="text" class="form-input" id="field-contact" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
          
@@ -287,10 +289,7 @@ if (!isset($_SESSION['name'])) {
               <option value="New-student">New student</option>
             </select>
           </div>
-          <div class="form-group full-width">
-            <label class="form-label">Address</label>
-            <input type="text" class="form-input" id="field-address" />
-          </div>
+          
         </div>
       </div>
 
