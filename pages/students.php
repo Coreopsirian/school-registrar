@@ -344,15 +344,18 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label">Grade &amp; Section *</label>
             <select class="form-select" name="grade_level_id" id="field-grade">
               <option value="">Select Grade </option>
-              <option value="1">Grade 1</option>
-              <option value="2">Grade 2</option>
-              <option value="3">Grade 3</option>
+              <option value="1">Grade 7</option>
+              <option value="2">Grade 8</option>
+              <option value="3">Grade 9</option>
+               <option value="4">Grade 10</option>
             </select>
                 <!-- Section -->
               <select class="form-select" name="section_id" id="field-sectionn">
               <option value="">Select Section</option>
-              <option value="1">Sampaguita</option>
-              <option value="2">Rosas</option>
+              <option value="1">Newton</option>
+              <option value="2">Einstein</option>
+                <option value="3">Curie</option>
+              <option value="4">Franklin</option>
             </select>
 
            <!-- to follow setion from COJ (AS IS STILL)-->
@@ -370,8 +373,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="form-group">
             <label class="form-label">Status</label>
             <select  name = "status" class="form-select" id="field-status" value="<?php echo $status ?>" >
-              <option value="Old-student">Old student</option>
-              <option value="New-student">New student</option>
+              <option value="old">Old student</option>
+              <option value="new">New student</option>
             </select>
           </div>
           
