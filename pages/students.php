@@ -296,7 +296,7 @@ if (!isset($_SESSION['name'])) {
 
       <div class="student-modal-footer">
         <button class="btn-cancel" id="modal-cancel-btn">Cancel</button>
-        <button class="btn-save-student" id="modal-save-btn">Save Student</button>
+        <button  type="submit" class="btn-save-student" id="modal-save-btn">Save Student</button>
       </div>
     </div>
   </div>
