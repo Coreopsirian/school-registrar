@@ -215,10 +215,8 @@ $success_message = $_GET['success'] ?? '';
         </div>
 
       </div>
-    </div><!-- /page-container -->
-  </div><!-- /main -->
-
-  <!-- ===== ADD / EDIT STUDENT MODAL ===== -->
+    </div>
+  </div>
  
 <!-- ADD NEW STUDENT BUTON -->
   <div class="student-modal-overlay" id="student-modal">
@@ -252,19 +250,19 @@ $success_message = $_GET['success'] ?? '';
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-input" name ="first_name" id="field-firstname" value="<?php echo $first_name ?>" />
+            <input type="text" class="form-input" name ="first_name" id="field-firstname" />
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
-            <input type="text" class="form-input"  name ="middle_name" id="field-middlename" value="<?php echo $middle_name ?>"  />
+            <input type="text" class="form-input"  name ="middle_name" id="field-middlename"  />
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
-            <input type="text" class="form-input"  name ="last_name" id="field-lastname" value="<?php echo $last_name ?>"  />
+            <input type="text" class="form-input"  name ="last_name" id="field-lastname" />
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
-            <input type="text" class="form-input"  name ="lrn" id="field-id" value="<?php echo $lrn?>"  />
+            <input type="text" class="form-input"  name ="lrn" id="field-id"  />
           </div>
           <div class="form-group">
             <!-- to follow setion from COJ -->
@@ -292,16 +290,16 @@ $success_message = $_GET['success'] ?? '';
           </div>
           <div class="form-group">
             <label class="form-label">City</label>
-            <input type="text" class="form-input" id="field-city" name = "city" value="<?php echo $city ?>"  placeholder="e.g. Quezon City" />
+            <input type="text" class="form-input" id="field-city" name = "city"  placeholder="e.g. Quezon City" />
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact" name = "contact_number" value="<?php echo $contact_number ?>" placeholder="e.g. 09XX-XXX-XXXX" />
+            <input type="text" class="form-input" id="field-contact" name = "contact_number" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
          
           <div class="form-group">
             <label class="form-label">Status</label>
-            <select  name = "status" class="form-select" id="field-status" value="<?php echo $status ?>" >
+            <select  name = "status" class="form-select" id="field-status"  >
               <option value="old">Old student</option>
               <option value="new">New student</option>
             </select>
@@ -335,12 +333,13 @@ $success_message = $_GET['success'] ?? '';
   <script  src="../js/students.js"></script>
   <script  src="../js/add.js"></script>
 
-  <!-- if theres an error; keep modal open -->
-   <?php if(!empty($error_message)): ?>
+
+
+  <!-- Keep modal open if there's an error or success message -->
+  <?php if(!empty($error_message) || !empty($success_message)): ?>
   <script>
     document.getElementById('student-modal').classList.add('open');
   </script>
   <?php endif; ?>
-
 </body>
 </html>
