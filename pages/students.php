@@ -12,10 +12,10 @@ $first_name= "";
 $middle_name= "";
 $last_name= "";
 $lrn= "";
-$grade_level_id= "";
-$section_id= "";
+$grade_level_id =  $_POST['grade_level_id'] ?? '';; //add empty string if empty
+$section_id =  $_POST['section_id'] ?? '';
 $city = "";
-$contact_number = "";
+$contact_number =  $_POST['contact_number'] ?? '';
 $student_type = "";
 $photo = "";
 
@@ -346,7 +346,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact" name = "contact" value="<?php echo $contact_number ?>" placeholder="e.g. 09XX-XXX-XXXX" />
+            <input type="text" class="form-input" id="field-contact" name = "contact_number" value="<?php echo $contact_number ?>" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
          
           <div class="form-group">
