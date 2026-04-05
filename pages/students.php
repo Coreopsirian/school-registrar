@@ -314,17 +314,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>";
             }
           ?>
-        <div class="photo-upload-area">
-          <div class="photo-preview-circle" id="photo-preview-circle" title="Click to upload photo">
-            <div class="photo-placeholder-icon" id="photo-placeholder-icon">
-              <i class="bi bi-camera-fill"></i>
-              <span>Upload</span>
+          <div class="photo-upload-area">
+              <label class="form-label">Student Photo</label>
+              <input type="file" name="photo" class="form-input" accept="image/*" id="photo-file-input" />
             </div>
-            <img id="photo-preview-img" src="" alt="Preview" />
-          </div>
-          <div class="photo-upload-hint">Click the photo area to upload an image</div>
-          <input type="file" id="photo-file-input" name="photo" accept="image/*" style="display:none" />
-        </div>
+
 
         <div class="form-grid">
           <div class="form-group">
