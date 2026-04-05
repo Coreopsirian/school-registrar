@@ -185,7 +185,7 @@
 }
 
 /* ===== MODAL FOOTER ===== */
-.modal-footer {
+.student-modal-footer {
   padding: 0 28px 28px;
   display: flex;
   justify-content: flex-end;

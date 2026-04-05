@@ -222,12 +222,12 @@ if (!isset($_SESSION['name'])) {
   <!-- ===== ADD / EDIT STUDENT MODAL ===== -->
   <div class="student-modal-overlay" id="student-modal">
     <div class="student-modal-box">
-      <div class="modal-header">
-        <h2 id="modal-title">Add New Student</h2>
-        <button class="modal-close" id="modal-close-btn">&times;</button>
+      <div class="student-modal-header">
+        <h2 id="student-modal-title">Add New Student</h2>
+        <button class="student-modal-close" id="modal-close-btn">&times;</button>
       </div>
 
-      <div class="modal-body">
+      <div class="student-modal-body">
         <div class="photo-upload-area">
           <div class="photo-preview-circle" id="photo-preview-circle" title="Click to upload photo">
             <div class="photo-placeholder-icon" id="photo-placeholder-icon">
@@ -297,7 +297,7 @@ if (!isset($_SESSION['name'])) {
         </div>
       </div>
 
-      <div class="modal-footer">
+      <div class="student-modal-footer">
         <button class="btn-cancel" id="modal-cancel-btn">Cancel</button>
         <button class="btn-save-student" id="modal-save-btn">Save Student</button>
       </div>
