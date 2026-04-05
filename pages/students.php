@@ -238,9 +238,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
               //read data of each row
               //uses internal id for edit/delete links
               while($row= $result->fetch_assoc()) {
-                $status = $row['is_active'] ? "Active" : "Inactive";
-                //badge used for identification
-                $badge = $row['is_active'] ? 'badge_active' : 'badge_inactive';
+
               ?>
                 <tr>
                 <!-- photo of students -->
@@ -358,7 +356,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
               <option value="4">Franklin</option>
             </select>
 
-           <!-- to follow setion from COJ (AS IS STILL)-->
+           <!-- to follow setion from COJ (plaeholder ^)-->
 
           </div>
           <div class="form-group">
