@@ -53,7 +53,7 @@ if (!isset($_SESSION['name'])) {
     <div id="topbar">
       <div class="topbar-left">
         <div class="page-title">Attendance</div>
-        <div class="page-sub">Track daily student attendance</div>
+        <div class="page-sub">Track daily faculty attendance</div>
       </div>
       <div class="topbar-search">
       
