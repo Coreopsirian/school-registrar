@@ -288,7 +288,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button class="student-modal-close" id="modal-close-btn">&times;</button>
       </div>
 
-      <form action="students.php" method="post" enctype="multipart/form-data">
+      <form action="students.php" method="POST" enctype="multipart/form-data">
       <div class="student-modal-body">
         <div class="photo-upload-area">
           <div class="photo-preview-circle" id="photo-preview-circle" title="Click to upload photo">
@@ -322,7 +322,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="form-group">
             <!-- to follow setion from COJ -->
             <label class="form-label">Grade &amp; Section *</label>
-            <select class="form-select" id="field-grade">
+            <select class="form-select" name="grade_level_id" id="field-grade">
               <option value="">Select Grade &amp; Section</option>
               <option>Grade 7 – Sampaguita</option>
               <option>Grade 7 – Rosal</option>
@@ -351,7 +351,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
       
-                  //success message
+                  <!--success message -->
       <?php
       if(!empty($success_message)){
         echo "
