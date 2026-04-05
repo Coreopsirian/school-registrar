@@ -100,31 +100,6 @@
   opacity: 0.88;
 }
 
-/* ===== SEARCH ===== */
-#page-students .search-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-#page-students .student-search-input {
-  flex: 1;
-  border: 1.5px solid var(--color-border);
-  border-radius: 8px;
-  padding: 9px 16px;
-  font-family: var(--font);
-  font-size: 13px;
-  color: var(--color-text);
-  background: var(--color-surface);
-  outline: none;
-  transition: border 0.2s;
-}
-
-#page-students .student-search-input:focus {
-  border-color: var(--accent);
-}
-
 /* ===== TABLE ===== */
 #page-students .table-card {
   background: var(--color-surface);
