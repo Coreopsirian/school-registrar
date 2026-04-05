@@ -271,16 +271,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div><!-- /main -->
 
   <!-- ===== ADD / EDIT STUDENT MODAL ===== -->
-   <?php // check if erro rmssg is not empty
-    if(!empty($error_message)){
-      echo "
-      <div class='alert alert-warning alert-dismissible fade show' role='alert'>
-        <strong>$error_message</strong>
-        <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-    </div>";
-    }
-   ?>
-
+ 
+<!-- ADD NEW STUDENT BUTON -->
   <div class="student-modal-overlay" id="student-modal">
     <div class="student-modal-box">
       <div class="student-modal-header">
@@ -288,8 +280,19 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button class="student-modal-close" id="modal-close-btn">&times;</button>
       </div>
 
+      <!-- MODAL FORM -->
       <form action="students.php" method="POST" enctype="multipart/form-data">
+         
       <div class="student-modal-body">
+             <?php // check if erro rmssg is not empty
+            if(!empty($error_message)){
+              echo "
+              <div class='alert alert-warning alert-dismissible fade show' role='alert'>
+                <strong>$error_message</strong>
+                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+            </div>";
+            }
+          ?>
         <div class="photo-upload-area">
           <div class="photo-preview-circle" id="photo-preview-circle" title="Click to upload photo">
             <div class="photo-placeholder-icon" id="photo-placeholder-icon">
@@ -325,14 +328,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Grade -->
             <label class="form-label">Grade &amp; Section *</label>
             <select class="form-select" name="grade_level_id" id="field-grade">
-              <option value="">Select Grade /option>
+              <option value="">Select Grade </option>
               <option>Grade 1</option>
               <option>Grade 2</option>
               <option>Grade 3</option>
             </select>
                 <!-- Section -->
               <select class="form-select" name="section_id" id="field-sectionn">
-              <option value="">Select Section/option>
+              <option value="">Select Section</option>
               <option>Sampaguita</option>
               <option>Rosas</option>
             </select>
