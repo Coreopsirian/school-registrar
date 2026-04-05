@@ -71,7 +71,7 @@
 }
 
 .student-modal-body {
-  padding: 28px;
+  padding: 25px;
 }
 
 /* ===== PHOTO UPLOAD ===== */
@@ -160,7 +160,7 @@
 .form-select {
   border: 1.5px solid var(--color-border);
   border-radius: 9px;
-  padding: 10px 14px;
+  padding: 8px 10px;
   font-family: var(--font);
   font-size: 13.5px;
   color: var(--color-text);
@@ -186,7 +186,7 @@
 
 /* ===== MODAL FOOTER ===== */
 .student-modal-footer {
-  padding: 0 28px 28px;
+  padding: 0 26px 26px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;

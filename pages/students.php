@@ -243,19 +243,19 @@ if (!isset($_SESSION['name'])) {
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-input" id="field-firstname" placeholder="e.g. Juan" />
+            <input type="text" class="form-input" id="field-firstname"  />
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
-            <input type="text" class="form-input" id="field-middlename" placeholder="e.g. Santos" />
+            <input type="text" class="form-input" id="field-middlename" />
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
-            <input type="text" class="form-input" id="field-lastname" placeholder="e.g. Dela Cruz" />
+            <input type="text" class="form-input" id="field-lastname" />
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
-            <input type="text" class="form-input" id="field-id" placeholder="e.g. 2024-0001" />
+            <input type="text" class="form-input" id="field-id"  />
           </div>
           <div class="form-group">
             <label class="form-label">Grade &amp; Section *</label>
@@ -289,7 +289,7 @@ if (!isset($_SESSION['name'])) {
           </div>
           <div class="form-group full-width">
             <label class="form-label">Address</label>
-            <input type="text" class="form-input" id="field-address" placeholder="Full address..." />
+            <input type="text" class="form-input" id="field-address" />
           </div>
         </div>
       </div>
