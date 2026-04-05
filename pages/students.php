@@ -254,7 +254,7 @@ if (!isset($_SESSION['name'])) {
             <input type="text" class="form-input" id="field-lastname" placeholder="e.g. Dela Cruz" />
           </div>
           <div class="form-group">
-            <label class="form-label">Student ID *</label>
+            <label class="form-label">LRN *</label>
             <input type="text" class="form-input" id="field-id" placeholder="e.g. 2024-0001" />
           </div>
           <div class="form-group">
@@ -279,15 +279,12 @@ if (!isset($_SESSION['name'])) {
             <label class="form-label">Contact Number</label>
             <input type="text" class="form-input" id="field-contact" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
-          <div class="form-group">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-input" id="field-dob" />
-          </div>
+         
           <div class="form-group">
             <label class="form-label">Status</label>
             <select class="form-select" id="field-status">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="Old-student">Old student</option>
+              <option value="New-student">New student</option>
             </select>
           </div>
           <div class="form-group full-width">
