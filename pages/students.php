@@ -6,6 +6,16 @@ if (!isset($_SESSION['name'])) {
   exit();
 }
 
+ //for connection
+$servername = "localhost";
+$email = "root";
+$password = "";
+$database = "school_registrar";
+
+$conn = new mysqli($servername, $email, $password, $database);
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
 
 //get data from form
 $photo = "";
@@ -24,7 +34,7 @@ $error_message = "";
 $success_message = "";
 
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $photo  = $_POST['photo'];;
+
   $first_name = $_POST['first_name'];
   $middle_name = $_POST['middle_name'];
   $last_name = $_POST['last_name'];
@@ -34,6 +44,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
   $city = $_POST['city'];
   $contact_number = $_POST['contact_number'];
   $student_type = $_POST['status']; // status is used for student type
+
+//photo is a file not post
+  $photo = $_FILES['photo']['name'];
+  $temp = $_FILES['photo']['tmp_name'];
+  $folder = "uploads/".$photo;
+  move_uploaded_file($temp,$folder);
 
   //CHECKS FOR NO EMPTY FIELD
   do{
@@ -193,17 +209,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <tbody>
             <?php
-            //for connection
-            $servername = "localhost";
-            $email = "root";
-            $password = "";
-            $database = "school_registrar";
-
-            $conn = new mysqli($servername, $email, $password, $database);
-
-            if ($conn->connect_error) {
-              die("Connection failed: " . $conn->connect_error);
-            }
+      
 
              //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
@@ -227,7 +233,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- photo of students -->
               <td>
                 <?php if(!empty($row['photo'])): ?>
-                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" name="photo" class="student-pics"/>
+                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" sclass="student-pics"/>
                   <?php endif; ?>
               </td>
               <!-- students name -->
@@ -304,7 +310,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             <img id="photo-preview-img" src="" alt="Preview" />
           </div>
           <div class="photo-upload-hint">Click the photo area to upload an image</div>
-          <input type="file" id="photo-file-input" accept="image/*" style="display:none" />
+          <input type="file" id="photo-file-input" name="photo" accept="image/*" style="display:none" />
         </div>
 
         <div class="form-grid">
