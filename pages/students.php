@@ -19,6 +19,43 @@ $contact_number = "";
 $student_type = "";
 $photo = "";
 
+$error_message = "";
+$success_message = "";
+
+if($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $first_name = $_POST['first_name'];
+  $middle_name = $_POST['middle_name'];
+  $last_name = $_POST['last_name'];
+  $lrn = $_POST['lrn'];
+  $grade_level_id = $_POST['grade_level_id'];
+  $section_id = $_POST['section_id'];
+  $city = $_POST['city'];
+  $contact_number = $_POST['contact_number'];
+  $student_type = $_POST['status']; // status is used for student type
+
+  //CHECKS FOR NO EMPTY FIELD
+  do{
+    if(empty($first_name) || empty($last_name) || empty($lrn) || empty($grade_level_id) || empty($section_id) || empty($city) || empty($contact_number) || empty($student_type)){
+      $error_message = "All fields are required";
+      break;
+    }
+    //add student to database
+      $first_name= "";
+      $middle_name= "";
+      $last_name= "";
+      $lrn= "";
+      $grade_level_id= "";
+      $section_id= "";
+      $city = "";
+      $contact_number = "";
+      $student_type = "";
+      $photo = "";
+
+      $success_message = "Student added successfully";
+
+  } while(false);
+}
+
 
 ?>
 
@@ -234,6 +271,16 @@ $photo = "";
   </div><!-- /main -->
 
   <!-- ===== ADD / EDIT STUDENT MODAL ===== -->
+   <?php // check if erro rmssg is not empty
+    if(!empty($error_message)){
+      echo "
+      <div class='alert alert-warning alert-dismissible fade show' role='alert'>
+        <strong>$error_message</strong>
+        <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+    </div>";
+    }
+   ?>
+
   <div class="student-modal-overlay" id="student-modal">
     <div class="student-modal-box">
       <div class="student-modal-header">
@@ -241,6 +288,7 @@ $photo = "";
         <button class="student-modal-close" id="modal-close-btn">&times;</button>
       </div>
 
+      <form action="students.php" method="post" enctype="multipart/form-data">
       <div class="student-modal-body">
         <div class="photo-upload-area">
           <div class="photo-preview-circle" id="photo-preview-circle" title="Click to upload photo">
@@ -302,12 +350,24 @@ $photo = "";
           
         </div>
       </div>
+      
+                  //success message
+      <?php
+      if(!empty($success_message)){
+        echo "
+        <div class='alert alert-success alert-dismissible fade show' role='alert'>
+          <strong>$success_message</strong>
+          <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+      </div>";
+      }
+      ?>
 
       <div class="student-modal-footer">
         <button class="btn-cancel" id="modal-cancel-btn">Cancel</button>
         <button  type="submit" class="btn-save-student" id="modal-save-btn">Save Student</button>
       </div>
     </div>
+                </form>
   </div>
 
   <!-- Toast -->
