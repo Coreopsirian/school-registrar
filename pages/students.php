@@ -17,76 +17,9 @@ if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 
-//get data from form
-$photo = "";
-$first_name= "";
-$middle_name= "";
-$last_name= "";
-$lrn= "";
-$grade_level_id =  $_POST['grade_level_id'] ?? '';; //add empty string if empty
-$section_id =  $_POST['section_id'] ?? '';
-$city = "";
-$contact_number =  $_POST['contact_number'] ?? '';
-$student_type = "";
-
-
-$error_message = "";
-$success_message = "";
-
-if($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-  $first_name = $_POST['first_name'];
-  $middle_name = $_POST['middle_name'];
-  $last_name = $_POST['last_name'];
-  $lrn = $_POST['lrn'];
-  $grade_level_id = $_POST['grade_level_id'];
-  $section_id = $_POST['section_id'];
-  $city = $_POST['city'];
-  $contact_number = $_POST['contact_number'];
-  $student_type = $_POST['status']; // status is used for student type
-
-//photo is a file not post
-  $photo = $_FILES['photo']['name'];
-  $temp = $_FILES['photo']['tmp_name'];
-  $folder = "uploads/".$photo;
-  move_uploaded_file($temp,$folder);
-
-  //CHECKS FOR NO EMPTY FIELD
-  do{
-    if(empty($photo) || empty($first_name) || empty($last_name) || empty($lrn) || empty($grade_level_id) || empty($section_id) || empty($city) || empty($contact_number) || empty($student_type)){
-      $error_message = "All fields are required";
-      break;
-    }
-
-    $sql = "INSERT INTO students (photo, first_name, middle_name, last_name, lrn, grade_level_id, section_id, city, contact_number, student_type) 
-    VALUES ('$photo', '$first_name', '$middle_name', '$last_name', '$lrn', '$grade_level_id', '$section_id', '$city', '$contact_number', '$student_type')";
-    $result = $conn->query($sql);
-
-    //catch error if query is not executed properly
-    if(!$result){
-      $error_message = "Invalid query: " . $conn->error;
-      break;
-    }
-   //add student to database
-      $first_name= "";
-      $middle_name= "";
-      $last_name= "";
-      $lrn= "";
-      $grade_level_id= "";
-      $section_id= "";
-      $city = "";
-      $contact_number = "";
-      $student_type = "";
-      $photo = "";
-
-      $success_message = "Student added successfully";
-
-      header("location: students.php"); //after added registrar will see the table list
-      exit;
-
-  } while(false);
-}
-
+//get message form add.php
+$error_message   = $_GET['error'] ?? '';
+$success_message = $_GET['success'] ?? '';
 
 ?>
 
@@ -97,7 +30,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Students — School Portal</title>
   <link rel="icon" type="image/png" href="../images/COJ.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -222,11 +155,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <tbody>
             <?php
-      
-
+    
              //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
-              LEFT JOIN grade_levels  g ON s.grade_level_id = g.id
+              LEFT JOIN grade_levels g ON s.grade_level_id = g.id
               LEFT JOIN sections sec ON s.section_id = sec.id
               ORDER BY s.last_name ASC";
 
@@ -235,18 +167,18 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             if(!$result){
               die("Invalid query: " . $conn->error);
             }
-              //read data of each row
-              //uses internal id for edit/delete links
-              while($row= $result->fetch_assoc()) {
+              //read data of each row; uses internal id for edit/delete links
+              while($row = $result->fetch_assoc()):
+                $badge = $row['student_type'] === 'new' ? 'badge_active' : 'badge_inactive';
 
               ?>
                 <tr>
                 <!-- photo of students -->
-              <td>
-                <?php if(!empty($row['photo'])): ?>
-                  <img src = "uploads/<?= htmlspecialchars($row['photo'])?>" class="student-pics"/>
-                  <?php endif; ?>
-              </td>
+                  <td>
+                    <?php if(!empty($row['photo'])): ?>
+                      <img src = "uploads/<?= htmlspecialchars($row['photo'])?>" class="student-pics"/>
+                      <?php endif; ?>
+                  </td>
               <!-- students name -->
               <td>
                 <div class="student-name">
@@ -254,7 +186,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="student-type"><?= $row['student_type']?> Student</div>
               </td>
-
               <!-- LRN -->
               <td><?= htmlspecialchars($row['lrn']) ?></td>
               <!-- Grade & Section -->
@@ -264,7 +195,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                  <!-- contact -->
               <td><?= htmlspecialchars($row['contact_number']) ?></td>
               <!-- Status -->
-              <td><span class="badge <?= $badge ?>"><?= $status ?></span></td>
+                <td><span class="badge <?= $badge ?>"><?= $row['student_type'] ?></span></td>
+
               <!-- Action -->
               <td>
                 <a class="btn-edit" href="edit.php?id=<?= $row['id'] ?>">Edit</a>
@@ -272,10 +204,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
               </td>
             </tr>
 
-              <?php
-              }
-              ?>
-          
+              <?php endwhile; ?>
             </tbody>
           </table>
 
@@ -312,6 +241,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>";
             }
           ?>
+
+
           <div class="photo-upload-area">
               <label class="form-label">Student Photo</label>
               <input type="file" name="photo" class="form-input" accept="image/*" id="photo-file-input" />
@@ -400,10 +331,16 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>
-
   <script  src="../js/nav.js"></script>
   <script  src="../js/students.js"></script>
-    <script  src="../js/add.js"></script>
+  <script  src="../js/add.js"></script>
+
+  <!-- if theres an error; keep modal open -->
+   <?php if(!empty($error_message)): ?>
+  <script>
+    document.getElementById('student-modal').classList.add('open');
+  </script>
+  <?php endif; ?>
 
 </body>
 </html>
