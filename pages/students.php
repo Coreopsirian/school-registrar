@@ -227,7 +227,7 @@ $success_message = $_GET['success'] ?? '';
       </div>
 
       <!-- MODAL FORM -->
-      <form action="students.php" method="POST" enctype="multipart/form-data">
+      <form action="add.php" method="POST" enctype="multipart/form-data">
          
       <div class="student-modal-body">
              <?php // check if erro rmssg is not empty
@@ -238,6 +238,17 @@ $success_message = $_GET['success'] ?? '';
                 <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
             </div>";
             }
+          ?>
+
+                              <!--success message -->
+          <?php
+          if(!empty($success_message)){
+            echo "
+            <div class='alert alert-success alert-dismissible fade show' role='alert'>
+              <strong>$success_message</strong>
+              <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+          </div>";
+          }
           ?>
 
 
@@ -308,16 +319,7 @@ $success_message = $_GET['success'] ?? '';
         </div>
       </div>
       
-                  <!--success message -->
-      <?php
-      if(!empty($success_message)){
-        echo "
-        <div class='alert alert-success alert-dismissible fade show' role='alert'>
-          <strong>$success_message</strong>
-          <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-      </div>";
-      }
-      ?>
+ 
 
       <div class="student-modal-footer">
         <button type="button" class="btn-cancel" id="modal-cancel-btn">Cancel</button>
