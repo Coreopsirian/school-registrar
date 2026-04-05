@@ -6,7 +6,19 @@ if (!isset($_SESSION['name'])) {
   exit();
 }
 
+
+//get data from form
 $first_name= "";
+$middle_name= "";
+$last_name= "";
+$lrn= "";
+$grade_level_id= "";
+$section_id= "";
+$city = "";
+$contact_number = "";
+$student_type = "";
+$photo = "";
+
 
 ?>
 
@@ -245,46 +257,44 @@ $first_name= "";
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-input" id="field-firstname"  />
+            <input type="text" class="form-input" name ="first_name" id="field-firstname"  />
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
-            <input type="text" class="form-input" id="field-middlename" />
+            <input type="text" class="form-input"  name ="middle_name" id="field-middlename" />
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
-            <input type="text" class="form-input" id="field-lastname" />
+            <input type="text" class="form-input"  name ="last_name" id="field-lastname" />
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
-            <input type="text" class="form-input" id="field-id"  />
+            <input type="text" class="form-input"  name ="lrn" id="field-id"  />
           </div>
           <div class="form-group">
+            <!-- to follow setion from COJ -->
             <label class="form-label">Grade &amp; Section *</label>
             <select class="form-select" id="field-grade">
               <option value="">Select Grade &amp; Section</option>
               <option>Grade 7 – Sampaguita</option>
               <option>Grade 7 – Rosal</option>
               <option>Grade 8 – Sampaguita</option>
-              <option>Grade 8 – Rosal</option>
-              <option>Grade 9 – Sampaguita</option>
-              <option>Grade 9 – Rosal</option>
-              <option>Grade 10 – Sampaguita</option>
-              <option>Grade 10 – Rosal</option>
             </select>
+           <!-- to follow setion from COJ (AS IS STILL)-->
+
           </div>
           <div class="form-group">
-            <label class="form-label">City / Municipality</label>
-            <input type="text" class="form-input" id="field-city" placeholder="e.g. Quezon City" />
+            <label class="form-label">City</label>
+            <input type="text" class="form-input" id="field-city" name = "city" placeholder="e.g. Quezon City" />
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact" placeholder="e.g. 09XX-XXX-XXXX" />
+            <input type="text" class="form-input" id="field-contact"  name = "contact" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
          
           <div class="form-group">
             <label class="form-label">Status</label>
-            <select class="form-select" id="field-status">
+            <select  name = "status" class="form-select" id="field-status">
               <option value="Old-student">Old student</option>
               <option value="New-student">New student</option>
             </select>
