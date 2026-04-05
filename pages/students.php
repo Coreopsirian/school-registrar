@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+//add to database
 if (!isset($_SESSION['name'])) {
   header('Location: ../index.php');
   exit();
@@ -8,6 +8,7 @@ if (!isset($_SESSION['name'])) {
 
 
 //get data from form
+$photo = "";
 $first_name= "";
 $middle_name= "";
 $last_name= "";
@@ -17,12 +18,13 @@ $section_id =  $_POST['section_id'] ?? '';
 $city = "";
 $contact_number =  $_POST['contact_number'] ?? '';
 $student_type = "";
-$photo = "";
+
 
 $error_message = "";
 $success_message = "";
 
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $photo  = $_POST['photo'];;
   $first_name = $_POST['first_name'];
   $middle_name = $_POST['middle_name'];
   $last_name = $_POST['last_name'];
@@ -35,7 +37,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   //CHECKS FOR NO EMPTY FIELD
   do{
-    if(empty($first_name) || empty($last_name) || empty($lrn) || empty($grade_level_id) || empty($section_id) || empty($city) || empty($contact_number) || empty($student_type)){
+    if(empty($photo) || empty($first_name) || empty($last_name) || empty($lrn) || empty($grade_level_id) || empty($section_id) || empty($city) || empty($contact_number) || empty($student_type)){
       $error_message = "All fields are required";
       break;
     }
@@ -225,7 +227,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- photo of students -->
               <td>
                 <?php if(!empty($row['photo'])): ?>
-                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" class="student-pics"/>
+                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" name="photo" class="student-pics"/>
                   <?php endif; ?>
               </td>
               <!-- students name -->
