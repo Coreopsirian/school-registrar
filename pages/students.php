@@ -57,6 +57,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_message = "All fields are required";
       break;
     }
+
+    $sql = "INSERT INTO students (photo, first_name, middle_name, last_name, lrn, grade_level_id, section_id, city, contact_number, student_type) 
+    VALUES ('$photo', '$first_name', '$middle_name', '$last_name', '$lrn', '$grade_level_id', '$section_id', '$city', '$contact_number', '$student_type')";
     //add student to database
       $first_name= "";
       $middle_name= "";
