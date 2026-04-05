@@ -246,7 +246,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- photo of students -->
               <td>
                 <?php if(!empty($row['photo'])): ?>
-                  <img src = "images/<?= htmlspecialchars($row['photo'])?>" sclass="student-pics"/>
+                  <img src = "uploads/<?= htmlspecialchars($row['photo'])?>" class="student-pics"/>
                   <?php endif; ?>
               </td>
               <!-- students name -->
@@ -350,15 +350,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label">Grade &amp; Section *</label>
             <select class="form-select" name="grade_level_id" id="field-grade">
               <option value="">Select Grade </option>
-              <option>Grade 1</option>
-              <option>Grade 2</option>
-              <option>Grade 3</option>
+              <option value="1">Grade 1</option>
+              <option value="2">Grade 2</option>
+              <option value="3">Grade 3</option>
             </select>
                 <!-- Section -->
               <select class="form-select" name="section_id" id="field-sectionn">
               <option value="">Select Section</option>
-              <option>Sampaguita</option>
-              <option>Rosas</option>
+              <option value="1">Sampaguita</option>
+              <option value="2">Rosas</option>
             </select>
 
            <!-- to follow setion from COJ (AS IS STILL)-->
