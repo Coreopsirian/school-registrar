@@ -21,6 +21,7 @@ if (!isset($_SESSION['name'])) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="../css/students.css">
+    <link rel="stylesheet" href="../css/add.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
