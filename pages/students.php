@@ -337,7 +337,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact" name = "contact" value="<?php echo $contact ?>" placeholder="e.g. 09XX-XXX-XXXX" />
+            <input type="text" class="form-input" id="field-contact" name = "contact" value="<?php echo $contact_number ?>" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
          
           <div class="form-group">
