@@ -257,19 +257,19 @@ $photo = "";
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-input" name ="first_name" id="field-firstname"  />
+            <input type="text" class="form-input" name ="first_name" id="field-firstname" value="<?php echo $first_name ?>" />
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
-            <input type="text" class="form-input"  name ="middle_name" id="field-middlename" />
+            <input type="text" class="form-input"  name ="middle_name" id="field-middlename" value="<?php echo $middle_name ?>"  />
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
-            <input type="text" class="form-input"  name ="last_name" id="field-lastname" />
+            <input type="text" class="form-input"  name ="last_name" id="field-lastname" value="<?php echo $last_name ?>"  />
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
-            <input type="text" class="form-input"  name ="lrn" id="field-id"  />
+            <input type="text" class="form-input"  name ="lrn" id="field-id" value="<?php echo $lrn?>"  />
           </div>
           <div class="form-group">
             <!-- to follow setion from COJ -->
@@ -285,16 +285,16 @@ $photo = "";
           </div>
           <div class="form-group">
             <label class="form-label">City</label>
-            <input type="text" class="form-input" id="field-city" name = "city" placeholder="e.g. Quezon City" />
+            <input type="text" class="form-input" id="field-city" name = "city" value="<?php echo $city ?>"  placeholder="e.g. Quezon City" />
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact"  name = "contact" placeholder="e.g. 09XX-XXX-XXXX" />
+            <input type="text" class="form-input" id="field-contact" name = "contact" value="<?php echo $contact ?>" placeholder="e.g. 09XX-XXX-XXXX" />
           </div>
          
           <div class="form-group">
             <label class="form-label">Status</label>
-            <select  name = "status" class="form-select" id="field-status">
+            <select  name = "status" class="form-select" id="field-status" value="<?php echo $status ?>" >
               <option value="Old-student">Old student</option>
               <option value="New-student">New student</option>
             </select>
