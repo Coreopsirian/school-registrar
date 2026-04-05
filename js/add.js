@@ -1,5 +1,5 @@
 // Open modal
-document.getElementById('add-student-btn').addEventListener('click', () => {
+document.getElementById('btn-add-student').addEventListener('click', () => {
   document.getElementById('student-modal').classList.add('open');
 });
 

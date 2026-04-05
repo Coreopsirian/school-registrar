@@ -14,6 +14,7 @@
 <body>
 
 <!-- ===== ADD / EDIT STUDENT MODAL ===== -->
+ <div class="modal-overlay open" id="student-modal">
   <div class="modal-overlay" id="student-modal">
     <div class="modal-box">
       <div class="modal-header">
@@ -97,5 +98,6 @@
       </div>
     </div>
   </div>
+  <script src="../js/add.js"></script>
 </body>
 </html>
