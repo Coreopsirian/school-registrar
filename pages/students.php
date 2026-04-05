@@ -375,8 +375,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
       ?>
 
       <div class="student-modal-footer">
-        <button class="btn-cancel" id="modal-cancel-btn">Cancel</button>
-        <button  type="submit" class="btn-save-student" id="modal-save-btn">Save Student</button>
+        <button type="button" class="btn-cancel" id="modal-cancel-btn">Cancel</button>
+        <button type="submit" class="btn-save-student" id="modal-save-btn">Save Student</button>
       </div>
     </div>
                 </form>
