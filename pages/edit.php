@@ -1,128 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Edit Student</title>
+<?php
+session_start();
+if (!isset($_SESSION['name'])) {
+  header('Location: ../index.php');
+  exit();
+}
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../css/edit.css">
-    <link rel="stylesheet" href="../css/add.css">
+$servername = "localhost";
+$email      = "root";
+$password   = "";
+$database   = "school_registrar";
 
-</head>
+$conn = new mysqli($servername, $email, $password, $database);
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
 
-<body>
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-  <!-- ADD NEW STUDENT BUTON -->
-  <div class="student-modal-overlay" id="student-modal">
-    <div class="student-modal-box">
-      <div class="student-modal-header">
-        <h2 id="student-modal-title">Add New Student</h2>
-        <button class="student-modal-close" id="modal-close-btn">&times;</button>
-      </div>
+  $id             = intval($_POST['id']              ?? 0);
+  $first_name     = trim($_POST['first_name']        ?? '');
+  $middle_name    = trim($_POST['middle_name']        ?? '');
+  $last_name      = trim($_POST['last_name']          ?? '');
+  $lrn            = trim($_POST['lrn']                ?? '');
+  $grade_level_id = intval($_POST['grade_level_id']   ?? 0);
+  $section_id     = intval($_POST['section_id']       ?? 0);
+  $city           = trim($_POST['city']               ?? '');
+  $contact_number = trim($_POST['contact_number']     ?? '');
+  $student_type   = trim($_POST['status']             ?? '');
+  $existing_photo = trim($_POST['existing_photo']     ?? '');
 
-      <!-- MODAL FORM -->
-      <form action="student.php" method="POST" enctype="multipart/form-data">
-         
-      <div class="student-modal-body">
-             <?php // check if erro rmssg is not empty
-            if(!empty($error_message)){
-              echo "
-              <div class='alert alert-warning alert-dismissible fade show' role='alert'>
-                <strong>$error_message</strong>
-                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-            </div>";
-            }
-          ?>
+  // Keep old photo if no new one uploaded
+  if (!empty($_FILES['photo']['name'])) {
+    $photo = $_FILES['photo']['name'];
+    move_uploaded_file($_FILES['photo']['tmp_name'], "uploads/" . $photo);
+  } else {
+    $photo = $existing_photo;
+  }
 
-                              <!--success message -->
-          <?php
-          if(!empty($success_message)){
-            echo "
-            <div class='alert alert-success alert-dismissible fade show' role='alert'>
-              <strong>$success_message</strong>
-              <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-          </div>";
-          }
-          ?>
+  // Validate required fields
+  if (empty($first_name) || empty($last_name) || empty($lrn) ||
+      empty($grade_level_id) || empty($city) || empty($contact_number) || empty($student_type)) {
+    header("Location: students.php?error=" . urlencode("All required fields must be filled.") . "&edit_id=$id");
+    exit;
+  }
 
+  if ($id <= 0) {
+    header("Location: students.php?error=" . urlencode("Invalid student ID."));
+    exit;
+  }
 
-          <div class="photo-upload-area">
-              <label class="form-label">Student Photo</label>
-              <input type="file" name="photo" class="form-input" accept="image/*" id="photo-file-input" />
-            </div>
+  // Prepared statement UPDATE
+  $stmt = $conn->prepare(
+    "UPDATE students SET
+      photo=?, first_name=?, middle_name=?, last_name=?, lrn=?,
+      grade_level_id=?, section_id=?, city=?, contact_number=?, student_type=?
+     WHERE id=?"
+  );
+  $stmt->bind_param(
+    "sssssiiissi",
+    $photo, $first_name, $middle_name, $last_name, $lrn,
+    $grade_level_id, $section_id, $city, $contact_number, $student_type,
+    $id
+  );
 
+  if ($stmt->execute()) {
+    header("Location: students.php?success=" . urlencode("Student updated successfully"));
+    exit;
+  } else {
+    header("Location: students.php?error=" . urlencode("Update failed: " . $stmt->error) . "&edit_id=$id");
+    exit;
+  }
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">First Name *</label>
-            <input type="hidden" class="form-input" name ="first_name" id="field-firstname" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Middle Name</label>
-            <input type="text" class="form-input"  name ="middle_name" id="field-middlename"  />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Last Name *</label>
-            <input type="text" class="form-input"  name ="last_name" id="field-lastname" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">LRN *</label>
-            <input type="text" class="form-input"  name ="lrn" id="field-id"  />
-          </div>
-          <div class="form-group">
-            <!-- to follow setion from COJ -->
-                           
-            <!-- Grade -->
-            <label class="form-label">Grade &amp; Section *</label>
-            <select class="form-select" name="grade_level_id" id="field-grade">
-              <option value="">Select Grade </option>
-              <option value="1">Grade 7</option>
-              <option value="2">Grade 8</option>
-              <option value="3">Grade 9</option>
-               <option value="4">Grade 10</option>
-            </select>
-                <!-- Section -->
-              <select class="form-select" name="section_id" id="field-sectionn">
-              <option value="">Select Section</option>
-              <option value="1">Newton</option>
-              <option value="2">Einstein</option>
-                <option value="3">Curie</option>
-              <option value="4">Franklin</option>
-            </select>
+  $stmt->close();
+}
 
-           <!-- to follow setion from COJ (plaeholder ^)-->
-
-          </div>
-          <div class="form-group">
-            <label class="form-label">City</label>
-            <input type="text" class="form-input" id="field-city" name = "city"  placeholder="e.g. Quezon City" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact" name = "contact_number" placeholder="e.g. 09XX-XXX-XXXX" />
-          </div>
-         
-          <div class="form-group">
-            <label class="form-label">Status</label>
-            <select  name = "status" class="form-select" id="field-status"  >
-              <option value="old">Old student</option>
-              <option value="new">New student</option>
-            </select>
-          </div>
-          
-        </div>
-      </div>
-      
- 
-
-      <div class="student-modal-footer">
-        <button type="button" class="btn-cancel" id="modal-cancel-btn">Cancel</button>
-        <button type="submit" class="btn-save-student" id="modal-save-btn">Save Student</button>
-      </div>
-    </div>
-                </form>
-  </div>
-    
-</body>
-</html>
+// If accessed directly without POST, redirect back
+header("Location: students.php");
+exit;
+?>

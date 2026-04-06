@@ -28,7 +28,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
   $photo          = $_FILES['photo']['name'] ?? '';
   $temp           = $_FILES['photo']['tmp_name'] ?? '';
 
-  // Upload photo 
+  // Upload photo to folder uploads
   if(!empty($temp)) {
     move_uploaded_file($temp, "uploads/" . $photo);
   }
