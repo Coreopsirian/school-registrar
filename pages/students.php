@@ -452,7 +452,7 @@ if (!empty($_GET['edit_id'])) {
   <?php endif; ?>
 
 
-  //auto open edit modal
+  <!-- auto open edit modal -->
   <?php if (!empty($_GET['edit_id'])): ?>
 <script>
   document.getElementById('edit-modal').classList.add('open');
