@@ -176,7 +176,7 @@ $success_message = $_GET['success'] ?? '';
                 <!-- photo of students -->
                   <td>
                     <?php if(!empty($row['photo'])): ?>
-                      <img src = "uploads/<?= htmlspecialchars($row['photo'])?>" class="student-pics"/>
+                      <img src = "uploads/<?= htmlspecialchars($row['photo'])?>" width="60" class="student-pics"/>
                       <?php endif; ?>
                   </td>
               <!-- students name -->
