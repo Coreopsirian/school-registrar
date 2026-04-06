@@ -21,6 +21,16 @@ if ($conn->connect_error) {
 $error_message   = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
 
+//fetch student for edit modal
+$edit_student = null;
+if (!empty($_GET['edit_id'])) {
+  $edit_id = intval($_GET['edit_id']);
+  $stmt = $conn->prepare("SELECT * FROM students WHERE id = ?");
+  $stmt->bind_param("i", $edit_id);
+  $stmt->execute();
+  $edit_student = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -199,7 +209,7 @@ $success_message = $_GET['success'] ?? '';
 
               <!-- Action -->
               <td>
-                <a class="btn-edit" href="edit.php?id=<?= $row['id'] ?>">Edit</a>
+                <a class="btn-edit" href="students.php?edit_id=<?= $row['id'] ?>">Edit</a>
                 <a class="btn-delete" href="delete.php?id=<?= $row['id'] ?>">Delete</a>
               </td>
             </tr>
@@ -257,6 +267,8 @@ $success_message = $_GET['success'] ?? '';
               <input type="file" name="photo" class="form-input" accept="image/*" id="photo-file-input" />
             </div>
 
+
+          <input type="hidden" name="id" value="<?= $edit_student['id'] ?? '' ?>">
 
         <div class="form-grid">
           <div class="form-group">
@@ -328,6 +340,101 @@ $success_message = $_GET['success'] ?? '';
     </div>
                 </form>
   </div>
+
+  <!-- EDIT STUDENT MODAL -->
+   <div class="student-modal-overlay" id="edit-modal">
+  <div class="student-modal-box">
+    <div class="student-modal-header">
+      <h2>Edit Student</h2>
+      <a href="students.php" class="student-modal-close">&times;</a>
+    </div>
+
+    <form action="edit.php" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="id"             value="<?= $edit_student['id']    ?? '' ?>">
+      <input type="hidden" name="existing_photo" value="<?= htmlspecialchars($edit_student['photo'] ?? '') ?>">
+
+      <div class="student-modal-body">
+
+        <?php if (!empty($error_message) && !empty($_GET['edit_id'])): ?>
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong><?= htmlspecialchars($error_message) ?></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        <?php endif; ?>
+
+        <div class="photo-upload-area">
+          <label class="form-label">Student Photo</label>
+          <?php if (!empty($edit_student['photo'])): ?>
+            <img src="uploads/<?= htmlspecialchars($edit_student['photo']) ?>" class="student-pics" style="display:block;margin-bottom:8px;"/>
+          <?php endif; ?>
+          <input type="file" name="photo" class="form-input" accept="image/*"/>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">First Name *</label>
+            <input type="text" class="form-input" name="first_name"
+                   value="<?= htmlspecialchars($edit_student['first_name'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Middle Name</label>
+            <input type="text" class="form-input" name="middle_name"
+                   value="<?= htmlspecialchars($edit_student['middle_name'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name *</label>
+            <input type="text" class="form-input" name="last_name"
+                   value="<?= htmlspecialchars($edit_student['last_name'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">LRN *</label>
+            <input type="text" class="form-input" name="lrn"
+                   value="<?= htmlspecialchars($edit_student['lrn'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Grade &amp; Section *</label>
+            <select class="form-select" name="grade_level_id">
+              <option value="">Select Grade</option>
+              <option value="1" <?= ($edit_student['grade_level_id'] ?? '') == 1 ? 'selected' : '' ?>>Grade 7</option>
+              <option value="2" <?= ($edit_student['grade_level_id'] ?? '') == 2 ? 'selected' : '' ?>>Grade 8</option>
+              <option value="3" <?= ($edit_student['grade_level_id'] ?? '') == 3 ? 'selected' : '' ?>>Grade 9</option>
+              <option value="4" <?= ($edit_student['grade_level_id'] ?? '') == 4 ? 'selected' : '' ?>>Grade 10</option>
+            </select>
+            <select class="form-select" name="section_id">
+              <option value="">Select Section</option>
+              <option value="1" <?= ($edit_student['section_id'] ?? '') == 1 ? 'selected' : '' ?>>Newton</option>
+              <option value="2" <?= ($edit_student['section_id'] ?? '') == 2 ? 'selected' : '' ?>>Einstein</option>
+              <option value="3" <?= ($edit_student['section_id'] ?? '') == 3 ? 'selected' : '' ?>>Curie</option>
+              <option value="4" <?= ($edit_student['section_id'] ?? '') == 4 ? 'selected' : '' ?>>Franklin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" class="form-input" name="city" placeholder="e.g. Quezon City"
+                   value="<?= htmlspecialchars($edit_student['city'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact</label>
+            <input type="text" class="form-input" name="contact_number" placeholder="e.g. 09XX-XXX-XXXX"
+                   value="<?= htmlspecialchars($edit_student['contact_number'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="old" <?= ($edit_student['student_type'] ?? '') === 'old' ? 'selected' : '' ?>>Old Student</option>
+              <option value="new" <?= ($edit_student['student_type'] ?? '') === 'new' ? 'selected' : '' ?>>New Student</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="student-modal-footer">
+        <a href="students.php" class="btn-cancel">Cancel</a>
+        <button type="submit" class="btn-save-student">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>
