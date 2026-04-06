@@ -19,19 +19,19 @@ $error__message = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
 
 //pagination cnt
-$result1 = mysqli_query($conn, "SELECT * FROM students");
+$result1 = mysqli_query($conn, "SELECT s.id FROM students s
+    LEFT JOIN grade_levels g ON s.grade_level_id = g.id
+    LEFT JOIN sections sec ON s.section_id = sec.id");
 $total_records = mysqli_num_rows($result1);
 $total_pages = ceil($total_records / $limit);
 
 $result = mysqli_query($conn, "SELECT * FROM students LIMIT $limit OFFSET $offset");
-?>
 
-
-  <!--get message form add.php -->
+  //  message form add.php  
 $error_message   = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
 
-<!--fetch student for edit modal-->
+//fetch student for edit modal
 $edit_student = null;
 if (!empty($_GET['edit_id'])) {
   $edit_id = intval($_GET['edit_id']);
@@ -180,7 +180,8 @@ if (!empty($_GET['edit_id'])) {
             $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
               LEFT JOIN grade_levels g ON s.grade_level_id = g.id
               LEFT JOIN sections sec ON s.section_id = sec.id
-              ORDER BY s.last_name ASC";
+              ORDER BY s.last_name ASC
+              LIMIT $limit OFFSET $offset";
 
             $result = $conn-> query($sql);
              //check if query executed prperly
