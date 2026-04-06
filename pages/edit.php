@@ -77,12 +77,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // If accessed directly without POST, redirect back
 header("Location: students.php");
 
-//auto open edit modal
-<?php if (!empty($_GET['edit_id'])): ?>
-
-<script>
-  document.getElementById('edit-modal').classList.add('open');
-</script>
-<?php endif; ?>
 
 ?>

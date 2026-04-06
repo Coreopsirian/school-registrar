@@ -350,7 +350,7 @@ if (!empty($_GET['edit_id'])) {
     </div>
 
     <form action="edit.php" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="id"             value="<?= $edit_student['id']    ?? '' ?>">
+      <input type="hidden" name="id" value="<?= $edit_student['id']    ?? '' ?>">
       <input type="hidden" name="existing_photo" value="<?= htmlspecialchars($edit_student['photo'] ?? '') ?>">
 
       <div class="student-modal-body">
@@ -450,5 +450,13 @@ if (!empty($_GET['edit_id'])) {
     document.getElementById('student-modal').classList.add('open');
   </script>
   <?php endif; ?>
+
+
+  //auto open edit modal
+  <?php if (!empty($_GET['edit_id'])): ?>
+<script>
+  document.getElementById('edit-modal').classList.add('open');
+</script>
+<?php endif; ?>
 </body>
 </html>
