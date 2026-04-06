@@ -13,6 +13,7 @@ $conn = new mysqli($servername, $email, $password, $database);
 
 $sql = "DELETE FROM students WHERE id = $id";
 $conn-> query($sql);
-
+header("Location: ./students.php");
+exit;
 }
 ?>
