@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -22,7 +22,7 @@
       </div>
 
       <!-- MODAL FORM -->
-      <form action="add.php" method="POST" enctype="multipart/form-data">
+      <form action="student.php" method="POST" enctype="multipart/form-data">
          
       <div class="student-modal-body">
              <?php // check if erro rmssg is not empty
@@ -56,7 +56,7 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-input" name ="first_name" id="field-firstname" />
+            <input type="hidden" class="form-input" name ="first_name" id="field-firstname" />
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
