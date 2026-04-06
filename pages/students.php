@@ -1,27 +1,37 @@
 <?php
+include('../mysql/db.php'); 
+
+
 session_start();
 //add to database
+
 if (!isset($_SESSION['name'])) {
   header('Location: ../index.php');
   exit();
 }
 
- //for connection
-$servername = "localhost";
-$email = "root";
-$password = "";
-$database = "school_registrar";
+$limit = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
-$conn = new mysqli($servername, $email, $password, $database);
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+//error/success
+$error__message = $_GET['error'] ?? '';
+$success_message = $_GET['success'] ?? '';
 
-//get message form add.php
+//pagination cnt
+$result1 = mysqli_query($conn, "SELECT * FROM students");
+$total_records = mysqli_num_rows($result1);
+$total_pages = ceil($total_records / $limit);
+
+$result = mysqli_query($conn, "SELECT * FROM students LIMIT $limit OFFSET $offset");
+?>
+
+
+  <!--get message form add.php -->
 $error_message   = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
 
-//fetch student for edit modal
+<!--fetch student for edit modal-->
 $edit_student = null;
 if (!empty($_GET['edit_id'])) {
   $edit_id = intval($_GET['edit_id']);
