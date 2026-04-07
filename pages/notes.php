@@ -55,8 +55,8 @@ if (!isset($_SESSION['name'])) {
       <div class="topbar-left">
         <div class="page-title">Notes</div>
         <div class="page-sub">Manage your notes and reminders</div>
+
       </div>
-      
       <div class="topbar-spacer"></div>
     </div>
 
