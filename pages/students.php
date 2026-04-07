@@ -27,10 +27,10 @@ $searchParam = "%$search%";
 $countSql = "SELECT COUNT(*) as total FROM students s
     LEFT JOIN grade_levels g ON s.grade_level_id = g.id
     LEFT JOIN sections sec ON s.section_id = sec.id
-    WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
+    WHERE s.first_name LIKE ? OR s.middle_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
 
 $countStmt = $conn->prepare($countSql);
-$countStmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+$countStmt->bind_param("ssss", $searchParam, $searchParam, $searchParam,$searchParam);
 $countStmt->execute();
 $total_records = $countStmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $limit);
@@ -45,7 +45,7 @@ $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name
         ORDER BY s.last_name ASC
         LIMIT $limit OFFSET $offset";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+$stmt->bind_param("ssss", $searchParam, $searchParam, $searchParam, $searchParam);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -74,6 +74,7 @@ if (!empty($_GET['edit_id'])) {
   <title>Students — School Portal</title>
   <link rel="icon" type="image/png" href="../images/COJ.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
