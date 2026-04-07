@@ -325,6 +325,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
+   flex-wrap: wrap;
   flex-shrink: 0;
 }
 

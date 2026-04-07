@@ -140,23 +140,22 @@ if (!empty($_GET['edit_id'])) {
 
       <div class="topbar-searchh">       
             <form method="GET" action="students.php" class="input-group">
-              <!--page number shown-->
-             <?php if(!empty($search)): ?>
-                <input type="hidden" name="page" value="1">
-              <?php endif; ?>
-        <div class="input-group">
-             <input type="search" 
-             name="search"          
-             class="form-control rounded" 
-             placeholder="Search name or LRN" 
-             value="<?= htmlspecialchars($search ?? '') ?>"
-             aria-label="Search" />
-
-
+                  <!--page number shown-->
+                <?php if(!empty($search)): ?>
+                    <input type="hidden" name="page" value="1">
+                  <?php endif; ?>
+         
+                <input type="search" 
+                name="search"          
+                class="form-control rounded" 
+                placeholder="Search name or LRN" 
+                value="<?= htmlspecialchars($search ?? '') ?>"
+                aria-label="Search" />
               <button type="submit" class="btn btn-outline-primary">Search</button>
-            </form>
-        </div>
+      
+         </form>
     </div>
+     </div>
 
     <div id="page-container">
       <div id="page-students">

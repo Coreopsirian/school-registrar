@@ -3,6 +3,23 @@
    ========================================================== */
 
 /* ===== TOOLBAR ===== */
+
+#main {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.table-card {
+  overflow-x: auto;
+  border: 3px solid red;
+}
+
+#students-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+
 .topbar-searchh {
   display: flex;
   align-items: center;
@@ -106,6 +123,7 @@
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow);
+
 }
 
 #page-students table {
