@@ -52,7 +52,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
   exit;
 }
 
-// If accessed directly without POST
+// 
 header("Location: students.php");
 exit;
 ?>

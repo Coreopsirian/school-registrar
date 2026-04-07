@@ -19,10 +19,12 @@ $error__message = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
 
 //pagination cnt
-$result1 = mysqli_query($conn, "SELECT s.id FROM students s
+$result1 = mysqli_query($conn, "SELECT COUNT(*) AS total FROM students s
     LEFT JOIN grade_levels g ON s.grade_level_id = g.id
     LEFT JOIN sections sec ON s.section_id = sec.id");
-$total_records = mysqli_num_rows($result1);
+
+$row1 = mysqli_fetch_assoc($result1);
+$total_records = $row1['total'];
 $total_pages = ceil($total_records / $limit);
 
 $result = mysqli_query($conn, "SELECT * FROM students LIMIT $limit OFFSET $offset");
