@@ -41,7 +41,7 @@ $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name
         FROM students s
         LEFT JOIN grade_levels g ON s.grade_level_id = g.id
         LEFT JOIN sections sec ON s.section_id = sec.id
-        WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?
+        WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.middle_name LIKE ?  OR s.lrn LIKE ?
         ORDER BY s.last_name ASC
         LIMIT $limit OFFSET $offset";
 $stmt = $conn->prepare($sql);
