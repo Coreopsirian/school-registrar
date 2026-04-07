@@ -240,7 +240,6 @@ if (!empty($_GET['edit_id'])) {
                 <div class="student-name">
                   <?= htmlspecialchars($row['last_name'].', '. $row['first_name'].' '. $row['middle_name']) ?>
                 </div>
-                <div class="student-type"><?= $row['student_type']?> Student</div>
               </td>
               <!-- LRN -->
               <td><?= htmlspecialchars($row['lrn']) ?></td>
