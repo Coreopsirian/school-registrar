@@ -18,7 +18,35 @@ $offset = ($page - 1) * $limit;
 $error__message = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
 
-//pagination cnt
+$search = $_GET['search'] ?? '';
+$searchParam = "%$search%";
+
+//search for specific student
+$countSql = "SELECT COUNT(*) as total FROM students s
+    LEFT JOIN grade_levels g ON s.grade_level_id = g.id
+    LEFT JOIN sections sec ON s.section_id = sec.id
+    WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
+    
+$countStmt = $conn->prepare($countSql);
+$countStmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+$countStmt->execute();
+$total_records = $countStmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $limit);
+
+$sql = "SELECT s.*, g.name as grade_name, sec.name as section_name 
+        FROM students s
+        LEFT JOIN grade_levels g ON s.grade_level_id = g.id
+        LEFT JOIN sections sec ON s.section_id = sec.id
+        WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?
+        ORDER BY s.last_name ASC
+        LIMIT $limit OFFSET $offset";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+$stmt->execute();
+$result = $stmt->get_result();
+
+
+//pagination counnt
 $result1 = mysqli_query($conn, "SELECT COUNT(*) AS total FROM students s
     LEFT JOIN grade_levels g ON s.grade_level_id = g.id
     LEFT JOIN sections sec ON s.section_id = sec.id");
@@ -231,11 +259,24 @@ if (!empty($_GET['edit_id'])) {
             </tbody>
           </table>
 
-          <div class="pagination-row" id="pagination-row">
-            <span id="pagination-info"></span>
-            <div class="pagination-btns" id="pagination-btns"></div>
-          </div>
-        </div>
+        <!-- Pagination  -->
+<div class="pagination-row" id="pagination-row">
+  <span id="pagination-info">
+    Showing <?= min($offset + 1, $total_records) ?>–<?= min($offset + $limit, $total_records) ?> of <?= $total_records ?> students
+  </span>
+
+  <nav>
+    <ul class="pagination">
+      <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+        <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+          <a class="page-link" href="students.php?page=<?= $i ?>">
+            <?= $i ?>
+          </a>
+        </li>
+      <?php endfor; ?>
+    </ul>
+  </nav>
+</div>
 
       </div>
     </div>
@@ -336,7 +377,7 @@ if (!empty($_GET['edit_id'])) {
           <div class="form-group">
             <label class="form-label">Status</label>
             <select  name = "status" class="form-select" id="field-status"  >
-              <option value="old">Old student</option>
+              <option value="old" style="color:black;">Old student</option>
               <option value="new">New student</option>
             </select>
           </div>

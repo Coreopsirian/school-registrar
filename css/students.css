@@ -223,7 +223,7 @@
 /* ===== BADGES ===== */
 #page-students .badge-active {
   background: #e6f9f0;
-  color: var(--color-success);
+  color: black;
   padding: 3px 12px;
   border-radius: 99px;
   font-size: 12px;
