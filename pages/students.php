@@ -209,19 +209,6 @@ if (!empty($_GET['edit_id'])) {
 
             <tbody>
             <?php
-    
-             //query db since grades and section r on diff table we use JOIN and ordered alphabetically last name
-            $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name FROM students s
-              LEFT JOIN grade_levels g ON s.grade_level_id = g.id
-              LEFT JOIN sections sec ON s.section_id = sec.id
-              ORDER BY s.last_name ASC
-              LIMIT $limit OFFSET $offset";
-
-            $result = $conn-> query($sql);
-             //check if query executed prperly
-            if(!$result){
-              die("Invalid query: " . $conn->error);
-            }
               //read data of each row; uses internal id for edit/delete links
               while($row = $result->fetch_assoc()):
                 $badge = $row['student_type'] === 'new' ? 'badge_active' : 'badge_inactive';
