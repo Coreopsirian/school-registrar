@@ -26,18 +26,7 @@ $success_message = $_GET['success'] ?? '';
 $search = $_GET['search'] ?? '';
 $searchParam = "%$search%";
 
-//search for specific student
-$countSql = "SELECT COUNT(*) as total FROM students s
-    LEFT JOIN grade_levels g ON s.grade_level_id = g.id
-    LEFT JOIN sections sec ON s.section_id = sec.id
-    WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
-
-$countStmt = $conn->prepare($countSql);
-$countStmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
-$countStmt->execute();
-$total_records = $countStmt->get_result()->fetch_assoc()['total'];
-$total_pages = ceil($total_records / $limit);
-
+//search filter for student either by name or lrn 
 $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name 
         FROM students s
         LEFT JOIN grade_levels g ON s.grade_level_id = g.id
@@ -50,6 +39,17 @@ $stmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
 $stmt->execute();
 $result = $stmt->get_result();
 
+
+$countSql = "SELECT COUNT(*) as total FROM students s
+    LEFT JOIN grade_levels g ON s.grade_level_id = g.id
+    LEFT JOIN sections sec ON s.section_id = sec.id
+    WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
+
+$countStmt = $conn->prepare($countSql);
+$countStmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+$countStmt->execute();
+$total_records = $countStmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $limit);
 
 //pagination counnt
 $result1 = mysqli_query($conn, "SELECT COUNT(*) AS total FROM students s
@@ -165,8 +165,8 @@ if (!empty($_GET['edit_id'])) {
              aria-label="Search" />
 
 
-        <button type="button" class="btn btn-outline-primary" data-mdb-ripple-init>search</button>
-        </div>
+              <button type="submit" class="btn btn-outline-primary">Search</button>
+            </form>
         </div>
     </div>
 
