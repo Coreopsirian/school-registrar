@@ -151,9 +151,21 @@ if (!empty($_GET['edit_id'])) {
       </div>
 
       <div class="topbar-searchh">       
+            <form method="GET" action="students.php" class="input-group">
+              <!--page number shown-->
+             <?php if(!empty($search)): ?>
+                <input type="hidden" name="page" value="1">
+              <?php endif; ?>
         <div class="input-group">
-          <input type="search" class="form-control rounded" placeholder="Search" aria-label="Search" aria-describedby="search-addon" />
-          <button type="button" class="btn btn-outline-primary" data-mdb-ripple-init>search</button>
+             <input type="search" 
+             name="search"          
+             class="form-control rounded" 
+             placeholder="Search name or LRN" 
+             value="<?= htmlspecialchars($search ?? '') ?>"
+             aria-label="Search" />
+
+
+        <button type="button" class="btn btn-outline-primary" data-mdb-ripple-init>search</button>
         </div>
         </div>
     </div>
