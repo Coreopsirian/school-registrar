@@ -5,6 +5,11 @@ include('../mysql/db.php');
 session_start();
 //add to database
 
+//search varibale
+$search = $_GET['search'] ?? '';
+$searchParam = "%$search%";
+
+
 if (!isset($_SESSION['name'])) {
   header('Location: ../index.php');
   exit();
@@ -26,7 +31,7 @@ $countSql = "SELECT COUNT(*) as total FROM students s
     LEFT JOIN grade_levels g ON s.grade_level_id = g.id
     LEFT JOIN sections sec ON s.section_id = sec.id
     WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
-    
+
 $countStmt = $conn->prepare($countSql);
 $countStmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
 $countStmt->execute();
