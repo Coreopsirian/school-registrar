@@ -184,7 +184,11 @@ if (!empty($_GET['edit_id'])) {
             </div>
           </div>
           <div class="toolbar-right">
-            <button class="btn-export" id="btn-export"><i class="bi bi-download"></i> Export</button>
+            <!-- Replace the export button -->
+            <a href="export.php?search=<?= urlencode($search) ?>" 
+              class="btn-export" id="btn-export">
+              <i class="bi bi-download"></i> Export
+              </a>
             <button class="btn-add"    id="btn-add-student">+ Add Students</button>
           </div>
         </div>
