@@ -27,7 +27,7 @@ $row1 = mysqli_fetch_assoc($result1);
 $total_records = $row1['total'];
 $total_pages = ceil($total_records / $limit);
 
-$result = mysqli_query($conn, "SELECT * FROM students LIMIT $limit OFFSET $offset");
+$result1 = mysqli_query($conn, "SELECT * FROM students LIMIT $limit OFFSET $offset");
 
   //  message form add.php  
 $error_message   = $_GET['error'] ?? '';
@@ -232,7 +232,7 @@ if (!empty($_GET['edit_id'])) {
           </table>
 
           <div class="pagination-row" id="pagination-row">
-            <span id="pagination-info">Showing 0–0 of 0 students</span>
+            <span id="pagination-info"></span>
             <div class="pagination-btns" id="pagination-btns"></div>
           </div>
         </div>
