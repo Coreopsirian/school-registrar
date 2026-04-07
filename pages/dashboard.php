@@ -3,11 +3,15 @@ if(session_id() == "") {
   session_start();
 }
 
-//ensures only the logged in user can see dasbaord
+//ONNLY THE LOGGED IN USERR CAN ACCESS
 if (!isset($_SESSION['name'])) {
   header('location: ../index.php');
   exit();
 }
+
+$total = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM students"))['total'];
+$new = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM students WHERE student_type='new'"))['total'];
+$old = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM students WHERE student_type='old'"))['total'];
 
 ?>
 
@@ -86,18 +90,32 @@ if (!isset($_SESSION['name'])) {
       <div class="topbar-space"></div>
     </div>
 
-    <div id="page-container">
-      <div class="dash-grid-top">
-        <div class="dash-card"></div>
-        <div class="dash-card"></div>
-        <div class="dash-card"></div>
-        <div class="dash-card"></div>
-      </div>
-      <div class="dash-grid-bottom">
-        <div class="dash-card-lg"></div>
-        <div class="dash-card-lg"></div>
+    <div class="row g-3">
+  <div class="col-md-4">
+    <div class="card text-white bg-primary">
+      <div class="card-body">
+        <h5 class="card-title">Total Students</h5>
+        <h2><?= $total ?></h2>
       </div>
     </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-success">
+      <div class="card-body">
+        <h5 class="card-title">New Students</h5>
+        <h2><?= $new ?></h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-secondary">
+      <div class="card-body">
+        <h5 class="card-title">Old Students</h5>
+        <h2><?= $old ?></h2>
+      </div>
+    </div>
+  </div>
+</div>
 
   </div>
 
