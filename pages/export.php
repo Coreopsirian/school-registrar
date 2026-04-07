@@ -26,7 +26,7 @@ $stmt->bind_param("ssss", $searchParam, $searchParam, $searchParam, $searchParam
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Build data array
+
 $rows = [];
 $rows[] = ['Last Name', 'First Name', 'Middle Name', 'LRN', 
            'Grade', 'Section', 'City', 'Contact', 'Status'];
@@ -45,7 +45,7 @@ while ($row = $result->fetch_assoc()) {
     ];
 }
 
-// Output as CSV (
+// Output as CSV or exell
 header('Content-Type: text/csv');
 header('Content-Disposition: attachment; filename="students_report.csv"');
 

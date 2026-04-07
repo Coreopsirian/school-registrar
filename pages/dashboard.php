@@ -3,7 +3,7 @@ if(session_id() == "") {
   session_start();
 }
 
-//ensures only the logged in user can see dasbaord
+//ONNLY THE LOGGED IN USERR CAN ACCESS
 if (!isset($_SESSION['name'])) {
   header('location: ../index.php');
   exit();
