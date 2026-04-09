@@ -306,3 +306,28 @@
   opacity: 0.4;
   cursor: default;
 }
+
+/* ===== INLINE ACTION LINKS (View / Edit / Delete) ===== */
+.btn-view, .btn-edit, .btn-delete {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: 4px;
+  transition: opacity 0.2s;
+}
+.btn-view   { background: #e8eaf6; color: var(--accent); }
+.btn-edit   { background: #fff8e1; color: #b8860b; }
+.btn-delete { background: #fdeaea; color: var(--color-danger); }
+.btn-view:hover, .btn-edit:hover, .btn-delete:hover { opacity: 0.75; }
+
+/* student pics in table */
+.student-pics {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+}

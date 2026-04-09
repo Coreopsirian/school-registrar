@@ -27,7 +27,8 @@ $searchParam = "%$search%";
 $countSql = "SELECT COUNT(*) as total FROM students s
     LEFT JOIN grade_levels g ON s.grade_level_id = g.id
     LEFT JOIN sections sec ON s.section_id = sec.id
-    WHERE s.first_name LIKE ? OR s.middle_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?";
+    WHERE (s.first_name LIKE ? OR s.middle_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?)
+    AND s.is_archived = 0";
 
 $countStmt = $conn->prepare($countSql);
 $countStmt->bind_param("ssss", $searchParam, $searchParam, $searchParam,$searchParam);
@@ -41,7 +42,8 @@ $sql = "SELECT s.*, g.name as grade_name, sec.name as section_name
         FROM students s
         LEFT JOIN grade_levels g ON s.grade_level_id = g.id
         LEFT JOIN sections sec ON s.section_id = sec.id
-        WHERE s.first_name LIKE ? OR s.last_name LIKE ? OR s.middle_name LIKE ?  OR s.lrn LIKE ?
+        WHERE (s.first_name LIKE ? OR s.last_name LIKE ? OR s.middle_name LIKE ? OR s.lrn LIKE ?)
+        AND s.is_archived = 0
         ORDER BY s.last_name ASC
         LIMIT $limit OFFSET $offset";
 $stmt = $conn->prepare($sql);
@@ -245,8 +247,9 @@ if (!empty($_GET['edit_id'])) {
 
               <!-- Action -->
               <td>
+                <a class="btn-view" href="student_profile.php?id=<?= $row['id'] ?>">View</a>
                 <a class="btn-edit" href="students.php?edit_id=<?= $row['id'] ?>">Edit</a>
-                <a class="btn-delete" href="delete.php?id=<?= $row['id'] ?>">Delete</a>
+                <a class="btn-delete" href="delete.php?id=<?= $row['id'] ?>" onclick="return confirm('Archive this student?')">Archive</a>
               </td>
             </tr>
 
