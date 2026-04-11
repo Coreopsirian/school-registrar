@@ -44,3 +44,21 @@ CREATE TABLE IF NOT EXISTS teacher_attendance (
   FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
   UNIQUE KEY unique_attendance (teacher_id, date)
 );
+
+
+<!-- USER ROLES — run these to add role-based access control -->
+
+<!-- 1. Add role and is_active columns to existing users table -->
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role ENUM('superadmin', 'registrar') NOT NULL DEFAULT 'registrar';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1;
+
+<!-- 2. Seed the first superadmin account -->
+<!-- Password below is: Admin@1234  — CHANGE THIS after first login -->
+INSERT INTO users (name, email, password, role, is_active)
+VALUES (
+  'Super Admin',
+  'superadmin@school.com',
+  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  'superadmin',
+  1
+) ON DUPLICATE KEY UPDATE role='superadmin';

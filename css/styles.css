@@ -52,7 +52,6 @@ body {
   background: var(--sidebar-bg);
   height: 100vh;
   display: flex;
-  min-width: 280px;
   flex-direction: column;
   z-index: 100;
   flex-shrink: 0;

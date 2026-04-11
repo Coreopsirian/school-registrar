@@ -62,11 +62,15 @@ $photo    = !empty($teacher['photo']) ? 'uploads/' . htmlspecialchars($teacher['
     </div>
     <div class="sidebar-toggle"><button class="toggle-btn" id="toggleBtn">&#9664;</button></div>
     <nav class="sidebar-nav">
-      <div class="nav-item" data-href="dashboard.php" data-label="Dashboard"><span class="nav-icon"><i class="bi bi-bar-chart-fill"></i></span><span class="nav-text">Dashboard</span></div>
+      <div class="nav-item" data-href="dashboard.php" data-label="Dashboard"><span class="nav-icon"><i class="bi bi-grid-fill"></i></span><span class="nav-text">Dashboard</span></div>
       <div class="nav-item" data-href="students.php" data-label="Students"><span class="nav-icon"><i class="bi bi-people-fill"></i></span><span class="nav-text">Students</span></div>
-      <div class="nav-item active" data-href="attendance.php" data-label="Attendance"><span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span><span class="nav-text">Attendance</span></div>
+      <div class="nav-item active" data-href="teachers.php" data-label="Teachers"><span class="nav-icon"><i class="bi bi-person-workspace"></i></span><span class="nav-text">Teachers</span></div>
+      <div class="nav-item" data-href="attendance.php" data-label="Attendance"><span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span><span class="nav-text">Attendance</span></div>
       <div class="nav-item" data-href="reports.php" data-label="Reports"><span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span><span class="nav-text">Reports</span></div>
       <div class="nav-item" data-href="notes.php" data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
+      <?php if (($_SESSION['role'] ?? '') === 'superadmin'): ?>
+      <div class="nav-item" data-href="users.php" data-label="Users"><span class="nav-icon"><i class="bi bi-shield-lock-fill"></i></span><span class="nav-text">Users</span></div>
+      <?php endif; ?>
     </nav>
     <div class="sidebar-footer">
       <a href="../logout.php" class="logout-btn">

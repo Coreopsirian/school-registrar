@@ -11,7 +11,6 @@
 
 .table-card {
   overflow-x: auto;
-  border: 3px solid red;
 }
 
 #students-table {
@@ -331,3 +330,30 @@
   object-fit: cover;
   border: 2px solid var(--color-border);
 }
+
+/* ===== TOPBAR SEARCH ===== */
+.topbar-search-input {
+  border: none;
+  outline: none;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--color-text);
+  background: transparent;
+  width: 100%;
+}
+
+.topbar-search-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.topbar-search-btn:hover { opacity: 0.88; }

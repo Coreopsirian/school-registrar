@@ -39,31 +39,31 @@ else{
             $row =$result->fetch_assoc(); //gets pass from db
             $db_password = $row['password'];
             if (password_verify($password, $db_password)) {
-              //former is the types password, cross check if same on db
-              $_SESSION['name'] = $row["name"];
-              if(isset($_POST['remember'])){
-                $remember = $_POST['remember'];
-                //create two cookies (email and remember checkbox)
-                //  email is displayed and checbox is checed
-                setcookie("cookie_email", $email, time() + 60*60*24*30, '/'); //lasts for 30days only
-                setcookie("cookie_remember", $remember, time() + 60*60*24*30, '/');
-              }
-              else{ //if cookie is beyond 30 days; automatically deleted
-                if(isset($_COOKIE['cookie_email'])){
-                  setcookie("cookie_email", $email, time() - 60*60*24*30, '/'); 
+              if (!$row['is_active']) {
+                $password_err = "This account has been deactivated. Contact your administrator.";
+              } else {
+                $_SESSION['name']    = $row["name"];
+                $_SESSION['role']    = $row["role"];
+                $_SESSION['user_id'] = $row["id"];
+                if(isset($_POST['remember'])){
+                  $remember = $_POST['remember'];
+                  setcookie("cookie_email", $email, time() + 60*60*24*30, '/');
+                  setcookie("cookie_remember", $remember, time() + 60*60*24*30, '/');
+                } else {
+                  if(isset($_COOKIE['cookie_email'])){
+                    setcookie("cookie_email", $email, time() - 60*60*24*30, '/'); 
+                  }
+                  if(isset($_COOKIE['cookie_remember'])){
+                    setcookie("cookie_remember", $remember, time() - 60*60*24*30, '/');
+                  }
                 }
-                if(isset($_COOKIE['cookie_remember'])){
-                  setcookie("cookie_remember", $remember, time() - 60*60*24*30, '/');
-                }
+                header("location: pages/dashboard.php");
+                exit();
               }
-              header("location: pages/dashboard.php"); //redirect to the dashboard
-
-            }
-            else{
+            } else {
               $password_err = "Incorrect password";
             }
-          }
-          else{
+          } else {
             $email_err = "Email is not registered";
           }
 }
