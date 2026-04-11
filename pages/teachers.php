@@ -119,6 +119,9 @@ $teachers = $conn->query("SELECT * FROM teachers WHERE is_archived = 0 ORDER BY 
         <div class="page-sub"><a href="attendance.php" class="back-link"><i class="bi bi-arrow-left"></i> Back to Attendance</a></div>
       </div>
       <div class="topbar-actions">
+        <a href="archived.php?tab=teachers" class="btn-add-teacher" style="background:rgba(255,255,255,0.15);color:#fff;">
+          <i class="bi bi-archive-fill"></i> Archived
+        </a>
         <button class="btn-add-teacher" id="btn-add-teacher"><i class="bi bi-plus-lg"></i> Add Teacher</button>
       </div>
     </div>
@@ -171,11 +174,11 @@ $teachers = $conn->query("SELECT * FROM teachers WHERE is_archived = 0 ORDER BY 
         <input type="hidden" name="id" value="0">
         <div class="modal-body">
           <div class="form-grid">
-            <div class="form-group"><label>First Name *</label><input type="text" name="first_name" class="form-input" required/></div>
-            <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" class="form-input"/></div>
-            <div class="form-group"><label>Last Name *</label><input type="text" name="last_name" class="form-input" required/></div>
+            <div class="form-group"><label>First Name *</label><input type="text" name="first_name" class="form-input" pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required/></div>
+            <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" class="form-input" pattern="[a-zA-ZÀ-ÿ\s\-\.]*" title="Letters only"/></div>
+            <div class="form-group"><label>Last Name *</label><input type="text" name="last_name" class="form-input" pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required/></div>
             <div class="form-group"><label>Email</label><input type="email" name="email" class="form-input"/></div>
-            <div class="form-group"><label>Contact</label><input type="text" name="contact_number" class="form-input" placeholder="09XX-XXX-XXXX"/></div>
+            <div class="form-group"><label>Contact</label><input type="tel" name="contact_number" class="form-input" placeholder="09XXXXXXXXX" pattern="(09|\+639)\d{9}" maxlength="13" title="Valid PH number: 09XXXXXXXXX"/></div>
             <div class="form-group"><label>Subject</label><input type="text" name="subject" class="form-input"/></div>
             <div class="form-group"><label>Department</label><input type="text" name="department" class="form-input"/></div>
             <div class="form-group"><label>Photo</label><input type="file" name="photo" class="form-input" accept="image/*"/></div>
@@ -202,11 +205,11 @@ $teachers = $conn->query("SELECT * FROM teachers WHERE is_archived = 0 ORDER BY 
         <input type="hidden" name="existing_photo" value="<?= htmlspecialchars($edit_teacher['photo'] ?? '') ?>">
         <div class="modal-body">
           <div class="form-grid">
-            <div class="form-group"><label>First Name *</label><input type="text" name="first_name" class="form-input" value="<?= htmlspecialchars($edit_teacher['first_name']) ?>" required/></div>
-            <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" class="form-input" value="<?= htmlspecialchars($edit_teacher['middle_name'] ?? '') ?>"/></div>
-            <div class="form-group"><label>Last Name *</label><input type="text" name="last_name" class="form-input" value="<?= htmlspecialchars($edit_teacher['last_name']) ?>" required/></div>
+            <div class="form-group"><label>First Name *</label><input type="text" name="first_name" class="form-input" pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" value="<?= htmlspecialchars($edit_teacher['first_name']) ?>" required/></div>
+            <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" class="form-input" pattern="[a-zA-ZÀ-ÿ\s\-\.]*" title="Letters only" value="<?= htmlspecialchars($edit_teacher['middle_name'] ?? '') ?>"/></div>
+            <div class="form-group"><label>Last Name *</label><input type="text" name="last_name" class="form-input" pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" value="<?= htmlspecialchars($edit_teacher['last_name']) ?>" required/></div>
             <div class="form-group"><label>Email</label><input type="email" name="email" class="form-input" value="<?= htmlspecialchars($edit_teacher['email'] ?? '') ?>"/></div>
-            <div class="form-group"><label>Contact</label><input type="text" name="contact_number" class="form-input" value="<?= htmlspecialchars($edit_teacher['contact_number'] ?? '') ?>"/></div>
+            <div class="form-group"><label>Contact</label><input type="tel" name="contact_number" class="form-input" placeholder="09XXXXXXXXX" pattern="(09|\+639)\d{9}" maxlength="13" title="Valid PH number: 09XXXXXXXXX" value="<?= htmlspecialchars($edit_teacher['contact_number'] ?? '') ?>"/></div>
             <div class="form-group"><label>Subject</label><input type="text" name="subject" class="form-input" value="<?= htmlspecialchars($edit_teacher['subject'] ?? '') ?>"/></div>
             <div class="form-group"><label>Department</label><input type="text" name="department" class="form-input" value="<?= htmlspecialchars($edit_teacher['department'] ?? '') ?>"/></div>
             <div class="form-group"><label>Photo</label><input type="file" name="photo" class="form-input" accept="image/*"/></div>

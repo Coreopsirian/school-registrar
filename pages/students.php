@@ -7,47 +7,69 @@ if (!isset($_SESSION['name'])) {
   exit();
 }
 
-//search varibale
-$search = $_GET['search'] ?? '';
+// Fetch all school years for filter dropdown
+$school_years = $conn->query("SELECT * FROM school_years ORDER BY label DESC");
+$sy_list = [];
+while ($sy = $school_years->fetch_assoc()) $sy_list[] = $sy;
+
+// Active school year
+$active_sy = $conn->query("SELECT * FROM school_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+
+$search    = $_GET['search'] ?? '';
 $searchParam = "%$search%";
-//pagiantion limit and get
-$limit = 10;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$filter_sy   = $_GET['sy'] ?? '';
+$filter_grade  = $_GET['grade'] ?? '';
+$filter_status = $_GET['status'] ?? '';
+
+$limit  = 10;
+$page   = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
-//error/success
-$error__message = $_GET['error'] ?? '';
+$error_message   = $_GET['error'] ?? '';
 $success_message = $_GET['success'] ?? '';
-
-$search = $_GET['search'] ?? '';
-$searchParam = "%$search%";
 
 
 //count w search filter
-$countSql = "SELECT COUNT(*) as total FROM students s
+$where_parts = [
+  "(s.first_name LIKE ? OR s.middle_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?)",
+  "s.is_archived = 0"
+];
+$bind_types = "ssss";
+$bind_vals  = [$searchParam, $searchParam, $searchParam, $searchParam];
+
+if ($filter_sy) {
+  $where_parts[] = "s.school_year_id = (SELECT id FROM school_years WHERE label = ?)";
+  $bind_types .= "s"; $bind_vals[] = $filter_sy;
+}
+if ($filter_grade) {
+  $where_parts[] = "g.name = ?";
+  $bind_types .= "s"; $bind_vals[] = $filter_grade;
+}
+if ($filter_status) {
+  $where_parts[] = "s.student_type = ?";
+  $bind_types .= "s"; $bind_vals[] = $filter_status;
+}
+
+$where_sql = implode(" AND ", $where_parts);
+
+$countStmt = $conn->prepare("SELECT COUNT(*) as total FROM students s
     LEFT JOIN grade_levels g ON s.grade_level_id = g.id
     LEFT JOIN sections sec ON s.section_id = sec.id
-    WHERE (s.first_name LIKE ? OR s.middle_name LIKE ? OR s.last_name LIKE ? OR s.lrn LIKE ?)
-    AND s.is_archived = 0";
-
-$countStmt = $conn->prepare($countSql);
-$countStmt->bind_param("ssss", $searchParam, $searchParam, $searchParam,$searchParam);
+    WHERE $where_sql");
+$countStmt->bind_param($bind_types, ...$bind_vals);
 $countStmt->execute();
 $total_records = $countStmt->get_result()->fetch_assoc()['total'];
-$total_pages = ceil($total_records / $limit);
+$total_pages   = ceil($total_records / $limit);
 
-
-//search filter for student either by name or lrn 
-$sql = "SELECT s.*, g.name as grade_name, sec.name as section_name 
+$stmt = $conn->prepare("SELECT s.*, g.name as grade_name, sec.name as section_name, sy.label as school_year
         FROM students s
         LEFT JOIN grade_levels g ON s.grade_level_id = g.id
         LEFT JOIN sections sec ON s.section_id = sec.id
-        WHERE (s.first_name LIKE ? OR s.last_name LIKE ? OR s.middle_name LIKE ? OR s.lrn LIKE ?)
-        AND s.is_archived = 0
+        LEFT JOIN school_years sy ON s.school_year_id = sy.id
+        WHERE $where_sql
         ORDER BY s.last_name ASC
-        LIMIT $limit OFFSET $offset";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ssss", $searchParam, $searchParam, $searchParam, $searchParam);
+        LIMIT $limit OFFSET $offset");
+$stmt->bind_param($bind_types, ...$bind_vals);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -148,60 +170,89 @@ if (!empty($_GET['edit_id'])) {
         <div class="page-title">Student Records</div>
         <div class="page-sub">Manage and view all registered students</div>
       </div>
-
-      <div class="topbar-searchh">       
-            <form method="GET" action="students.php" class="input-group">
-                  <!--page number shown-->
-                <?php if(!empty($search)): ?>
-                    <input type="hidden" name="page" value="1">
-                  <?php endif; ?>
-         
-                <input type="search" 
-                name="search"          
-                class="topbar-search-input" 
-                placeholder="Search name or LRN" 
-                value="<?= htmlspecialchars($search ?? '') ?>"
-                aria-label="Search" />
-              <button type="submit" class="topbar-search-btn">Search</button>
-      
-         </form>
+      <div class="topbar-user-chip">
+        <i class="bi bi-person-circle"></i>
+        <span><?= htmlspecialchars($_SESSION['name']) ?></span>
+      </div>
     </div>
-     </div>
 
     <div id="page-container">
       <div id="page-students">
 
         <!-- Toolbar -->
-        <div class="students-toolbar">
-          <div class="toolbar-left">
-            <div>
-              <div class="filter-label">Filter by Grade &amp; Section:</div>
-              <select class="filter-select" id="filter-grade">
-                <option value="">All Grade &amp; Sections</option>
-                <option value="Grade 7">Grade 7</option>
-                <option value="Grade 8">Grade 8</option>
-                <option value="Grade 9">Grade 9</option>
-                <option value="Grade 10">Grade 10</option>
-              </select>
+        <form method="GET" action="students.php" id="filter-form">
+          <input type="hidden" name="page" value="1">
+          <div class="students-toolbar">
+            <div class="toolbar-left">
+
+              <!-- Search -->
+              <div class="search-wrap">
+                <i class="bi bi-search search-icon"></i>
+                <input type="search" name="search" class="toolbar-search-input"
+                       placeholder="Search name or LRN"
+                       value="<?= htmlspecialchars($search) ?>"/>
+              </div>
+
+              <!-- Grade filter -->
+              <div class="filter-group">
+                <label class="filter-label">Grade</label>
+                <select class="filter-select" name="grade" onchange="this.form.submit()">
+                  <option value="">All Grades</option>
+                  <option value="Grade 7"  <?= $filter_grade === 'Grade 7'  ? 'selected' : '' ?>>Grade 7</option>
+                  <option value="Grade 8"  <?= $filter_grade === 'Grade 8'  ? 'selected' : '' ?>>Grade 8</option>
+                  <option value="Grade 9"  <?= $filter_grade === 'Grade 9'  ? 'selected' : '' ?>>Grade 9</option>
+                  <option value="Grade 10" <?= $filter_grade === 'Grade 10' ? 'selected' : '' ?>>Grade 10</option>
+                </select>
+              </div>
+
+              <!-- Status filter -->
+              <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-select" name="status" onchange="this.form.submit()">
+                  <option value="">All</option>
+                  <option value="new" <?= $filter_status === 'new' ? 'selected' : '' ?>>New</option>
+                  <option value="old" <?= $filter_status === 'old' ? 'selected' : '' ?>>Old</option>
+                </select>
+              </div>
+
+              <!-- School Year filter -->
+              <div class="filter-group">
+                <label class="filter-label">School Year</label>
+                <select class="filter-select" name="sy" onchange="this.form.submit()">
+                  <option value="">All Years</option>
+                  <?php foreach ($sy_list as $sy): ?>
+                    <option value="<?= htmlspecialchars($sy['label']) ?>"
+                      <?= $filter_sy === $sy['label'] ? 'selected' : '' ?>>
+                      SY <?= htmlspecialchars($sy['label']) ?><?= $sy['is_active'] ? ' ✓' : '' ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+
+              <!-- Search submit -->
+              <button type="submit" class="btn-search">
+                <i class="bi bi-search"></i> Search
+              </button>
+
+              <?php if ($search || $filter_grade || $filter_status || $filter_sy): ?>
+                <a href="students.php" class="btn-clear-filters">
+                  <i class="bi bi-x-circle"></i> Clear
+                </a>
+              <?php endif; ?>
+
             </div>
-            <div>
-              <div class="filter-label">Filter by Status:</div>
-              <select class="filter-select" id="filter-status">
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="toolbar-right">
-            <!-- Replace the export button -->
-            <a href="export.php?search=<?= urlencode($search) ?>" 
-              class="btn-export" id="btn-export">
-              <i class="bi bi-download"></i> Export
+            <div class="toolbar-right">
+              <a href="archived.php" class="btn-export">
+                <i class="bi bi-archive-fill"></i> Archived
               </a>
-            <button class="btn-add"    id="btn-add-student">+ Add Students</button>
+              <a href="export.php?search=<?= urlencode($search) ?>&grade=<?= urlencode($filter_grade) ?>&status=<?= urlencode($filter_status) ?>"
+                 class="btn-export">
+                <i class="bi bi-download"></i> Export
+              </a>
+              <button type="button" class="btn-add" id="btn-add-student">+ Add Student</button>
+            </div>
           </div>
-        </div>
+        </form>
 
   
       
@@ -215,9 +266,10 @@ if (!empty($_GET['edit_id'])) {
                 <th>Name</th>
                 <th>LRN</th>
                 <th>Grade &amp; Section</th>
+                <th>School Year</th>
                 <th>City</th> 
                 <th>Contact</th>
-                <th>Status</th> <!-- old student, new-->
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -246,6 +298,8 @@ if (!empty($_GET['edit_id'])) {
               <td><?= htmlspecialchars($row['lrn']) ?></td>
               <!-- Grade & Section -->
               <td><?= htmlspecialchars($row['grade_name'] . ' - ' . $row['section_name']) ?></td>
+              <!-- School Year -->
+              <td><?= htmlspecialchars($row['school_year'] ?? '—') ?></td>
               <!-- City -->
               <td><?= htmlspecialchars($row['city']) ?></td>
                  <!-- contact -->
@@ -275,7 +329,7 @@ if (!empty($_GET['edit_id'])) {
     <ul class="pagination">
       <?php for ($i = 1; $i <= $total_pages; $i++): ?>
         <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-          <a class="page-link" href="students.php?page=<?= $i ?>">
+          <a class="page-link" href="students.php?page=<?= $i ?>&search=<?= urlencode($search) ?>&grade=<?= urlencode($filter_grade) ?>&status=<?= urlencode($filter_status) ?>&sy=<?= urlencode($filter_sy) ?>">
             <?= $i ?>
           </a>
         </li>
@@ -333,19 +387,24 @@ if (!empty($_GET['edit_id'])) {
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">First Name *</label>
-            <input type="text" class="form-input" name ="first_name" id="field-firstname" />
+            <input type="text" class="form-input" name="first_name" id="field-firstname"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required/>
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
-            <input type="text" class="form-input"  name ="middle_name" id="field-middlename"  />
+            <input type="text" class="form-input" name="middle_name" id="field-middlename"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]*" title="Letters only"/>
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
-            <input type="text" class="form-input"  name ="last_name" id="field-lastname" />
+            <input type="text" class="form-input" name="last_name" id="field-lastname"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required/>
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
-            <input type="text" class="form-input"  name ="lrn" id="field-id"  />
+            <input type="text" class="form-input" name="lrn" id="field-id"
+                   pattern="\d{12}" maxlength="12" inputmode="numeric"
+                   title="LRN must be exactly 12 digits" required/>
           </div>
           <div class="form-group">
             <!-- to follow setion from COJ -->
@@ -373,17 +432,32 @@ if (!empty($_GET['edit_id'])) {
           </div>
           <div class="form-group">
             <label class="form-label">City</label>
-            <input type="text" class="form-input" id="field-city" name = "city"  placeholder="e.g. Quezon City" />
+            <input type="text" class="form-input" id="field-city" name="city"
+                   placeholder="e.g. Quezon City"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only"/>
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" id="field-contact" name = "contact_number" placeholder="e.g. 09XX-XXX-XXXX" />
+            <input type="tel" class="form-input" id="field-contact" name="contact_number"
+                   placeholder="e.g. 09XXXXXXXXX"
+                   pattern="(09|\+639)\d{9}" maxlength="13"
+                   title="Valid PH number: 09XXXXXXXXX or +639XXXXXXXXX"/>
           </div>
          
           <div class="form-group">
+            <label class="form-label">School Year</label>
+            <select class="form-select" name="school_year_id">
+              <?php foreach ($sy_list as $sy): ?>
+                <option value="<?= $sy['id'] ?>" <?= $sy['is_active'] ? 'selected' : '' ?>>
+                  SY <?= htmlspecialchars($sy['label']) ?><?= $sy['is_active'] ? ' (Current)' : '' ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="form-group">
             <label class="form-label">Status</label>
-            <select  name = "status" class="form-select" id="field-status"  >
-              <option value="old" style="color:black;">Old student</option>
+            <select name="status" class="form-select" id="field-status">
+              <option value="old">Old student</option>
               <option value="new">New student</option>
             </select>
           </div>
@@ -434,21 +508,26 @@ if (!empty($_GET['edit_id'])) {
           <div class="form-group">
             <label class="form-label">First Name *</label>
             <input type="text" class="form-input" name="first_name"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required
                    value="<?= htmlspecialchars($edit_student['first_name'] ?? '') ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
             <input type="text" class="form-input" name="middle_name"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]*" title="Letters only"
                    value="<?= htmlspecialchars($edit_student['middle_name'] ?? '') ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
             <input type="text" class="form-input" name="last_name"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required
                    value="<?= htmlspecialchars($edit_student['last_name'] ?? '') ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
             <input type="text" class="form-input" name="lrn"
+                   pattern="\d{12}" maxlength="12" inputmode="numeric"
+                   title="LRN must be exactly 12 digits" required
                    value="<?= htmlspecialchars($edit_student['lrn'] ?? '') ?>"/>
           </div>
           <div class="form-group">
@@ -470,13 +549,29 @@ if (!empty($_GET['edit_id'])) {
           </div>
           <div class="form-group">
             <label class="form-label">City</label>
-            <input type="text" class="form-input" name="city" placeholder="e.g. Quezon City"
+            <input type="text" class="form-input" name="city"
+                   placeholder="e.g. Quezon City"
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only"
                    value="<?= htmlspecialchars($edit_student['city'] ?? '') ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
-            <input type="text" class="form-input" name="contact_number" placeholder="e.g. 09XX-XXX-XXXX"
+            <input type="tel" class="form-input" name="contact_number"
+                   placeholder="e.g. 09XXXXXXXXX"
+                   pattern="(09|\+639)\d{9}" maxlength="13"
+                   title="Valid PH number: 09XXXXXXXXX or +639XXXXXXXXX"
                    value="<?= htmlspecialchars($edit_student['contact_number'] ?? '') ?>"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">School Year</label>
+            <select class="form-select" name="school_year_id">
+              <?php foreach ($sy_list as $sy): ?>
+                <option value="<?= $sy['id'] ?>"
+                  <?= ($edit_student['school_year_id'] ?? '') == $sy['id'] ? 'selected' : '' ?>>
+                  SY <?= htmlspecialchars($sy['label']) ?><?= $sy['is_active'] ? ' (Current)' : '' ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">Status</label>

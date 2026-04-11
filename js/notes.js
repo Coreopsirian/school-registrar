@@ -2,6 +2,8 @@
   var notes      = [];
   var selectedId = null;
   var isNew      = false;
+  var isDirty    = false;   // tracks unsaved changes
+  var autoSaveTimer = null;
 
   // DOM refs
   var container    = document.getElementById('notesContainer');
@@ -42,7 +44,6 @@
     countLabel.textContent = 'All Notes (' + notes.length + ')';
     var emptyState = document.getElementById('emptyState');
 
-    // clear except emptyState
     container.innerHTML = '';
     container.appendChild(emptyState);
 
@@ -67,7 +68,12 @@
         '<div class="note-item-preview">' + esc(preview) + '</div>' +
         '<div class="note-item-date">' + formatDate(note.updated_at || note.created_at) + '</div>';
 
-      item.addEventListener('click', function() { selectNote(note.id); });
+      item.addEventListener('click', function() {
+        if (isDirty) {
+          if (!confirm('You have unsaved changes. Discard and switch notes?')) return;
+        }
+        selectNote(note.id);
+      });
       container.appendChild(item);
     });
   }
@@ -76,41 +82,77 @@
   function selectNote(id) {
     selectedId = id;
     isNew = false;
+    isDirty = false;
     var note = notes.find(n => n.id == id);
     if (!note) return;
 
-    titleInput.value    = note.title;
-    bodyInput.value     = note.body;
-    categorySel.value   = note.category;
+    titleInput.value      = note.title;
+    bodyInput.value       = note.body;
+    categorySel.value     = note.category;
     timestamp.textContent = 'Last edited ' + formatDate(note.updated_at);
-    charCount.textContent = note.body.length + ' chars';
+    charCount.textContent = (note.body || '').length + ' chars';
     deleteBtn.style.display = '';
+    updateSaveBtnState();
     showEditor(true);
     renderList();
   }
 
   // ── New note ─────────────────────────────────────
   addBtn.addEventListener('click', function() {
+    if (isDirty) {
+      if (!confirm('You have unsaved changes. Discard and create new note?')) return;
+    }
     selectedId = null;
     isNew = true;
-    titleInput.value    = '';
-    bodyInput.value     = '';
-    categorySel.value   = 'General';
+    isDirty = false;
+    titleInput.value      = '';
+    bodyInput.value       = '';
+    categorySel.value     = 'General';
     timestamp.textContent = '';
     charCount.textContent = '0 chars';
     deleteBtn.style.display = 'none';
+    updateSaveBtnState();
     showEditor(true);
     titleInput.focus();
     renderList();
   });
 
-  // ── Character count ──────────────────────────────
+  // ── Track changes ────────────────────────────────
+  function markDirty() {
+    isDirty = true;
+    updateSaveBtnState();
+    // Auto-save after 3 seconds of inactivity
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(function() {
+      if (isDirty) saveNote(true); // silent auto-save
+    }, 3000);
+  }
+
+  titleInput.addEventListener('input', markDirty);
   bodyInput.addEventListener('input', function() {
     charCount.textContent = bodyInput.value.length + ' chars';
+    markDirty();
+  });
+  categorySel.addEventListener('change', markDirty);
+
+  // ── Save button state ─────────────────────────────
+  function updateSaveBtnState() {
+    saveBtn.style.opacity = isDirty ? '1' : '0.6';
+    saveBtn.title = isDirty ? 'Save (Ctrl+S)' : 'No changes';
+  }
+
+  // ── Ctrl+S shortcut ──────────────────────────────
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      if (editorDiv.style.display !== 'none') saveNote(false);
+    }
   });
 
   // ── Save ─────────────────────────────────────────
-  saveBtn.addEventListener('click', function() {
+  saveBtn.addEventListener('click', function() { saveNote(false); });
+
+  function saveNote(silent) {
     var title    = titleInput.value.trim() || 'Untitled Note';
     var body     = bodyInput.value.trim();
     var category = categorySel.value;
@@ -124,13 +166,16 @@
     .then(function(res) {
       if (res.success) {
         selectedId = res.id;
-        isNew = false;
+        isNew  = false;
+        isDirty = false;
         deleteBtn.style.display = '';
-        showToast('Note saved!', 'success');
+        updateSaveBtnState();
+        timestamp.textContent = 'Last edited ' + formatDate(new Date().toISOString());
+        if (!silent) showToast('Note saved!', 'success');
         fetchNotes();
       }
     });
-  });
+  }
 
   // ── Delete ───────────────────────────────────────
   deleteBtn.addEventListener('click', function() {
@@ -147,6 +192,7 @@
     .then(function(res) {
       if (res.success) {
         selectedId = null;
+        isDirty = false;
         confirmOverlay.style.display = 'none';
         showEditor(false);
         showToast('Note deleted.', 'danger');
@@ -159,7 +205,15 @@
     confirmOverlay.style.display = 'none';
   });
 
-  // ── Search & filter listeners ─────────────────────
+  // ── Warn before leaving with unsaved changes ──────
+  window.addEventListener('beforeunload', function(e) {
+    if (isDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // ── Search & filter ───────────────────────────────
   searchInput.addEventListener('input', fetchNotes);
   catFilter.addEventListener('change', fetchNotes);
 
@@ -190,6 +244,7 @@
   }
 
   // Init
+  updateSaveBtnState();
   showEditor(false);
   fetchNotes();
 })();

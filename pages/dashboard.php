@@ -161,7 +161,6 @@ if ($teachers_exist) {
 <!-- ===== MAIN ===== -->
 <div id="main">
 
-  <!-- TOPBAR -->
   <div id="topbar">
     <div class="topbar-left">
       <div class="page-title">Dashboard</div>

@@ -9,19 +9,20 @@
 }
 
 .btn-manage-teachers {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
-  background: #fff;
-  color: var(--accent);
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.30);
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: background var(--transition);
 }
-.btn-manage-teachers:hover { opacity: 0.85; }
+.btn-manage-teachers:hover { background: rgba(255,255,255,0.28); }
 
 /* Date row */
 .att-date-row {
@@ -46,7 +47,7 @@
 
 .date-form input[type="date"] {
   border: 1.5px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 7px 12px;
   font-family: var(--font);
   font-size: 13px;
@@ -54,6 +55,12 @@
   background: var(--color-surface);
   outline: none;
   cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.date-form input[type="date"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(73,76,138,0.10);
 }
 
 .att-date-label {
@@ -187,7 +194,7 @@
 
 .att-status-select {
   border: 1.5px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
   font-family: var(--font);
   font-size: 13px;
@@ -196,11 +203,17 @@
   outline: none;
   cursor: pointer;
   min-width: 120px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.att-status-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(73,76,138,0.10);
 }
 
 .att-remarks-input {
   border: 1.5px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
   font-family: var(--font);
   font-size: 13px;
@@ -209,6 +222,12 @@
   outline: none;
   width: 100%;
   min-width: 160px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.att-remarks-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(73,76,138,0.10);
 }
 
 .btn-att-save {

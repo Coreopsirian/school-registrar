@@ -6,7 +6,11 @@
   color: rgba(255,255,255,0.75);
   text-decoration: none;
   font-size: 12px;
+  font-weight: 500;
   transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .back-link:hover { color: #fff; }
 
@@ -17,21 +21,22 @@
 }
 
 .btn-add-teacher {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
-  background: #fff;
-  color: var(--accent);
-  border: none;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.30);
   cursor: pointer;
   font-family: var(--font);
-  transition: opacity 0.2s;
+  transition: background var(--transition);
+  text-decoration: none;
 }
-.btn-add-teacher:hover { opacity: 0.85; }
+.btn-add-teacher:hover { background: rgba(255,255,255,0.28); }
 
 /* Alerts */
 .alert-success-bar, .alert-error-bar {
@@ -54,7 +59,7 @@
 .teacher-card {
   background: var(--color-surface);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   border: 1.5px solid var(--color-border);
   padding: 24px 20px;
   display: flex;
@@ -62,6 +67,12 @@
   align-items: center;
   text-align: center;
   gap: 10px;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.teacher-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
 }
 
 .teacher-card-photo img {

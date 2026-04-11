@@ -9,10 +9,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255,255,255,0.18);
   color: #fff;
-  padding: 7px 16px;
-  border-radius: 50px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
@@ -42,6 +42,13 @@
   display: flex;
   align-items: center;
   gap: 18px;
+  transition: box-shadow var(--transition), transform var(--transition);
+  cursor: default;
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
 }
 
 /* large coloured icon square — matches Image 1 reference */

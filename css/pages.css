@@ -1,17 +1,6 @@
 /* ==========================================================
-   attendance.css — Attendance, Reports, Notes styles
+   pages.css — Legacy page styles (attendance, reports, notes)
    ========================================================== */
-
-/* ===== ATTENDANCE ===== */
-
-#main {
-  display:flex;
-   min-width: 0; 
-  flex-direction: column;
-  flex: 1;
-  height: 100vh;
-  overflow: hidden;
-}
 
 #page-attendance .page-section-title {
   font-size: 22px;

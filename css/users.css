@@ -9,21 +9,21 @@
 }
 
 .btn-add-user {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
-  background: #fff;
-  color: var(--accent);
-  border: none;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.30);
   cursor: pointer;
   font-family: var(--font);
-  transition: opacity 0.2s;
+  transition: background var(--transition);
 }
-.btn-add-user:hover { opacity: 0.85; }
+.btn-add-user:hover { background: rgba(255,255,255,0.28); }
 
 /* Alerts */
 .alert-success-bar, .alert-error-bar {

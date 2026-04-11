@@ -136,7 +136,7 @@ else{
 
           </div>
 
-          <a href="#" class="forgot">Forgot password?</a>
+          <a href="#" class="forgot">Contact your administrator to reset your password.</a>
 
           <button type="submit" class="btn-login" name="submit">Log In</button>
 
