@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- Run these SQL statements in phpMyAdmin or MySQL CLI -->
 
 <!-- DATABASE -->
@@ -62,3 +63,16 @@ VALUES (
   'superadmin',
   1
 ) ON DUPLICATE KEY UPDATE role='superadmin';
+=======
+<!-- query -->
+
+CREATE DATABASE IF NOT EXISTS school_registrar;
+USE school_registrar;
+
+ INSERT INTO sections (name, grade_level_id) VALUES
+('Newton', 1),
+('Einstein', 2),
+('Curie', 3),
+('Franklin', 4);
+<!-- option value for dropdown must match the id in the database -->
+>>>>>>> 601376344b56fb29ab0efc06d2df45c88d0a2dd4
