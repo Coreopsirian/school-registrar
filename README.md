@@ -94,25 +94,23 @@ All tables use foreign keys.
 - Session-based authentication checked on every page
 - Role based access like superadmin-only pages
 - Simply designed for **intranet deployment** so sensitive student data stays on-premises
-- Compliant with RA 10173 (Data Privacy Act) intent; no third-party data exposure
+-  In compliance with RA 10173 (Data Privacy Act), we ensure no data exposure by hosting this on localhost and using prepared statements
 
 ## Out of Scope/ Limitations
 
 - No student attendance tracking (teacher attendance only)
 - No grade/marks recording or report card generation
-- No financial/ Payment Syste,
-- No Form 137 printing
-- No email notifications
+- No financial/ Payment System
 - Sections are currently fixed 
 
 
 
 ## Setup Instructions
 
-### You need the ff. (XAMPP (Apache + MySQL), PHP)
+### You need the ff. (XAMPP [Apache + MySQL], PHP)
 
 1. Open your VSCode and go to C:\xampp\htdocs\ 
-2. On your VSCode terminal type git clone https://github.com/novadar-star/school-registrar.git
+2. On your VSCode terminal and type git clone https://github.com/novadar-star/school-registrar.git
 3.Extract the folder and make sure you're inside this (C:\xampp\htdocs\school-registrar\)
 3. Start Apache and MySQL in XAMPP.
 4. Click shell and type mysql -u root. Type use school_registrar.
@@ -123,25 +121,26 @@ All tables use foreign keys.
 Super Admin
 Email:    superadmin@gmail.com
 Password: Admin@1234
+
 Registrar
 Email: timothy@gmail.com
 Password: timothy
 ```
-```
- You can change the password and email via user tab under superadmin account
-```
+
+- You can change the password and email via user tab under superadmin account
+
 ## To host the system via secure tunnel from the localhost
 
-# Type this to run ngrok
-ngrok http 80
-URL: https://xxxx.ngrok-free.app/school-registrar/pages/dashboard.php
+## Type this to run ngrok
+- ngrok http 80
+- URL: https://xxxx.ngrok-free.app/school-registrar/pages/dashboard.php
 
 
 ## Team
 
-Garra, Aaron James (frontend, design)
-Lastrilla, Timothy James (backend, database)
-Moloboco, Juan Gabriel (frontend, backend)
-Singh, Gurjindier (frontend, design)
-Raduban, James Adrian (backend, database)
-Sumanting, Darla Nova  (design, backend, database)
+- Garra, Aaron James (frontend, design)
+- Lastrilla, Timothy James (backend, database)
+- Moloboco, Juan Gabriel (frontend, backend)
+- Singh, Gurjindier (frontend, design)
+- Raduban, James Adrian (backend, database)
+- Sumanting, Darla Nova  (design, backend, database)
