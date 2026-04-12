@@ -164,7 +164,7 @@ if ($teachers_exist) {
   <div id="topbar">
     <div class="topbar-left">
       <div class="page-title">Dashboard</div>
-      <div class="page-sub">Analytics &nbsp;·&nbsp; <?= date('l, F j, Y') ?></div>
+      <div class="page-sub">Analytics Overview</div>
     </div>
     <div class="topbar-user-chip">
       <i class="bi bi-person-circle"></i>

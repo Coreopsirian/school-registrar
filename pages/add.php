@@ -55,9 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Photo upload
   $photo = '';
   if (!empty($_FILES['photo']['tmp_name'])) {
-    $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    $allowed = ['image/jpeg', 'image/png'];
     if (!in_array($_FILES['photo']['type'], $allowed)) {
-      header("Location: students.php?error=" . urlencode("Photo must be JPG, PNG, WEBP, or GIF."));
+      header("Location: students.php?error=" . urlencode("Photo must be JPG or PNG"));
       exit;
     }
     $photo = uniqid() . '_' . basename($_FILES['photo']['name']);
