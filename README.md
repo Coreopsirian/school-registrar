@@ -12,12 +12,11 @@ Export (SheetJS)
 Tunnel (ngrok)
 
 
-## Features of the system !
+## Features of the system 
 
 ### Authentication & Access Control
-- Only Login with email and password with Remember Me (30-day cookie)
+- No Signup, only Login with email and password with Remember Me (30-day cookie)
 - Two roles created: **Superadmin** and **Registrar**
-
 - Superadmin manages user accounts  can add , edit, activate/deactivate users
 - Session-based auth on every page with role checks on restricted pages
 
@@ -131,7 +130,7 @@ Password: timothy
 
 ## To host the system via secure tunnel from the localhost
 
-## Type this to run ngrok
+### Type this to run ngrok
 - ngrok http 80
 - URL: https://xxxx.ngrok-free.app/school-registrar/pages/dashboard.php
 
