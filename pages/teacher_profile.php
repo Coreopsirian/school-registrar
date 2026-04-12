@@ -14,7 +14,9 @@ $stmt->close();
 
 if (!$teacher) { header('Location: teachers.php'); exit(); }
 
-// Attendance summary (last 30 days)
+// Attendance summary (selected month, default current)
+$sel_month = $_GET['month'] ?? date('Y-m');
+
 $summary = $conn->query("
   SELECT
     SUM(status='present') as present,
@@ -23,15 +25,15 @@ $summary = $conn->query("
     COUNT(*)              as total
   FROM teacher_attendance
   WHERE teacher_id = $id
-    AND date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    AND DATE_FORMAT(date, '%Y-%m') = '$sel_month'
 ")->fetch_assoc();
 
-// Recent attendance records
+// All records for selected month
 $records = $conn->query("
   SELECT date, status, remarks FROM teacher_attendance
   WHERE teacher_id = $id
+    AND DATE_FORMAT(date, '%Y-%m') = '$sel_month'
   ORDER BY date DESC
-  LIMIT 10
 ");
 
 $fullname = htmlspecialchars($teacher['last_name'] . ', ' . $teacher['first_name'] . ' ' . ($teacher['middle_name'] ?? ''));
@@ -151,7 +153,16 @@ $photo    = !empty($teacher['photo']) ? 'uploads/' . htmlspecialchars($teacher['
 
           <!-- Attendance Summary -->
           <div class="detail-section">
-            <div class="detail-section-title"><i class="bi bi-calendar-check-fill"></i> Attendance Summary (Last 30 Days)</div>
+            <div class="detail-section-title">
+              <span><i class="bi bi-calendar-check-fill"></i> Attendance Summary</span>
+              <form method="GET" action="teacher_profile.php" style="display:inline-flex;align-items:center;gap:8px;margin-left:auto;">
+                <input type="hidden" name="id" value="<?= $teacher['id'] ?>">
+                <label style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:500;">Month:</label>
+                <input type="month" name="month" value="<?= htmlspecialchars($sel_month) ?>"
+                       onchange="this.form.submit()"
+                       style="border:none;border-radius:4px;padding:3px 8px;font-size:12px;cursor:pointer;background:#fff;color:var(--color-text);">
+              </form>
+            </div>
             <div class="att-summary-grid">
               <div class="att-summary-card" style="border-top:3px solid var(--color-success)">
                 <div class="att-summary-val" style="color:var(--color-success)"><?= $summary['present'] ?? 0 ?></div>
@@ -176,13 +187,19 @@ $photo    = !empty($teacher['photo']) ? 'uploads/' . htmlspecialchars($teacher['
             </div>
           </div>
 
-          <!-- Recent Records -->
+          <!-- Records -->
           <div class="detail-section">
-            <div class="detail-section-title"><i class="bi bi-clock-history"></i> Recent Attendance</div>
+            <div class="detail-section-title">
+              <i class="bi bi-clock-history"></i>
+              Attendance Records — <?= date('F Y', strtotime($sel_month . '-01')) ?>
+            </div>
             <table class="att-records-table">
               <thead><tr><th>Date</th><th>Status</th><th>Remarks</th></tr></thead>
               <tbody>
-                <?php while ($rec = $records->fetch_assoc()):
+                <?php
+                $has_records = false;
+                while ($rec = $records->fetch_assoc()):
+                  $has_records = true;
                   $cls = match($rec['status']) { 'present' => 'status-present', 'absent' => 'status-absent', 'late' => 'status-late', default => '' };
                 ?>
                 <tr>
@@ -191,6 +208,9 @@ $photo    = !empty($teacher['photo']) ? 'uploads/' . htmlspecialchars($teacher['
                   <td><?= htmlspecialchars($rec['remarks'] ?: '—') ?></td>
                 </tr>
                 <?php endwhile; ?>
+                <?php if (!$has_records): ?>
+                <tr><td colspan="3" style="text-align:center;padding:32px;color:var(--color-muted);">No attendance records for this month.</td></tr>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>

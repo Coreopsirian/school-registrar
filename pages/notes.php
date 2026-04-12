@@ -148,12 +148,9 @@ if (!isset($_SESSION['name'])) {
                 <option>Meeting</option>
                 <option>Concern</option>
               </select>
-              <!-- character count - NEW IMPROVEMENT -->
-              <span id="charCount" style="margin-left:auto;font-size:11px;color:var(--color-muted);">0 chars</span>
-              <span id="noteTimestamp" style="font-size:11px;color:var(--color-muted);"></span>
             </div>
 
-            <textarea id="noteBody" placeholder="Start writing your note here..."></textarea>
+            <textarea id="noteBody" placeholder="Start writing your note here!"></textarea>
           </div>
         </div>
       </div>

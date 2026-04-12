@@ -16,8 +16,6 @@
   var titleInput   = document.getElementById('noteTitle');
   var bodyInput    = document.getElementById('noteBody');
   var categorySel  = document.getElementById('noteCategory');
-  var timestamp    = document.getElementById('noteTimestamp');
-  var charCount    = document.getElementById('charCount');
   var saveBtn      = document.getElementById('saveNoteBtn');
   var deleteBtn    = document.getElementById('deleteNoteBtn');
   var confirmOverlay  = document.getElementById('notesConfirmOverlay');
@@ -89,8 +87,6 @@
     titleInput.value      = note.title;
     bodyInput.value       = note.body;
     categorySel.value     = note.category;
-    timestamp.textContent = 'Last edited ' + formatDate(note.updated_at);
-    charCount.textContent = (note.body || '').length + ' chars';
     deleteBtn.style.display = '';
     updateSaveBtnState();
     showEditor(true);
@@ -121,18 +117,14 @@
   function markDirty() {
     isDirty = true;
     updateSaveBtnState();
-    // Auto-save after 3 seconds of inactivity
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(function() {
-      if (isDirty) saveNote(true); // silent auto-save
+      if (isDirty) saveNote(true);
     }, 3000);
   }
 
   titleInput.addEventListener('input', markDirty);
-  bodyInput.addEventListener('input', function() {
-    charCount.textContent = bodyInput.value.length + ' chars';
-    markDirty();
-  });
+  bodyInput.addEventListener('input', markDirty);
   categorySel.addEventListener('change', markDirty);
 
   // ── Save button state ─────────────────────────────
@@ -170,7 +162,6 @@
         isDirty = false;
         deleteBtn.style.display = '';
         updateSaveBtnState();
-        timestamp.textContent = 'Last edited ' + formatDate(new Date().toISOString());
         if (!silent) showToast('Note saved!', 'success');
         fetchNotes();
       }

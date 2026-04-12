@@ -1,9 +1,4 @@
--- ============================================================
---  COJ Catholic Progressive School — Registrar System
---  Full Database Initialization Script
---  Run in phpMyAdmin SQL tab or MySQL CLI
---  Safe to re-run: uses IF NOT EXISTS / INSERT IGNORE
--- ============================================================
+
 
 CREATE DATABASE IF NOT EXISTS school_registrar
   CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -13,8 +8,8 @@ USE school_registrar;
 -- ============================================================
 --  USERS
 --  Stores superadmin and registrar accounts.
---  Note: uses latin1 to match existing live table.
 -- ============================================================
+
 CREATE TABLE IF NOT EXISTS `users` (
   `id`        int(11)      NOT NULL AUTO_INCREMENT,
   `email`     varchar(255) NOT NULL,

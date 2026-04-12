@@ -12,6 +12,24 @@ $school_years = $conn->query("SELECT * FROM school_years ORDER BY label DESC");
 $sy_list = [];
 while ($sy = $school_years->fetch_assoc()) $sy_list[] = $sy;
 
+// Repopulate add form values from session flash on validation error
+$rf = $_SESSION['add_form'] ?? [
+  'first_name'     => '',
+  'middle_name'    => '',
+  'last_name'      => '',
+  'lrn'            => '',
+  'grade_level_id' => '',
+  'section_id'     => '',
+  'city'           => '',
+  'contact_number' => '',
+  'status'         => 'old',
+];
+// Clear session flash after reading so it doesn't persist on next load
+if (isset($_SESSION['add_form']) && empty($_GET['open_add'])) {
+  unset($_SESSION['add_form']);
+}
+$open_add = !empty($_GET['open_add']);
+
 // Active school year
 $active_sy = $conn->query("SELECT * FROM school_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
 
@@ -388,60 +406,59 @@ if (!empty($_GET['edit_id'])) {
           <div class="form-group">
             <label class="form-label">First Name *</label>
             <input type="text" class="form-input" name="first_name" id="field-firstname"
-                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required/>
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required
+                   value="<?= htmlspecialchars($rf['first_name']) ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">Middle Name</label>
             <input type="text" class="form-input" name="middle_name" id="field-middlename"
-                   pattern="[a-zA-ZÀ-ÿ\s\-\.]*" title="Letters only"/>
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]*" title="Letters only"
+                   value="<?= htmlspecialchars($rf['middle_name']) ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">Last Name *</label>
             <input type="text" class="form-input" name="last_name" id="field-lastname"
-                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required/>
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only" required
+                   value="<?= htmlspecialchars($rf['last_name']) ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">LRN *</label>
             <input type="text" class="form-input" name="lrn" id="field-id"
                    pattern="\d{12}" maxlength="12" inputmode="numeric"
-                   title="LRN must be exactly 12 digits" required/>
+                   title="LRN must be exactly 12 digits" required
+                   value="<?= htmlspecialchars($rf['lrn']) ?>"/>
           </div>
           <div class="form-group">
-            <!-- to follow setion from COJ -->
-                           
-            <!-- Grade -->
             <label class="form-label">Grade &amp; Section *</label>
             <select class="form-select" name="grade_level_id" id="field-grade">
-              <option value="">Select Grade </option>
-              <option value="1">Grade 7</option>
-              <option value="2">Grade 8</option>
-              <option value="3">Grade 9</option>
-               <option value="4">Grade 10</option>
+              <option value="">Select Grade</option>
+              <option value="1" <?= $rf['grade_level_id'] == 1 ? 'selected' : '' ?>>Grade 7</option>
+              <option value="2" <?= $rf['grade_level_id'] == 2 ? 'selected' : '' ?>>Grade 8</option>
+              <option value="3" <?= $rf['grade_level_id'] == 3 ? 'selected' : '' ?>>Grade 9</option>
+              <option value="4" <?= $rf['grade_level_id'] == 4 ? 'selected' : '' ?>>Grade 10</option>
             </select>
-                <!-- Section -->
-              <select class="form-select" name="section_id" id="field-sectionn">
+            <select class="form-select" name="section_id" id="field-sectionn">
               <option value="">Select Section</option>
-              <option value="1">Newton</option>
-              <option value="2">Einstein</option>
-                <option value="3">Curie</option>
-              <option value="4">Franklin</option>
+              <option value="1" <?= $rf['section_id'] == 1 ? 'selected' : '' ?>>Newton</option>
+              <option value="2" <?= $rf['section_id'] == 2 ? 'selected' : '' ?>>Einstein</option>
+              <option value="3" <?= $rf['section_id'] == 3 ? 'selected' : '' ?>>Curie</option>
+              <option value="4" <?= $rf['section_id'] == 4 ? 'selected' : '' ?>>Franklin</option>
             </select>
-
-           <!-- to follow setion from COJ (plaeholder ^)-->
-
           </div>
           <div class="form-group">
             <label class="form-label">City</label>
             <input type="text" class="form-input" id="field-city" name="city"
                    placeholder="e.g. Quezon City"
-                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only"/>
+                   pattern="[a-zA-ZÀ-ÿ\s\-\.]+" title="Letters only"
+                   value="<?= htmlspecialchars($rf['city']) ?>"/>
           </div>
           <div class="form-group">
             <label class="form-label">Contact</label>
             <input type="tel" class="form-input" id="field-contact" name="contact_number"
                    placeholder="e.g. 09XXXXXXXXX"
                    pattern="(09|\+639)\d{9}" maxlength="13"
-                   title="Valid PH number: 09XXXXXXXXX or +639XXXXXXXXX"/>
+                   title="Valid PH number: 09XXXXXXXXX or +639XXXXXXXXX"
+                   value="<?= htmlspecialchars($rf['contact_number']) ?>"/>
           </div>
          
           <div class="form-group">
@@ -457,8 +474,8 @@ if (!empty($_GET['edit_id'])) {
           <div class="form-group">
             <label class="form-label">Status</label>
             <select name="status" class="form-select" id="field-status">
-              <option value="old">Old student</option>
-              <option value="new">New student</option>
+              <option value="old" <?= $rf['status'] === 'old' ? 'selected' : '' ?>>Old student</option>
+              <option value="new" <?= $rf['status'] === 'new' ? 'selected' : '' ?>>New student</option>
             </select>
           </div>
           
@@ -599,8 +616,8 @@ if (!empty($_GET['edit_id'])) {
 
 
 
-  <!-- Keep modal open if there's an error or success message -->
-  <?php if(!empty($error_message) || !empty($success_message)): ?>
+  <!-- Keep modal open only on validation error -->
+  <?php if (!empty($error_message) || $open_add): ?>
   <script>
     document.getElementById('student-modal').classList.add('open');
   </script>
