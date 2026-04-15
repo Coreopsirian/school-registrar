@@ -1,0 +1,15 @@
+# Uploaded files (photos, documents)
+pages/uploads/*
+!pages/uploads/.gitkeep
+
+# Environment / secrets
+.env
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp

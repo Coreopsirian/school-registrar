@@ -10,10 +10,9 @@ A web-based enrollment and records management system built for COJ Catholic Prog
 | | |
 |---|---|
 | **School** | COJ Catholic Progressive School |
-| **Scope** | Junior High School — Grades 7 to 10 | (subject to change once presentation is done)
-| **Interfaces** | Admin Portal + Parent Portal + Public Landing Page |
+| **Scope** | Junior High School — Grades 7 to 10  (subject to change once presentation is done) |
+| **Interfaces** | Admin Portal , Parent Portal,  Public Landing Page |
 | **Deployment** | LAN / Intranet (XAMPP) |
-| **Version** | 2.0 |
 
 ---
 
@@ -25,7 +24,6 @@ A web-based enrollment and records management system built for COJ Catholic Prog
 | Backend | PHP 8.x |
 | Database | MySQL / MariaDB |
 | Server | Apache via XAMPP |
-| Icons | Bootstrap Icons 1.11 |
 | Charts | Chart.js 4.4 |
 | Export | SheetJS (xlsx) |
 | Tunnel (dev) | ngrok |
@@ -289,7 +287,7 @@ school-registrar/
 
 ---
 
-## Known Limitations / Future Work
+## Known Limitations 
 
 - No student attendance tracking (teacher-encoded)
 - No grade/marks recording or report card generation
