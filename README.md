@@ -191,6 +191,14 @@ http://localhost/school-registrar/portal/login.php ← Parent portal
 ```
 Email:    superadmin@gmail.com
 Password: Admin@1234
+
+Registrar
+Email: timothy@gmail.com
+Password: timothy
+
+Parent Portal (=for demo)
+Email: darla.nova.sumanting360@adamson.edu.ph
+Password: darla
 ```
 > Change this immediately after first login.
 
