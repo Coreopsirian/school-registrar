@@ -189,7 +189,7 @@ http://localhost/school-registrar/portal/login.php ← Parent portal
 
 **6.** Default superadmin:
 ```
-Email:    superadmin@school.com
+Email:    superadmin@gmail.com
 Password: Admin@1234
 ```
 > Change this immediately after first login.
