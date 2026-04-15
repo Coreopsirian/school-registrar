@@ -7,36 +7,29 @@ if (!isset($_SESSION['name'])) {
   exit();
 }
 
-// ── Student stats ──────────────────────────────────────────
-$total  = $conn->query("SELECT COUNT(*) as c FROM students WHERE is_archived=0")->fetch_assoc()['c'];
-$new_s  = $conn->query("SELECT COUNT(*) as c FROM students WHERE student_type='new' AND is_archived=0")->fetch_assoc()['c'];
-$old_s  = $conn->query("SELECT COUNT(*) as c FROM students WHERE student_type='old' AND is_archived=0")->fetch_assoc()['c'];
+$active_sy = $conn->query("SELECT * FROM school_years WHERE is_active = 1 LIMIT 1")->fetch_assoc();
+$sy_id     = $active_sy['id'] ?? 0;
 
-// ── Teacher + attendance stats ─────────────────────────────
-$total_teachers = 0;
-$att_today = ['present' => 0, 'absent' => 0, 'late' => 0];
-$teachers_exist = $conn->query("SHOW TABLES LIKE 'teachers'")->num_rows > 0;
-$today = date('Y-m-d');
+// ── Enrollment stats ───────────────────────────────────────
+$total_students = $conn->query("SELECT COUNT(*) as c FROM students WHERE is_archived=0")->fetch_assoc()['c'];
 
-if ($teachers_exist) {
-  $total_teachers = $conn->query("SELECT COUNT(*) as c FROM teachers WHERE is_archived=0")->fetch_assoc()['c'];
-  $att_row = $conn->query("
-    SELECT
-      SUM(status='present') as present,
-      SUM(status='absent')  as absent,
-      SUM(status='late')    as late
-    FROM teacher_attendance WHERE date='$today'
-  ")->fetch_assoc();
-  $att_today = [
-    'present' => (int)($att_row['present'] ?? 0),
-    'absent'  => (int)($att_row['absent']  ?? 0),
-    'late'    => (int)($att_row['late']    ?? 0),
-  ];
+$enrollments_exist = $conn->query("SHOW TABLES LIKE 'enrollments'")->num_rows > 0;
+$total_enrolled = $total_pending = $total_dropped = 0;
+if ($enrollments_exist && $sy_id) {
+  $total_enrolled = $conn->query("SELECT COUNT(*) as c FROM enrollments WHERE school_year_id=$sy_id AND status='enrolled'")->fetch_assoc()['c'];
+  $total_pending  = $conn->query("SELECT COUNT(*) as c FROM enrollments WHERE school_year_id=$sy_id AND status='pending'")->fetch_assoc()['c'];
+  $total_dropped  = $conn->query("SELECT COUNT(*) as c FROM enrollments WHERE school_year_id=$sy_id AND status='dropped'")->fetch_assoc()['c'];
 }
 
-$att_rate = $total_teachers > 0
-  ? round(($att_today['present'] / $total_teachers) * 100)
-  : 0;
+// ── Payment stats ──────────────────────────────────────────
+$payments_exist = $conn->query("SHOW TABLES LIKE 'payments'")->num_rows > 0;
+$total_paid = $total_unpaid = $total_collection = $total_partial = 0;
+if ($payments_exist) {
+  $total_paid       = $conn->query("SELECT COUNT(DISTINCT student_id) as c FROM payments WHERE status='paid'")->fetch_assoc()['c'];
+  $total_partial    = $conn->query("SELECT COUNT(DISTINCT student_id) as c FROM payments WHERE status='partial'")->fetch_assoc()['c'];
+  $total_unpaid     = $conn->query("SELECT COUNT(DISTINCT student_id) as c FROM payments WHERE status='unpaid'")->fetch_assoc()['c'];
+  $total_collection = $conn->query("SELECT COALESCE(SUM(amount_paid),0) as c FROM payments")->fetch_assoc()['c'];
+}
 
 // ── Students per grade ─────────────────────────────────────
 $grade_labels = [];
@@ -54,7 +47,7 @@ while ($g = $grade_res->fetch_assoc()) {
 
 // ── Section enrollment ─────────────────────────────────────
 $sections_exist = $conn->query("SHOW TABLES LIKE 'sections'")->num_rows > 0;
-$enrollment = [];
+$enrollment_table = [];
 if ($sections_exist) {
   $enroll_res = $conn->query("
     SELECT g.name as grade, sec.name as section, COUNT(s.id) as total
@@ -64,11 +57,11 @@ if ($sections_exist) {
     GROUP BY g.id, sec.id ORDER BY g.id, sec.id
   ");
   while ($row = $enroll_res->fetch_assoc()) {
-    $enrollment[$row['grade']][$row['section']] = (int)$row['total'];
+    $enrollment_table[$row['grade']][$row['section']] = (int)$row['total'];
   }
 }
 
-// ── Recent students ────────────────────────────────────────
+// ── Recent enrollments ─────────────────────────────────────
 $recent = $conn->query("
   SELECT s.first_name, s.last_name, s.photo, g.name as grade, s.student_type, s.id
   FROM students s
@@ -76,18 +69,6 @@ $recent = $conn->query("
   WHERE s.is_archived = 0
   ORDER BY s.id DESC LIMIT 6
 ");
-
-// ── All teachers + today attendance ───────────────────────
-$all_teachers = null;
-if ($teachers_exist) {
-  $all_teachers = $conn->query("
-    SELECT t.first_name, t.last_name, t.subject, a.status
-    FROM teachers t
-    LEFT JOIN teacher_attendance a ON a.teacher_id = t.id AND a.date = '$today'
-    WHERE t.is_archived = 0
-    ORDER BY t.last_name ASC
-  ");
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -127,13 +108,17 @@ if ($teachers_exist) {
       <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
       <span class="nav-text">Students</span>
     </div>
-    <div class="nav-item" data-href="teachers.php" data-label="Teachers">
-      <span class="nav-icon"><i class="bi bi-person-workspace"></i></span>
-      <span class="nav-text">Teachers</span>
+    <div class="nav-item" data-href="enrollment.php" data-label="Enrollment">
+      <span class="nav-icon"><i class="bi bi-person-check-fill"></i></span>
+      <span class="nav-text">Enrollment</span>
     </div>
-    <div class="nav-item" data-href="attendance.php" data-label="Attendance">
-      <span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span>
-      <span class="nav-text">Attendance</span>
+    <div class="nav-item" data-href="payments.php" data-label="Payments">
+      <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>
+      <span class="nav-text">Payments</span>
+    </div>
+    <div class="nav-item" data-href="fees.php" data-label="Fees">
+      <span class="nav-icon"><i class="bi bi-receipt"></i></span>
+      <span class="nav-text">Fees</span>
     </div>
     <div class="nav-item" data-href="reports.php" data-label="Reports">
       <span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
@@ -164,7 +149,7 @@ if ($teachers_exist) {
   <div id="topbar">
     <div class="topbar-left">
       <div class="page-title">Dashboard</div>
-      <div class="page-sub">Analytics Overview</div>
+      <div class="page-sub">Enrollment Overview — SY <?= htmlspecialchars($active_sy['label'] ?? 'N/A') ?></div>
     </div>
     <div class="topbar-user-chip">
       <i class="bi bi-person-circle"></i>
@@ -172,120 +157,49 @@ if ($teachers_exist) {
     </div>
   </div>
 
-  <!-- PAGE CONTENT -->
   <div id="page-container">
 
-    <!-- ══════════════════════════════════════
-         ROW 1 — STAT CARDS
-    ══════════════════════════════════════ -->
     <div class="stat-grid">
-
       <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#dbeafe;">
-          <i class="bi bi-person-workspace" style="color:#2563eb;"></i>
-        </div>
-        <div class="stat-body">
-          <div class="stat-value"><?= $total_teachers ?></div>
-          <div class="stat-label">Teachers</div>
-        </div>
-        <a href="teachers.php" class="stat-arrow" title="View teachers">
-          <i class="bi bi-arrow-right-short"></i>
-        </a>
+        <div class="stat-icon-wrap" style="background:#dbeafe;"><i class="bi bi-people-fill" style="color:#2563eb;"></i></div>
+        <div class="stat-body"><div class="stat-value"><?= $total_students ?></div><div class="stat-label">Total Students</div></div>
+        <a href="students.php" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#fef9c3;">
-          <i class="bi bi-people-fill" style="color:#ca8a04;"></i>
-        </div>
-        <div class="stat-body">
-          <div class="stat-value"><?= $total ?></div>
-          <div class="stat-label">Students</div>
-        </div>
-        <a href="students.php" class="stat-arrow" title="View students">
-          <i class="bi bi-arrow-right-short"></i>
-        </a>
+        <div class="stat-icon-wrap" style="background:#dcfce7;"><i class="bi bi-person-check-fill" style="color:#16a34a;"></i></div>
+        <div class="stat-body"><div class="stat-value"><?= $total_enrolled ?></div><div class="stat-label">Enrolled</div></div>
+        <a href="enrollment.php" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#dcfce7;">
-          <i class="bi bi-person-plus-fill" style="color:#16a34a;"></i>
-        </div>
-        <div class="stat-body">
-          <div class="stat-value"><?= $new_s ?></div>
-          <div class="stat-label">New Enrollees</div>
-        </div>
-        <a href="students.php" class="stat-arrow" title="View new students">
-          <i class="bi bi-arrow-right-short"></i>
-        </a>
+        <div class="stat-icon-wrap" style="background:#fef9c3;"><i class="bi bi-hourglass-split" style="color:#ca8a04;"></i></div>
+        <div class="stat-body"><div class="stat-value"><?= $total_pending ?></div><div class="stat-label">Pending Enrollment</div></div>
+        <a href="enrollment.php?status=pending" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#fce7f3;">
-          <i class="bi bi-calendar2-check-fill" style="color:#db2777;"></i>
-        </div>
-        <div class="stat-body">
-          <div class="stat-value"><?= $att_today['present'] ?></div>
-          <div class="stat-label">Present Today</div>
-        </div>
-        <a href="attendance.php" class="stat-arrow" title="View attendance">
-          <i class="bi bi-arrow-right-short"></i>
-        </a>
+        <div class="stat-icon-wrap" style="background:#fce7f3;"><i class="bi bi-cash-stack" style="color:#db2777;"></i></div>
+        <div class="stat-body"><div class="stat-value">₱<?= number_format($total_collection, 0) ?></div><div class="stat-label">Total Collection</div></div>
+        <a href="payments.php" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
       </div>
-
     </div>
-    <!-- /stat-grid -->
 
-    <!-- ══════════════════════════════════════
-         ROW 2 — CHART + SECTION ENROLLMENT
-    ══════════════════════════════════════ -->
     <div class="dash-row">
-
-      <!-- Bar chart: Students per Grade -->
       <div class="dash-panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <i class="bi bi-bar-chart-fill"></i> Students per Grade
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="chart-wrap">
-            <canvas id="gradeChart"></canvas>
-          </div>
-        </div>
+        <div class="panel-header"><div class="panel-title"><i class="bi bi-bar-chart-fill"></i> Students per Grade</div></div>
+        <div class="panel-body"><div class="chart-wrap"><canvas id="gradeChart"></canvas></div></div>
       </div>
-
-      <!-- Section enrollment table -->
       <div class="dash-panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <i class="bi bi-grid-3x3-gap-fill"></i> Section Enrollment
-          </div>
-        </div>
+        <div class="panel-header"><div class="panel-title"><i class="bi bi-grid-3x3-gap-fill"></i> Section Enrollment</div></div>
         <div class="panel-body panel-body-flush">
-          <?php if (empty($enrollment)): ?>
+          <?php if (empty($enrollment_table)): ?>
             <div class="empty-msg">No section data yet.</div>
-          <?php else:
-            $sections = array_keys(reset($enrollment));
-          ?>
+          <?php else: $sections = array_keys(reset($enrollment_table)); ?>
             <table class="enroll-table">
-              <thead>
-                <tr>
-                  <th>Grade</th>
-                  <?php foreach ($sections as $sec): ?>
-                    <th><?= htmlspecialchars($sec) ?></th>
-                  <?php endforeach; ?>
-                  <th>Total</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Grade</th><?php foreach ($sections as $sec): ?><th><?= htmlspecialchars($sec) ?></th><?php endforeach; ?><th>Total</th></tr></thead>
               <tbody>
-                <?php foreach ($enrollment as $grade => $secs):
-                  $row_total = array_sum($secs);
-                ?>
+                <?php foreach ($enrollment_table as $grade => $secs): $row_total = array_sum($secs); ?>
                 <tr>
                   <td class="enroll-grade"><?= htmlspecialchars($grade) ?></td>
-                  <?php foreach ($secs as $count): ?>
-                    <td class="enroll-count"><?= $count ?></td>
-                  <?php endforeach; ?>
+                  <?php foreach ($secs as $count): ?><td class="enroll-count"><?= $count ?></td><?php endforeach; ?>
                   <td class="enroll-total"><?= $row_total ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -294,57 +208,28 @@ if ($teachers_exist) {
           <?php endif; ?>
         </div>
       </div>
-
     </div>
-    <!-- /dash-row -->
 
-    <!-- ══════════════════════════════════════
-         ROW 3 — RECENT STUDENTS + ATTENDANCE
-    ══════════════════════════════════════ -->
     <div class="dash-row">
-
-      <!-- Recent registrations -->
       <div class="dash-panel">
         <div class="panel-header">
-          <div class="panel-title">
-            <i class="bi bi-clock-history"></i> Recent Registrations
-          </div>
+          <div class="panel-title"><i class="bi bi-clock-history"></i> Recent Registrations</div>
           <a href="students.php" class="panel-link">View all →</a>
         </div>
         <div class="panel-body panel-body-flush">
           <table class="dash-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Grade</th>
-                <th>Type</th>
-                <th></th>
-              </tr>
-            </thead>
+            <thead><tr><th>Student</th><th>Grade</th><th>Type</th><th></th></tr></thead>
             <tbody>
               <?php while ($r = $recent->fetch_assoc()): ?>
               <tr>
-                <td>
-                  <div class="name-cell">
-                    <?php if (!empty($r['photo'])): ?>
-                      <img src="uploads/<?= htmlspecialchars($r['photo']) ?>" class="mini-pic"/>
-                    <?php else: ?>
-                      <div class="mini-avatar"><i class="bi bi-person-fill"></i></div>
-                    <?php endif; ?>
-                    <span><?= htmlspecialchars($r['last_name'] . ', ' . $r['first_name']) ?></span>
-                  </div>
-                </td>
+                <td><div class="name-cell">
+                  <?php if (!empty($r['photo'])): ?><img src="uploads/<?= htmlspecialchars($r['photo']) ?>" class="mini-pic"/>
+                  <?php else: ?><div class="mini-avatar"><i class="bi bi-person-fill"></i></div><?php endif; ?>
+                  <span><?= htmlspecialchars($r['last_name'] . ', ' . $r['first_name']) ?></span>
+                </div></td>
                 <td class="td-muted"><?= htmlspecialchars($r['grade'] ?? '—') ?></td>
-                <td>
-                  <span class="type-badge <?= $r['student_type'] === 'new' ? 'badge-new' : 'badge-old' ?>">
-                    <?= ucfirst($r['student_type']) ?>
-                  </span>
-                </td>
-                <td>
-                  <a href="student_profile.php?id=<?= $r['id'] ?>" class="row-link">
-                    <i class="bi bi-arrow-right"></i>
-                  </a>
-                </td>
+                <td><span class="type-badge <?= $r['student_type'] === 'new' ? 'badge-new' : 'badge-old' ?>"><?= ucfirst($r['student_type']) ?></span></td>
+                <td><a href="student_profile.php?id=<?= $r['id'] ?>" class="row-link"><i class="bi bi-arrow-right"></i></a></td>
               </tr>
               <?php endwhile; ?>
             </tbody>
@@ -352,121 +237,47 @@ if ($teachers_exist) {
         </div>
       </div>
 
-      <!-- Attendance today -->
       <div class="dash-panel">
         <div class="panel-header">
-          <div class="panel-title">
-            <i class="bi bi-calendar2-check-fill"></i> Attendance Today
-          </div>
-          <a href="attendance.php" class="panel-link">Mark →</a>
+          <div class="panel-title"><i class="bi bi-cash-coin"></i> Payment Summary</div>
+          <a href="payments.php" class="panel-link">View all →</a>
         </div>
         <div class="panel-body panel-body-flush">
-
-          <!-- 3 summary boxes -->
           <div class="att-summary">
-            <div class="att-sum-item att-present">
-              <span class="att-sum-val"><?= $att_today['present'] ?></span>
-              <span class="att-sum-lbl">Present</span>
-            </div>
-            <div class="att-sum-item att-absent">
-              <span class="att-sum-val"><?= $att_today['absent'] ?></span>
-              <span class="att-sum-lbl">Absent</span>
-            </div>
-            <div class="att-sum-item att-late">
-              <span class="att-sum-val"><?= $att_today['late'] ?></span>
-              <span class="att-sum-lbl">Late</span>
-            </div>
+            <div class="att-sum-item att-present"><span class="att-sum-val"><?= $total_paid ?></span><span class="att-sum-lbl">Fully Paid</span></div>
+            <div class="att-sum-item att-late"><span class="att-sum-val"><?= $total_partial ?></span><span class="att-sum-lbl">Partial</span></div>
+            <div class="att-sum-item att-absent"><span class="att-sum-val"><?= $total_unpaid ?></span><span class="att-sum-lbl">Unpaid</span></div>
           </div>
-
-          <!-- Rate bar -->
-          <?php if ($total_teachers > 0): ?>
-          <div class="att-rate-wrap">
-            <div class="att-rate-row">
-              <span class="att-rate-lbl">Attendance Rate</span>
-              <span class="att-rate-val"><?= $att_rate ?>%</span>
-            </div>
-            <div class="att-rate-track">
-              <div class="att-rate-fill" style="width:<?= $att_rate ?>%"></div>
-            </div>
+          <div style="padding:20px;">
+            <div style="font-size:11px;color:var(--color-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Total Collection</div>
+            <div style="font-size:26px;font-weight:700;color:var(--color-primary);">₱<?= number_format($total_collection, 2) ?></div>
           </div>
-          <?php endif; ?>
-
-          <!-- Teacher list -->
-          <?php if (!$teachers_exist || $total_teachers == 0): ?>
-            <div class="empty-msg">No teachers added yet.</div>
-          <?php else: ?>
-            <div class="att-teacher-list">
-              <?php while ($t = $all_teachers->fetch_assoc()):
-                $s    = $t['status'] ?? null;
-                $dot  = match($s) { 'present' => 'dot-present', 'absent' => 'dot-absent', 'late' => 'dot-late', default => 'dot-none' };
-                $bdg  = match($s) { 'present' => 'status-present', 'absent' => 'status-absent', 'late' => 'status-late', default => 'status-none' };
-                $lbl  = $s ? ucfirst($s) : 'Not marked';
-              ?>
-              <div class="att-teacher-row">
-                <span class="att-dot <?= $dot ?>"></span>
-                <div class="att-teacher-info">
-                  <div class="att-teacher-name"><?= htmlspecialchars($t['last_name'] . ', ' . $t['first_name']) ?></div>
-                  <div class="att-teacher-sub"><?= htmlspecialchars($t['subject'] ?? '') ?></div>
-                </div>
-                <span class="att-status-badge <?= $bdg ?>"><?= $lbl ?></span>
-              </div>
-              <?php endwhile; ?>
-            </div>
-          <?php endif; ?>
-
         </div>
       </div>
-
     </div>
-    <!-- /dash-row -->
 
   </div>
-  <!-- /page-container -->
 </div>
-<!-- /main -->
 
 <script src="../js/nav.js"></script>
 <script>
   Chart.defaults.font.family = 'Inter, sans-serif';
-  Chart.defaults.color = '#7a869a';
-
+  Chart.defaults.color = '#6b7280';
   new Chart(document.getElementById('gradeChart'), {
     type: 'bar',
     data: {
       labels: <?= json_encode($grade_labels) ?>,
-      datasets: [{
-        label: 'Students',
-        data: <?= json_encode($grade_counts) ?>,
-        backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444'],
-        borderRadius: 8,
-        borderSkipped: false,
-      }]
+      datasets: [{ label: 'Students', data: <?= json_encode($grade_counts) ?>, backgroundColor: ['#6366f1','#22c55e','#f59e0b','#ef4444'], borderRadius: 6, borderSkipped: false }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: { label: ctx => ' ' + ctx.parsed.y + ' students' }
-        }
-      },
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.y + ' students' } } },
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1, color: '#94a3b8', font: { size: 11 } },
-          grid: { color: 'rgba(0,0,0,0.05)' },
-          border: { display: false }
-        },
-        x: {
-          ticks: { color: '#64748b', font: { size: 12, weight: '600' } },
-          grid: { display: false },
-          border: { display: false }
-        }
+        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } },
+        x: { ticks: { color: '#6b7280', font: { size: 12, weight: '600' } }, grid: { display: false }, border: { display: false } }
       }
     }
   });
 </script>
-
 </body>
 </html>

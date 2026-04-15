@@ -233,3 +233,5 @@
   transition: opacity 0.2s;
 }
 .btn-save:hover { opacity: 0.88; }
+
+.role-finance { background: #dcfce7; color: #166534; }

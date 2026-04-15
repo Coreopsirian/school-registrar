@@ -93,7 +93,7 @@ else{
 
         <h1>Manage your<br>school with</h1>
         <h1 class="accent">ease</h1>
-        <p>Access your student's enrollment<br>records and student data in an<br>organized and secured way.</p>
+        <p>Access your student's enrollment<br>records and employee attendance in an<br>organized and secured way.</p>
       </div>
 
       <!-- RIGHT PANEL -->
@@ -101,6 +101,7 @@ else{
         <img src="./images/COJ.png" class="logo" alt="COJ Logo">
         <h2>Welcome back, Admin!</h2>
         <p class="subtitle">REGISTRAR PORTAL</p>
+        <p style="text-align:center;margin-bottom:16px;"><a href="home.php" style="font-size:12px;color:var(--color-muted,#6b7280);text-decoration:none;">← Back to School Website</a></p>
 
         <?php
         //check if email is avaialble then display on textbox

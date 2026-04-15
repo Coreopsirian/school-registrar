@@ -60,7 +60,7 @@ $photo    = !empty($student['photo']) ? 'uploads/' . htmlspecialchars($student['
       <img src="../images/COJ.png" alt="School Logo"/>
       <div class="logo-text">
         <div class="school-name">Catholic<br/>Progressive School</div>
-        <div class="school-sub">Registrar System</div>
+        <div class="school-sub">Enrollment System</div>
       </div>
     </div>
     <div class="sidebar-toggle">
@@ -69,8 +69,9 @@ $photo    = !empty($student['photo']) ? 'uploads/' . htmlspecialchars($student['
     <nav class="sidebar-nav">
       <div class="nav-item" data-href="dashboard.php" data-label="Dashboard"><span class="nav-icon"><i class="bi bi-grid-fill"></i></span><span class="nav-text">Dashboard</span></div>
       <div class="nav-item active" data-href="students.php" data-label="Students"><span class="nav-icon"><i class="bi bi-people-fill"></i></span><span class="nav-text">Students</span></div>
-      <div class="nav-item" data-href="teachers.php" data-label="Teachers"><span class="nav-icon"><i class="bi bi-person-workspace"></i></span><span class="nav-text">Teachers</span></div>
-      <div class="nav-item" data-href="attendance.php" data-label="Attendance"><span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span><span class="nav-text">Attendance</span></div>
+      <div class="nav-item" data-href="enrollment.php" data-label="Enrollment"><span class="nav-icon"><i class="bi bi-person-check-fill"></i></span><span class="nav-text">Enrollment</span></div>
+      <div class="nav-item" data-href="payments.php" data-label="Payments"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-text">Payments</span></div>
+      <div class="nav-item" data-href="fees.php" data-label="Fees"><span class="nav-icon"><i class="bi bi-receipt"></i></span><span class="nav-text">Fees</span></div>
       <div class="nav-item" data-href="reports.php" data-label="Reports"><span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span><span class="nav-text">Reports</span></div>
       <div class="nav-item" data-href="notes.php" data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
       <?php if (($_SESSION['role'] ?? '') === 'superadmin'): ?>
@@ -196,6 +197,56 @@ $photo    = !empty($student['photo']) ? 'uploads/' . htmlspecialchars($student['
                 <div class="detail-label">Student Type</div>
                 <div class="detail-value"><?= ucfirst($type) ?></div>
               </div>
+            </div>
+          </div>
+
+          <?php
+          // Parent account
+          $parent_acct = $conn->query("SELECT * FROM parent_accounts WHERE student_id={$student['id']} LIMIT 1")->fetch_assoc();
+          $profile_success = $_GET['success'] ?? '';
+          $profile_error   = $_GET['error']   ?? '';
+          ?>
+
+          <?php if ($profile_success): ?>
+            <div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:10px 16px;font-size:13px;color:#27ae60;margin-bottom:12px;"><?= htmlspecialchars($profile_success) ?></div>
+          <?php endif; ?>
+          <?php if ($profile_error): ?>
+            <div style="background:#fdeaea;border:1px solid #f5c6c6;border-radius:8px;padding:10px 16px;font-size:13px;color:var(--color-danger);margin-bottom:12px;"><?= htmlspecialchars($profile_error) ?></div>
+          <?php endif; ?>
+
+          <div class="detail-section">
+            <div class="detail-section-title"><i class="bi bi-person-heart"></i> Parent / Guardian Portal Access</div>
+            <div style="padding:20px;">
+              <?php if ($parent_acct): ?>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                  <div>
+                    <div style="font-size:14px;font-weight:600;"><?= htmlspecialchars($parent_acct['name']) ?></div>
+                    <div style="font-size:12px;color:var(--color-muted);"><?= htmlspecialchars($parent_acct['email']) ?></div>
+                  </div>
+                  <span style="padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;background:<?= $parent_acct['is_active'] ? '#dcfce7' : '#fdeaea' ?>;color:<?= $parent_acct['is_active'] ? '#166534' : 'var(--color-danger)' ?>;">
+                    <?= $parent_acct['is_active'] ? 'Active' : 'Inactive' ?>
+                  </span>
+                  <span style="font-size:12px;color:var(--color-muted);">Portal: <a href="../portal/login.php" target="_blank" style="color:var(--color-primary);">portal/login.php</a></span>
+                </div>
+              <?php else: ?>
+                <p style="font-size:13px;color:var(--color-muted);margin-bottom:16px;">No parent account yet. Create one to give the parent access to the portal.</p>
+                <form method="POST" action="create_parent.php" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px;">
+                  <input type="hidden" name="student_id" value="<?= $student['id'] ?>">
+                  <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Parent Name *</label>
+                    <input type="text" name="parent_name" class="form-input" required style="width:100%;"/></div>
+                  <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Email *</label>
+                    <input type="email" name="parent_email" class="form-input" required style="width:100%;"/></div>
+                  <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Contact</label>
+                    <input type="text" name="parent_contact" class="form-input" style="width:100%;"/></div>
+                  <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Password *</label>
+                    <input type="password" name="parent_password" class="form-input" required style="width:100%;"/></div>
+                  <div style="grid-column:1/-1;">
+                    <button type="submit" style="padding:9px 20px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">
+                      <i class="bi bi-person-plus-fill"></i> Create Parent Account
+                    </button>
+                  </div>
+                </form>
+              <?php endif; ?>
             </div>
           </div>
 

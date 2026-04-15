@@ -131,7 +131,7 @@ if (!empty($_GET['edit_id'])) {
       <img src="../images/COJ.png" alt="School Logo" />
       <div class="logo-text">
         <div class="school-name">Catholic<br/>Progressive School</div>
-        <div class="school-sub">Registrar System</div>
+        <div class="school-sub">Enrollment System</div>
       </div>
     </div>
 
@@ -140,35 +140,15 @@ if (!empty($_GET['edit_id'])) {
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-item" data-href="dashboard.php" data-label="Dashboard">
-        <span class="nav-icon"><i class="bi bi-grid-fill"></i></span>
-        <span class="nav-text">Dashboard</span>
-      </div>
-      <div class="nav-item active" data-href="students.php" data-label="Students">
-        <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
-        <span class="nav-text">Students</span>
-      </div>
-      <div class="nav-item" data-href="teachers.php" data-label="Teachers">
-        <span class="nav-icon"><i class="bi bi-person-workspace"></i></span>
-        <span class="nav-text">Teachers</span>
-      </div>
-      <div class="nav-item" data-href="attendance.php" data-label="Attendance">
-        <span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span>
-        <span class="nav-text">Attendance</span>
-      </div>
-      <div class="nav-item" data-href="reports.php" data-label="Reports">
-        <span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
-        <span class="nav-text">Reports</span>
-      </div>
-      <div class="nav-item" data-href="notes.php" data-label="Notes">
-        <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
-        <span class="nav-text">Notes</span>
-      </div>
+      <div class="nav-item" data-href="dashboard.php" data-label="Dashboard"><span class="nav-icon"><i class="bi bi-grid-fill"></i></span><span class="nav-text">Dashboard</span></div>
+      <div class="nav-item active" data-href="students.php" data-label="Students"><span class="nav-icon"><i class="bi bi-people-fill"></i></span><span class="nav-text">Students</span></div>
+      <div class="nav-item" data-href="enrollment.php" data-label="Enrollment"><span class="nav-icon"><i class="bi bi-person-check-fill"></i></span><span class="nav-text">Enrollment</span></div>
+      <div class="nav-item" data-href="payments.php" data-label="Payments"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-text">Payments</span></div>
+      <div class="nav-item" data-href="fees.php" data-label="Fees"><span class="nav-icon"><i class="bi bi-receipt"></i></span><span class="nav-text">Fees</span></div>
+      <div class="nav-item" data-href="reports.php" data-label="Reports"><span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span><span class="nav-text">Reports</span></div>
+      <div class="nav-item" data-href="notes.php" data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
       <?php if (($_SESSION['role'] ?? '') === 'superadmin'): ?>
-      <div class="nav-item" data-href="users.php" data-label="Users">
-        <span class="nav-icon"><i class="bi bi-shield-lock-fill"></i></span>
-        <span class="nav-text">Users</span>
-      </div>
+      <div class="nav-item" data-href="users.php" data-label="Users"><span class="nav-icon"><i class="bi bi-shield-lock-fill"></i></span><span class="nav-text">Users</span></div>
       <?php endif; ?>
     </nav>
 

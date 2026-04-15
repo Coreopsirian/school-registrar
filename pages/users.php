@@ -13,7 +13,7 @@ if ($_SESSION['role'] !== 'superadmin') {
 $error_message   = '';
 $success_message = '';
 
-// ── Handle Add / Edit ──────────────────────────────────────
+// ── Handle Add / Edit ──────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $id       = intval($_POST['id'] ?? 0);
   $name     = trim($_POST['name'] ?? '');
@@ -87,7 +87,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
     <img src="../images/COJ.png" alt="School Logo"/>
     <div class="logo-text">
       <div class="school-name">Catholic<br/>Progressive School</div>
-      <div class="school-sub">Registrar System</div>
+      <div class="school-sub">Enrollment System</div>
     </div>
   </div>
   <div class="sidebar-toggle">
@@ -96,11 +96,14 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
   <nav class="sidebar-nav">
     <div class="nav-item" data-href="dashboard.php" data-label="Dashboard"><span class="nav-icon"><i class="bi bi-grid-fill"></i></span><span class="nav-text">Dashboard</span></div>
     <div class="nav-item" data-href="students.php" data-label="Students"><span class="nav-icon"><i class="bi bi-people-fill"></i></span><span class="nav-text">Students</span></div>
-    <div class="nav-item" data-href="teachers.php" data-label="Teachers"><span class="nav-icon"><i class="bi bi-person-workspace"></i></span><span class="nav-text">Teachers</span></div>
-    <div class="nav-item" data-href="attendance.php" data-label="Attendance"><span class="nav-icon"><i class="bi bi-calendar-check-fill"></i></span><span class="nav-text">Attendance</span></div>
+    <div class="nav-item" data-href="enrollment.php" data-label="Enrollment"><span class="nav-icon"><i class="bi bi-person-check-fill"></i></span><span class="nav-text">Enrollment</span></div>
+    <div class="nav-item" data-href="payments.php" data-label="Payments"><span class="nav-icon"><i class="bi bi-cash-coin"></i></span><span class="nav-text">Payments</span></div>
+    <div class="nav-item" data-href="fees.php" data-label="Fees"><span class="nav-icon"><i class="bi bi-receipt"></i></span><span class="nav-text">Fees</span></div>
     <div class="nav-item" data-href="reports.php" data-label="Reports"><span class="nav-icon"><i class="bi bi-file-earmark-text-fill"></i></span><span class="nav-text">Reports</span></div>
     <div class="nav-item" data-href="notes.php" data-label="Notes"><span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span></div>
+    <?php if (($_SESSION['role'] ?? '') === 'superadmin'): ?>
     <div class="nav-item active" data-href="users.php" data-label="Users"><span class="nav-icon"><i class="bi bi-shield-lock-fill"></i></span><span class="nav-text">Users</span></div>
+    <?php endif; ?>
   </nav>
   <div class="sidebar-footer">
     <a href="../logout.php" class="logout-btn">
@@ -150,8 +153,8 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
             </td>
             <td class="td-muted"><?= htmlspecialchars($u['email']) ?></td>
             <td>
-              <span class="role-badge <?= $u['role'] === 'superadmin' ? 'role-super' : 'role-registrar' ?>">
-                <?= $u['role'] === 'superadmin' ? 'Super Admin' : 'Registrar' ?>
+              <span class="role-badge <?= match($u['role']) { 'superadmin' => 'role-super', 'finance' => 'role-finance', default => 'role-registrar' } ?>">
+                <?= match($u['role']) { 'superadmin' => 'Super Admin', 'finance' => 'Finance', default => 'Registrar' } ?>
               </span>
             </td>
             <td>
@@ -196,6 +199,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
             <label>Role</label>
             <select name="role" class="form-input">
               <option value="registrar">Registrar</option>
+              <option value="finance">Finance / Cashier</option>
               <option value="superadmin">Super Admin</option>
             </select>
           </div>
@@ -228,6 +232,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
             <label>Role</label>
             <select name="role" class="form-input">
               <option value="registrar" <?= $edit_user['role'] === 'registrar' ? 'selected' : '' ?>>Registrar</option>
+              <option value="finance"   <?= $edit_user['role'] === 'finance'   ? 'selected' : '' ?>>Finance / Cashier</option>
               <option value="superadmin" <?= $edit_user['role'] === 'superadmin' ? 'selected' : '' ?>>Super Admin</option>
             </select>
           </div>
