@@ -10,17 +10,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $school_year_id = intval($_POST['school_year_id']);
   $name           = trim($_POST['name']);
   $amount         = floatval($_POST['amount']);
+  $fee_type       = trim($_POST['fee_type'] ?? 'tuition');
+  $allowed_types  = ['tuition','miscellaneous','pta_fund','development','books','sped','other'];
+  if (!in_array($fee_type, $allowed_types)) $fee_type = 'tuition';
 
   if (empty($name) || $grade_level_id <= 0 || $school_year_id <= 0) {
     header("Location: fees.php?error=" . urlencode("All fields are required.")); exit();
   }
 
   if ($id > 0) {
-    $stmt = $conn->prepare("UPDATE fees SET grade_level_id=?, school_year_id=?, name=?, amount=? WHERE id=?");
-    $stmt->bind_param("iisdi", $grade_level_id, $school_year_id, $name, $amount, $id);
+    $stmt = $conn->prepare("UPDATE fees SET grade_level_id=?, school_year_id=?, name=?, fee_type=?, amount=? WHERE id=?");
+    $stmt->bind_param("iissdi", $grade_level_id, $school_year_id, $name, $fee_type, $amount, $id);
   } else {
-    $stmt = $conn->prepare("INSERT INTO fees (grade_level_id, school_year_id, name, amount) VALUES (?,?,?,?)");
-    $stmt->bind_param("iisd", $grade_level_id, $school_year_id, $name, $amount);
+    $stmt = $conn->prepare("INSERT INTO fees (grade_level_id, school_year_id, name, fee_type, amount) VALUES (?,?,?,?,?)");
+    $stmt->bind_param("iissd", $grade_level_id, $school_year_id, $name, $fee_type, $amount);
   }
   $stmt->execute()
     ? header("Location: fees.php?success=" . ($id > 0 ? "Fee updated" : "Fee added"))
@@ -92,12 +95,13 @@ $active_page = 'fees';
     <div class="fees-table-card">
       <table class="fees-table">
         <thead>
-          <tr><th>Fee Name</th><th>Grade Level</th><th>School Year</th><th>Amount</th><th>Actions</th></tr>
+          <tr><th>Fee Name</th><th>Fee Type</th><th>Grade Level</th><th>School Year</th><th>Amount</th><th>Actions</th></tr>
         </thead>
         <tbody>
           <?php $count = 0; while ($f = $fees->fetch_assoc()): $count++; ?>
           <tr>
             <td style="font-weight:600;"><?= htmlspecialchars($f['name']) ?></td>
+            <td><span style="font-size:11px;padding:2px 8px;border-radius:999px;background:var(--color-bg);border:1px solid var(--color-border);color:var(--color-muted);font-weight:600;text-transform:capitalize;"><?= htmlspecialchars(str_replace('_',' ',$f['fee_type'] ?? 'tuition')) ?></span></td>
             <td><?= htmlspecialchars($f['grade']) ?></td>
             <td class="td-muted">SY <?= htmlspecialchars($f['school_year']) ?></td>
             <td style="font-weight:700;color:var(--color-primary);">₱<?= number_format($f['amount'], 2) ?></td>
@@ -109,7 +113,7 @@ $active_page = 'fees';
           </tr>
           <?php endwhile; ?>
           <?php if ($count === 0): ?>
-          <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--color-muted);">No fees defined yet. Add one to get started.</td></tr>
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-muted);">No fees defined yet. Add one to get started.</td></tr>
           <?php endif; ?>
         </tbody>
       </table>
@@ -127,9 +131,21 @@ $active_page = 'fees';
     <form method="POST" action="fees.php">
       <input type="hidden" name="id" value="0">
       <div class="modal-body">
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="form-group"><label>Fee Name *</label><input type="text" name="name" class="form-input" required/></div>
           <div class="form-group"><label>Amount (₱) *</label><input type="number" name="amount" class="form-input" step="0.01" min="0" required/></div>
+          <div class="form-group">
+            <label>Fee Type</label>
+            <select name="fee_type" class="form-input">
+              <option value="tuition">Tuition</option>
+              <option value="miscellaneous">Miscellaneous</option>
+              <option value="pta_fund">PTA Fund</option>
+              <option value="development">Development Fee</option>
+              <option value="books">Books</option>
+              <option value="sped">SPED</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>Grade Level *</label>
             <select name="grade_level_id" class="form-input" required>
@@ -161,9 +177,21 @@ $active_page = 'fees';
     <form method="POST" action="fees.php">
       <input type="hidden" name="id" value="<?= $edit_fee['id'] ?>">
       <div class="modal-body">
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="form-group"><label>Fee Name *</label><input type="text" name="name" class="form-input" value="<?= htmlspecialchars($edit_fee['name']) ?>" required/></div>
           <div class="form-group"><label>Amount (₱) *</label><input type="number" name="amount" class="form-input" step="0.01" value="<?= $edit_fee['amount'] ?>" required/></div>
+          <div class="form-group">
+            <label>Fee Type</label>
+            <select name="fee_type" class="form-input">
+              <option value="tuition"       <?= ($edit_fee['fee_type']??'tuition')==='tuition'       ?'selected':'' ?>>Tuition</option>
+              <option value="miscellaneous" <?= ($edit_fee['fee_type']??'')==='miscellaneous' ?'selected':'' ?>>Miscellaneous</option>
+              <option value="pta_fund"      <?= ($edit_fee['fee_type']??'')==='pta_fund'      ?'selected':'' ?>>PTA Fund</option>
+              <option value="development"   <?= ($edit_fee['fee_type']??'')==='development'   ?'selected':'' ?>>Development Fee</option>
+              <option value="books"         <?= ($edit_fee['fee_type']??'')==='books'         ?'selected':'' ?>>Books</option>
+              <option value="sped"          <?= ($edit_fee['fee_type']??'')==='sped'          ?'selected':'' ?>>SPED</option>
+              <option value="other"         <?= ($edit_fee['fee_type']??'')==='other'         ?'selected':'' ?>>Other</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>Grade Level *</label>
             <select name="grade_level_id" class="form-input" required>

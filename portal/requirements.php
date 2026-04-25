@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
     if (!in_array($_FILES['doc_file']['type'], $allowed)) {
       $error = "Only JPG, PNG, WEBP, or PDF files are allowed.";
-    } elseif ($_FILES['doc_file']['size'] > 5 * 1024 * 1024) {
-      $error = "File must be under 5MB.";
+    } elseif ($_FILES['doc_file']['size'] > 25 * 1024 * 1024) {
+      $error = "File must be under 25MB.";
     } else {
       $filename = 'req_' . $student_id . '_' . $req_id . '_' . uniqid() . '_' . basename($_FILES['doc_file']['name']);
       move_uploaded_file($_FILES['doc_file']['tmp_name'], "../pages/uploads/" . $filename);
@@ -101,7 +101,7 @@ $reqs = $conn->query("
 
   <div class="portal-req-note">
     <i class="bi bi-info-circle-fill"></i>
-    Accepted formats: JPG, PNG, PDF · Max file size: 5MB · Documents marked <strong>Under Review</strong> are awaiting registrar verification.
+    Accepted formats: JPG, PNG, PDF · Max file size: 25MB · Documents marked <strong>Under Review</strong> are awaiting registrar verification.
   </div>
 </div>
 </body>

@@ -257,6 +257,9 @@ if (!empty($_GET['edit_id'])) {
               <td>
                 <div class="student-name">
                   <?= htmlspecialchars($row['last_name'].', '. $row['first_name'].' '. $row['middle_name']) ?>
+                  <?php if (!empty($row['is_sped'])): ?>
+                    <span style="background:#fef9c3;color:#92400e;border-radius:999px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px;vertical-align:middle;">SPED</span>
+                  <?php endif; ?>
                 </div>
               </td>
               <!-- LRN -->
@@ -425,6 +428,14 @@ if (!empty($_GET['edit_id'])) {
               <option value="new" <?= $rf['status'] === 'new' ? 'selected' : '' ?>>New student</option>
             </select>
           </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">SPED / Special Needs</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="checkbox" name="is_sped" value="1" id="field-sped" style="width:16px;height:16px;accent-color:var(--color-primary);"/>
+              <label for="field-sped" style="font-size:13px;color:var(--color-text);font-weight:500;">Student has diagnosed disability / requires SPED support</label>
+            </div>
+            <input type="text" name="sped_notes" class="form-input" placeholder="Optional: describe disability or support needed" style="margin-top:8px;"/>
+          </div>
           
         </div>
       </div>
@@ -543,6 +554,19 @@ if (!empty($_GET['edit_id'])) {
               <option value="old" <?= ($edit_student['student_type'] ?? '') === 'old' ? 'selected' : '' ?>>Old Student</option>
               <option value="new" <?= ($edit_student['student_type'] ?? '') === 'new' ? 'selected' : '' ?>>New Student</option>
             </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">SPED / Special Needs</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="checkbox" name="is_sped" value="1" id="edit-field-sped"
+                     style="width:16px;height:16px;accent-color:var(--color-primary);"
+                     <?= !empty($edit_student['is_sped']) ? 'checked' : '' ?>/>
+              <label for="edit-field-sped" style="font-size:13px;color:var(--color-text);font-weight:500;">Student has diagnosed disability / requires SPED support</label>
+            </div>
+            <input type="text" name="sped_notes" class="form-input"
+                   placeholder="Optional: describe disability or support needed"
+                   style="margin-top:8px;"
+                   value="<?= htmlspecialchars($edit_student['sped_notes'] ?? '') ?>"/>
           </div>
         </div>
       </div>

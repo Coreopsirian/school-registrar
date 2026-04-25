@@ -10,6 +10,7 @@ if (!isset($_SESSION['name'])) {
 $search       = $_GET['search'] ?? '';
 $filter_grade  = $_GET['grade']  ?? '';
 $filter_status = $_GET['status'] ?? '';
+$filter_enrollment_status = $_GET['enrollment_status'] ?? '';
 $searchParam   = "%$search%";
 
 // Build WHERE dynamically — same logic as students.php
@@ -29,6 +30,15 @@ if ($filter_status) {
   $bind_types .= "s"; $bind_vals[] = $filter_status;
 }
 
+$join_enrollment = '';
+if ($filter_enrollment_status) {
+  $active_sy = $conn->query("SELECT id FROM school_years WHERE is_active=1 LIMIT 1")->fetch_assoc();
+  $sy_id = $active_sy['id'] ?? 0;
+  $join_enrollment = "JOIN enrollments e ON e.student_id = s.id AND e.school_year_id = $sy_id";
+  $where_parts[] = "e.status = ?";
+  $bind_types .= "s"; $bind_vals[] = $filter_enrollment_status;
+}
+
 $where_sql = implode(" AND ", $where_parts);
 
 $stmt = $conn->prepare("
@@ -39,6 +49,7 @@ $stmt = $conn->prepare("
   LEFT JOIN grade_levels g  ON s.grade_level_id = g.id
   LEFT JOIN sections sec    ON s.section_id = sec.id
   LEFT JOIN school_years sy ON s.school_year_id = sy.id
+  $join_enrollment
   WHERE $where_sql
   ORDER BY s.last_name ASC
 ");

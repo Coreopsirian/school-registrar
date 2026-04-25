@@ -6,15 +6,34 @@ if (!isset($_SESSION['name'])) { header('Location: ../index.php'); exit(); }
 $active_sy = $conn->query("SELECT * FROM school_years WHERE is_active=1 LIMIT 1")->fetch_assoc();
 $sy_id     = $active_sy['id'] ?? 0;
 
-// Verify a document
+// Verify a document (works for both submitted and missing — registrar can manually verify)
 if (isset($_GET['verify'])) {
   $rid = intval($_GET['verify']);
-  $conn->prepare("UPDATE student_requirements SET status='verified', verified_by=?, verified_at=NOW() WHERE id=?")
-       ->bind_param("ii", $_SESSION['user_id'], $rid) || null;
-  $stmt = $conn->prepare("UPDATE student_requirements SET status='verified', verified_by=?, verified_at=NOW() WHERE id=?");
-  $stmt->bind_param("ii", $_SESSION['user_id'], $rid);
+  $sid = intval($_GET['student_id'] ?? 0);
+  $uid = $_SESSION['user_id'] ?? 0;
+
+  // If no student_requirements record exists yet (status was missing), create one
+  $existing = $conn->query("SELECT id FROM student_requirements WHERE id = $rid")->fetch_assoc();
+  if ($existing) {
+    $stmt = $conn->prepare("UPDATE student_requirements SET status='verified', verified_by=?, verified_at=NOW() WHERE id=?");
+    $stmt->bind_param("ii", $uid, $rid);
+    $stmt->execute();
+  }
+  header("Location: requirements.php?student_id=$sid&success=Document marked as verified"); exit();
+}
+
+// Mark as received (physical copy brought to school — creates record if missing)
+if (isset($_GET['mark_received'])) {
+  $req_id = intval($_GET['req_id']);
+  $sid    = intval($_GET['student_id'] ?? 0);
+  $uid    = $_SESSION['user_id'] ?? 0;
+
+  $stmt = $conn->prepare("INSERT INTO student_requirements (student_id, requirement_id, school_year_id, status, submitted_at, verified_by, verified_at)
+    VALUES (?,?,?,'verified',NOW(),?,NOW())
+    ON DUPLICATE KEY UPDATE status='verified', submitted_at=NOW(), verified_by=VALUES(verified_by), verified_at=NOW()");
+  $stmt->bind_param("iiii", $sid, $req_id, $sy_id, $uid);
   $stmt->execute();
-  header("Location: requirements.php?success=Document verified"); exit();
+  header("Location: requirements.php?student_id=$sid&success=Document marked as received and verified"); exit();
 }
 
 // Reject a document
@@ -131,7 +150,11 @@ $active_page = 'requirements';
               <i class="bi bi-eye-fill"></i> View
             </a>
           <?php endif; ?>
-          <?php if (($req['status'] ?? '') === 'submitted'): ?>
+
+          <?php $status = $req['status'] ?? 'missing'; ?>
+
+          <?php if ($status === 'submitted'): ?>
+            <!-- Parent uploaded — registrar can verify or reject -->
             <a href="requirements.php?verify=<?= $req['sr_id'] ?>&student_id=<?= $detail_student['id'] ?>"
                class="btn-verify" onclick="return confirm('Mark as verified?')">
               <i class="bi bi-check-lg"></i> Verify
@@ -139,6 +162,22 @@ $active_page = 'requirements';
             <a href="requirements.php?reject=<?= $req['sr_id'] ?>&student_id=<?= $detail_student['id'] ?>"
                class="btn-reject" onclick="return confirm('Reject this document?')">
               <i class="bi bi-x-lg"></i> Reject
+            </a>
+
+          <?php elseif ($status === 'missing'): ?>
+            <!-- Physical copy brought to school — registrar marks it directly -->
+            <a href="requirements.php?mark_received=1&req_id=<?= $req['req_id'] ?>&student_id=<?= $detail_student['id'] ?>"
+               class="btn-verify" onclick="return confirm('Mark this document as received and verified?')"
+               title="Use this when the parent brings the physical document to school">
+              <i class="bi bi-check2-circle"></i> Mark as Received
+            </a>
+
+          <?php elseif ($status === 'verified'): ?>
+            <!-- Already verified — allow undo -->
+            <a href="requirements.php?reject=<?= $req['sr_id'] ?>&student_id=<?= $detail_student['id'] ?>"
+               class="btn-reject" style="font-size:11px;padding:3px 10px;"
+               onclick="return confirm('Remove verification for this document?')">
+              <i class="bi bi-arrow-counterclockwise"></i> Undo
             </a>
           <?php endif; ?>
         </div>

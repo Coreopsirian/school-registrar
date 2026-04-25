@@ -282,7 +282,6 @@
 
     <div class="footer-bottom">
       <span>© <?= date('Y') ?> COJ Catholic Progressive School. All rights reserved.</span>
-      <span>Enrollment Management System v2.0</span>
     </div>
   </div>
 </footer>

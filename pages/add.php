@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $city           = trim($_POST['city']             ?? '');
   $contact_number = trim($_POST['contact_number']   ?? '');
   $student_type   = trim($_POST['status']           ?? '');
+  $is_sped        = isset($_POST['is_sped']) ? 1 : 0;
+  $sped_notes     = trim($_POST['sped_notes'] ?? '');
 
   // Store form data in session so it survives the redirect
   $_SESSION['add_form'] = [
@@ -88,13 +90,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $stmt = $conn->prepare(
     "INSERT INTO students
        (photo, first_name, middle_name, last_name, lrn,
-        grade_level_id, section_id, school_year_id, city, contact_number, student_type)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+        grade_level_id, section_id, school_year_id, city, contact_number, student_type, is_sped, sped_notes)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
   );
   $stmt->bind_param(
-    "sssssiiisss",
+    "sssssiiisssiss",
     $photo, $first_name, $middle_name, $last_name, $lrn,
-    $grade_level_id, $section_id, $school_year_id, $city, $contact_number, $student_type
+    $grade_level_id, $section_id, $school_year_id, $city, $contact_number, $student_type, $is_sped, $sped_notes
   );
 
   if ($stmt->execute()) {

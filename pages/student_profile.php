@@ -86,6 +86,12 @@ $photo    = !empty($student['photo']) ? 'uploads/' . htmlspecialchars($student['
           <span class="profile-badge <?= $type === 'new' ? 'badge-new' : 'badge-old' ?>">
             <?= ucfirst($type) ?> Student
           </span>
+          <?php if (!empty($student['is_sped'])): ?>
+            <span class="profile-badge" style="background:#fef9c3;color:#92400e;margin-top:4px;">SPED</span>
+            <?php if (!empty($student['sped_notes'])): ?>
+              <div style="font-size:12px;color:var(--color-muted);margin-top:4px;"><?= htmlspecialchars($student['sped_notes']) ?></div>
+            <?php endif; ?>
+          <?php endif; ?>
 
           <div class="profile-quick">
             <div class="quick-item">

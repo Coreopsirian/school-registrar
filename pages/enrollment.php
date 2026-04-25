@@ -165,7 +165,7 @@ $active_page = 'enrollment';
             <td>
               <span class="enroll-status-badge status-<?= $e['status'] ?>"><?= ucfirst($e['status']) ?></span>
             </td>
-            <td class="td-muted"><?= date('M j, Y', strtotime($e['enrolled_at'])) ?></td>
+            <td class="td-muted"><?= date('M j, Y g:i A', strtotime($e['enrolled_at'])) ?></td>
             <td>
               <form method="POST" action="enrollment.php" style="display:inline-flex;gap:4px;">
                 <input type="hidden" name="action" value="update_status">

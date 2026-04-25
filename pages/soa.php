@@ -24,7 +24,7 @@ $enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$student_
 $fees_payments = $conn->query("
   SELECT f.name as fee_name, f.amount,
          p.id as payment_id, p.amount_paid, p.balance, p.status,
-         p.paid_at, p.or_number, p.payment_method, p.proof_file
+         p.paid_at, p.or_number, p.payment_method, p.payment_plan, p.surcharge, p.proof_file
   FROM fees f
   LEFT JOIN payments p ON p.fee_id=f.id AND p.student_id=$student_id
   WHERE f.grade_level_id = {$student['grade_level_id']} AND f.school_year_id = $sy_id
@@ -34,6 +34,14 @@ $fees_payments = $conn->query("
 $total_fees = array_sum(array_column($fees_payments, 'amount'));
 $total_paid = array_sum(array_column($fees_payments, 'amount_paid'));
 $total_bal  = array_sum(array_column($fees_payments, 'balance'));
+
+// Discounts
+$discounts = $conn->query("
+  SELECT * FROM discounts WHERE student_id=$student_id AND school_year_id=$sy_id
+")->fetch_all(MYSQLI_ASSOC);
+$total_discount_pct = array_sum(array_column($discounts, 'percentage'));
+$discount_amount    = $total_fees * ($total_discount_pct / 100);
+$adjusted_total     = max(0, $total_fees - $discount_amount);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -106,7 +114,7 @@ include('includes/sidebar.php');
       </div>
 
       <table class="soa-table">
-        <thead><tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Method</th><th>OR #</th><th>Date</th></tr></thead>
+        <thead><tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Plan</th><th>Surcharge</th><th>Method</th><th>OR #</th><th>Date</th></tr></thead>
         <tbody>
           <?php foreach ($fees_payments as $fp): ?>
           <tr>
@@ -115,16 +123,41 @@ include('includes/sidebar.php');
             <td>₱<?= number_format($fp['amount_paid'] ?? 0, 2) ?></td>
             <td style="font-weight:600;color:<?= ($fp['balance'] ?? 0) > 0 ? '#dc2626' : '#16a34a' ?>">₱<?= number_format($fp['balance'] ?? $fp['amount'], 2) ?></td>
             <td><span class="badge-<?= $fp['status'] ?? 'unpaid' ?>"><?= ucfirst($fp['status'] ?? 'Unpaid') ?></span></td>
+            <td><?= $fp['payment_plan'] ? ucfirst(str_replace('_',' ',$fp['payment_plan'])) : '—' ?></td>
+            <td><?= ($fp['surcharge'] ?? 0) > 0 ? '₱'.number_format($fp['surcharge'],2) : '—' ?></td>
             <td><?= $fp['payment_method'] ? ucfirst(str_replace('_',' ',$fp['payment_method'])) : '—' ?></td>
             <td><?= htmlspecialchars($fp['or_number'] ?? '—') ?></td>
             <td><?= $fp['paid_at'] ? date('M j, Y', strtotime($fp['paid_at'])) : '—' ?></td>
           </tr>
           <?php endforeach; ?>
           <?php if (empty($fees_payments)): ?>
-          <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--color-muted);">No fee records for this school year.</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:32px;color:var(--color-muted);">No fee records for this school year.</td></tr>
           <?php endif; ?>
         </tbody>
       </table>
+
+      <?php if (!empty($discounts)): ?>
+      <div style="padding:16px 32px;border-top:1px solid var(--color-border);">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-muted);margin-bottom:10px;">Applied Discounts / Scholarships</div>
+        <table class="soa-table">
+          <thead><tr><th>Type</th><th>Label</th><th>Percentage</th><th>Notes</th></tr></thead>
+          <tbody>
+            <?php foreach ($discounts as $d): ?>
+            <tr>
+              <td style="text-transform:capitalize;"><?= htmlspecialchars(str_replace('_',' ',$d['type'])) ?></td>
+              <td><?= htmlspecialchars($d['label'] ?? '—') ?></td>
+              <td style="font-weight:700;color:#16a34a;"><?= number_format($d['percentage'],2) ?>%</td>
+              <td><?= htmlspecialchars($d['notes'] ?? '—') ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+        <div style="margin-top:12px;text-align:right;font-size:13px;color:var(--color-muted);">
+          Total Discount: <strong style="color:#16a34a;"><?= number_format($total_discount_pct,2) ?>% (₱<?= number_format($discount_amount,2) ?>)</strong>
+          &nbsp;|&nbsp; Adjusted Total: <strong style="color:var(--color-primary);">₱<?= number_format($adjusted_total,2) ?></strong>
+        </div>
+      </div>
+      <?php endif; ?>
 
       <div class="soa-totals">
         <div class="soa-total-item"><div class="soa-total-label">Total Fees</div><div class="soa-total-val">₱<?= number_format($total_fees, 2) ?></div></div>

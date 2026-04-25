@@ -93,7 +93,7 @@ else{
 
         <h1>Manage your<br>school with</h1>
         <h1 class="accent">ease</h1>
-        <p>Access your student's enrollment<br>records and employee attendance in an<br>organized and secured way.</p>
+        <p>Access your student's enrollment<br>records in an organized and secured way.</p>
       </div>
 
       <!-- RIGHT PANEL -->

@@ -42,6 +42,20 @@ $active_page = $active_page ?? '';
     <div class="nav-item <?= $active_page==='notes'?'active':'' ?>" data-href="notes.php" data-label="Notes">
       <span class="nav-icon"><i class="bi bi-journal-text"></i></span><span class="nav-text">Notes</span>
     </div>
+    <?php
+    $unread = 0;
+    if (isset($_SESSION['user_id'])) {
+      $unread_res = $conn->query("SELECT COUNT(*) as c FROM messages WHERE recipient_id={$_SESSION['user_id']} AND is_read=0");
+      if ($unread_res) $unread = $unread_res->fetch_assoc()['c'];
+    }
+    ?>
+    <div class="nav-item <?= $active_page==='messages'?'active':'' ?>" data-href="messages.php" data-label="Messages">
+      <span class="nav-icon"><i class="bi bi-chat-dots-fill"></i></span>
+      <span class="nav-text">Messages <?php if ($unread > 0): ?><span style="background:#e53e3e;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:4px;"><?= $unread ?></span><?php endif; ?></span>
+    </div>
+    <div class="nav-item <?= $active_page==='discounts'?'active':'' ?>" data-href="discounts.php" data-label="Discounts">
+      <span class="nav-icon"><i class="bi bi-percent"></i></span><span class="nav-text">Discounts</span>
+    </div>
     <?php if (($_SESSION['role'] ?? '') === 'superadmin'): ?>
     <div class="nav-item <?= $active_page==='users'?'active':'' ?>" data-href="users.php" data-label="Users">
       <span class="nav-icon"><i class="bi bi-shield-lock-fill"></i></span><span class="nav-text">Users</span>

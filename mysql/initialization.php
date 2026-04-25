@@ -260,10 +260,11 @@ CREATE TABLE IF NOT EXISTS `requirements` (
 -- Seed default requirements
 INSERT IGNORE INTO `requirements` (`name`, `description`, `student_type`, `sort_order`) VALUES
   ('PSA Birth Certificate', 'Original or certified true copy', 'new', 1),
-  ('Form 138 / Report Card', 'Previous school year report card', 'both', 2),
+  ('Form 138 / Report Card', 'Previous school year report card', 'new', 2),
   ('Good Moral Certificate', 'From previous school', 'new', 3),
   ('2x2 ID Photo', '2 pieces, white background', 'both', 4),
-  ('Baptismal Certificate', 'For Catholic students', 'new', 5);
+  ('Baptismal Certificate', 'For Catholic students', 'new', 5),
+  ('Certificate of Completion', 'From previous grade level (required for Grade 1 and Grade 7 entrants)', 'new', 6);
 
 -- Student document submissions
 CREATE TABLE IF NOT EXISTS `student_requirements` (
@@ -311,3 +312,56 @@ ALTER TABLE `payments`
 -- Add reference number to enrollments
 ALTER TABLE `enrollments`
   ADD COLUMN IF NOT EXISTS `ref_number` VARCHAR(20) DEFAULT NULL AFTER `id`;
+
+-- ============================================================
+--  FEE TYPE COLUMN
+-- ============================================================
+ALTER TABLE `fees`
+  ADD COLUMN IF NOT EXISTS `fee_type` ENUM('tuition','miscellaneous','pta_fund','development','books','sped','other') DEFAULT 'tuition' AFTER `name`;
+
+-- ============================================================
+--  SPED COLUMNS
+-- ============================================================
+ALTER TABLE `students`
+  ADD COLUMN IF NOT EXISTS `is_sped`    TINYINT(1)   NOT NULL DEFAULT 0   AFTER `is_archived`;
+ALTER TABLE `students`
+  ADD COLUMN IF NOT EXISTS `sped_notes` VARCHAR(255) DEFAULT NULL AFTER `is_sped`;
+
+-- ============================================================
+--  INTERNAL MESSAGING
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id`           INT AUTO_INCREMENT PRIMARY KEY,
+  `sender_id`    INT NOT NULL,
+  `recipient_id` INT NOT NULL,
+  `subject`      VARCHAR(255) NOT NULL,
+  `body`         TEXT NOT NULL,
+  `is_read`      TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at`   DATETIME DEFAULT current_timestamp(),
+  FOREIGN KEY (`sender_id`)    REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`recipient_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+--  DISCOUNTS / SCHOLARSHIPS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `discounts` (
+  `id`             INT AUTO_INCREMENT PRIMARY KEY,
+  `student_id`     INT NOT NULL,
+  `school_year_id` INT NOT NULL,
+  `type`           ENUM('employee','sibling','scholarship','other') NOT NULL,
+  `percentage`     DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  `label`          VARCHAR(100) DEFAULT NULL,
+  `notes`          VARCHAR(255) DEFAULT NULL,
+  `created_at`     DATETIME DEFAULT current_timestamp(),
+  FOREIGN KEY (`student_id`)     REFERENCES `students`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`school_year_id`) REFERENCES `school_years`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+--  PAYMENT PLAN COLUMNS
+-- ============================================================
+ALTER TABLE `payments`
+  ADD COLUMN IF NOT EXISTS `payment_plan` ENUM('annual','semi_annual','quarterly','monthly') DEFAULT 'annual' AFTER `payment_method`;
+ALTER TABLE `payments`
+  ADD COLUMN IF NOT EXISTS `surcharge` DECIMAL(10,2) DEFAULT 0.00 AFTER `payment_plan`;

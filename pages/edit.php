@@ -19,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $contact_number = trim($_POST['contact_number']     ?? '');
   $student_type   = trim($_POST['status']             ?? '');
   $existing_photo = trim($_POST['existing_photo']     ?? '');
+  $is_sped        = isset($_POST['is_sped']) ? 1 : 0;
+  $sped_notes     = trim($_POST['sped_notes'] ?? '');
 
   // ── Server-side validation ────────────────────────────────
   $name_pattern = '/^[a-zA-ZÀ-ÿ\s\-\.]+$/u';
@@ -79,14 +81,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     "UPDATE students SET
        photo=?, first_name=?, middle_name=?, last_name=?, lrn=?,
        grade_level_id=?, section_id=?, school_year_id=?,
-       city=?, contact_number=?, student_type=?
+       city=?, contact_number=?, student_type=?, is_sped=?, sped_notes=?
      WHERE id=?"
   );
   $stmt->bind_param(
-    "sssssiissssi",
+    "sssssiiisssisi",
     $photo, $first_name, $middle_name, $last_name, $lrn,
     $grade_level_id, $section_id, $school_year_id,
-    $city, $contact_number, $student_type, $id
+    $city, $contact_number, $student_type, $is_sped, $sped_notes, $id
   );
 
   $stmt->execute()

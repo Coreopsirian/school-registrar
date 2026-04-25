@@ -17,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $paid_at     = $_POST['paid_at'] ?? date('Y-m-d');
   $pay_method  = in_array($_POST['payment_method'] ?? '', ['cash','check','bank_transfer'])
                  ? $_POST['payment_method'] : 'cash';
+  $payment_plan = in_array($_POST['payment_plan'] ?? '', ['annual','semi_annual','quarterly','monthly'])
+                  ? $_POST['payment_plan'] : 'annual';
+  $surcharge   = floatval($_POST['surcharge'] ?? 0);
 
   $fee        = $conn->query("SELECT amount FROM fees WHERE id=$fee_id")->fetch_assoc();
   $fee_amount = $fee ? floatval($fee['amount']) : 0;
@@ -33,14 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
-  $stmt = $conn->prepare("INSERT INTO payments (student_id, fee_id, amount_paid, balance, status, paid_at, or_number, payment_method, proof_file, notes)
-    VALUES (?,?,?,?,?,?,?,?,?,?)
+  $stmt = $conn->prepare("INSERT INTO payments (student_id, fee_id, amount_paid, balance, status, paid_at, or_number, payment_method, payment_plan, surcharge, proof_file, notes)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
     ON DUPLICATE KEY UPDATE amount_paid=VALUES(amount_paid), balance=VALUES(balance),
       status=VALUES(status), paid_at=VALUES(paid_at), or_number=VALUES(or_number),
-      payment_method=VALUES(payment_method),
+      payment_method=VALUES(payment_method), payment_plan=VALUES(payment_plan),
+      surcharge=VALUES(surcharge),
       proof_file=IF(VALUES(proof_file)!='',VALUES(proof_file),proof_file),
       notes=VALUES(notes)");
-  $stmt->bind_param("iiddssssss", $student_id, $fee_id, $amount_paid, $balance, $status, $paid_at, $or_number, $pay_method, $proof_file, $notes);
+  $stmt->bind_param("iiddsssssdss", $student_id, $fee_id, $amount_paid, $balance, $status, $paid_at, $or_number, $pay_method, $payment_plan, $surcharge, $proof_file, $notes);
   $stmt->execute()
     ? header("Location: payments.php?success=Payment recorded")
     : header("Location: payments.php?error=" . urlencode($conn->error));
@@ -197,6 +201,19 @@ $active_page = 'payments';
               <option value="check">Check</option>
               <option value="bank_transfer">Bank Transfer</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Payment Plan</label>
+            <select name="payment_plan" class="form-input">
+              <option value="annual">Annual (no surcharge)</option>
+              <option value="semi_annual">Semi-Annual</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="monthly">Monthly (with surcharge)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Surcharge / Penalty (₱)</label>
+            <input type="number" name="surcharge" class="form-input" step="0.01" min="0" value="0.00" placeholder="0.00"/>
           </div>
           <div class="form-group">
             <label>Amount Paid *</label>
