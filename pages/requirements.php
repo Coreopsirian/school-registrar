@@ -15,9 +15,9 @@ $uname     = $_SESSION['name'] ?? '';
 if (isset($_GET['verify'])) {
   $rid = intval($_GET['verify']);
   $sid = intval($_GET['student_id'] ?? 0);
-  $conn->prepare("UPDATE student_requirements SET status='verified', verified_by=?, verified_at=NOW() WHERE id=?")->bind_param("ii",$uid,$rid) && $conn->execute();
   $stmt = $conn->prepare("UPDATE student_requirements SET status='verified', verified_by=?, verified_at=NOW() WHERE id=?");
-  $stmt->bind_param("ii", $uid, $rid); $stmt->execute();
+  $stmt->bind_param("ii", $uid, $rid);
+  $stmt->execute();
   // Notify parent
   $parent = $conn->query("SELECT pa.id FROM parent_accounts pa JOIN parent_student_links psl ON psl.parent_id=pa.id WHERE psl.student_id=$sid LIMIT 1")->fetch_assoc();
   if ($parent) {
@@ -28,7 +28,14 @@ if (isset($_GET['verify'])) {
   require_once '../mysql/email_notifications.php';
   $req_data = $conn->query("SELECT sr.student_id, r.name as req_name FROM student_requirements sr JOIN requirements r ON r.id=sr.requirement_id WHERE sr.id=$rid")->fetch_assoc();
   if ($req_data) {
-    $parent_email_row = $conn->query("SELECT pa.email, pa.name, s.first_name, s.last_name FROM parent_accounts pa JOIN students s ON s.id=pa.student_id WHERE pa.student_id={$req_data['student_id']} LIMIT 1")->fetch_assoc();
+    $parent_email_row = $conn->query("
+      SELECT pa.email, pa.name, s.first_name, s.last_name
+      FROM parent_accounts pa
+      JOIN parent_student_links psl ON psl.parent_id = pa.id
+      JOIN students s ON s.id = psl.student_id
+      WHERE psl.student_id = {$req_data['student_id']}
+      LIMIT 1
+    ")->fetch_assoc();
     if ($parent_email_row) {
       notifyDocumentVerified($parent_email_row['email'], $parent_email_row['name'], $parent_email_row['first_name'].' '.$parent_email_row['last_name'], $req_data['req_name']);
     }
@@ -108,7 +115,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'rejec
   require_once '../mysql/email_notifications.php';
   $req_data_rej = $conn->query("SELECT sr.student_id, r.name as req_name FROM student_requirements sr JOIN requirements r ON r.id=sr.requirement_id WHERE sr.id=$sr_id")->fetch_assoc();
   if ($req_data_rej) {
-    $parent_email_row = $conn->query("SELECT pa.email, pa.name, s.first_name, s.last_name FROM parent_accounts pa JOIN students s ON s.id=pa.student_id WHERE pa.student_id={$req_data_rej['student_id']} LIMIT 1")->fetch_assoc();
+    $parent_email_row = $conn->query("
+      SELECT pa.email, pa.name, s.first_name, s.last_name
+      FROM parent_accounts pa
+      JOIN parent_student_links psl ON psl.parent_id = pa.id
+      JOIN students s ON s.id = psl.student_id
+      WHERE psl.student_id = {$req_data_rej['student_id']}
+      LIMIT 1
+    ")->fetch_assoc();
     if ($parent_email_row) {
       notifyDocumentRejected($parent_email_row['email'], $parent_email_row['name'], $parent_email_row['first_name'].' '.$parent_email_row['last_name'], $req_data_rej['req_name']);
     }
@@ -253,7 +267,6 @@ $active_page = 'requirements';
           <div class="req-status-dot dot-<?= $status ?>"></div>
           <div>
             <div class="req-name"><?= htmlspecialchars($req['name']) ?></div>
-            <?php if ($req['description']): ?><div class="req-desc"><?= htmlspecialchars($req['description']) ?></div><?php endif; ?>
             <?php if ($req['submitted_at']): ?><div class="req-date">Submitted: <?= date('M j, Y', strtotime($req['submitted_at'])) ?></div><?php endif; ?>
             <?php if ($status === 'rejected' && $req['reject_reason']): ?><div class="reject-reason"><i class="bi bi-exclamation-circle"></i> <?= htmlspecialchars($req['reject_reason']) ?></div><?php endif; ?>
             <?php if (!empty($req['uploaded_by_role'])): ?><div class="uploaded-by">Uploaded by: <?= ucfirst($req['uploaded_by_role']) ?></div><?php endif; ?>

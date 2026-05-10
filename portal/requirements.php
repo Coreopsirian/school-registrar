@@ -47,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $ext      = strtolower(pathinfo($_FILES['doc_file']['name'], PATHINFO_EXTENSION));
       $safe     = preg_replace('/[^a-zA-Z0-9\-]/', '_', $student_name . '_' . $req_name);
       $filename = $safe . '_' . uniqid() . '.' . $ext;
-      move_uploaded_file($_FILES['doc_file']['tmp_name'], "../pages/uploads/" . $filename);
+      $upload_path = __DIR__ . '/../pages/uploads/';
+      if (!is_dir($upload_path)) mkdir($upload_path, 0755, true);
+      move_uploaded_file($_FILES['doc_file']['tmp_name'], $upload_path . $filename);
 
       $stmt = $conn->prepare("INSERT INTO student_requirements (student_id, requirement_id, school_year_id, file_path, status, submitted_at)
         VALUES (?,?,?,?,'submitted',NOW())
@@ -128,7 +130,6 @@ if (!empty($notifs)) {
         <div class="portal-req-dot dot-<?= $status ?>"></div>
         <div>
           <div class="portal-req-name"><?= htmlspecialchars($r['name']) ?></div>
-          <?php if ($r['description']): ?><div class="portal-req-desc"><?= htmlspecialchars($r['description']) ?></div><?php endif; ?>
           <?php if ($r['submitted_at']): ?><div class="portal-req-date">Submitted <?= date('M j, Y', strtotime($r['submitted_at'])) ?></div><?php endif; ?>
           <?php if ($status === 'rejected' && $r['reject_reason']): ?>
             <div class="reject-reason"><i class="bi bi-exclamation-circle"></i> Rejected: <?= htmlspecialchars($r['reject_reason']) ?></div>
@@ -162,7 +163,7 @@ if (!empty($notifs)) {
 
   <div class="portal-req-note">
     <i class="bi bi-info-circle-fill"></i>
-    Accepted formats: JPG, PNG, PDF · <strong>Max file size: 3MB</strong> · Documents marked <strong>Under Review</strong> are awaiting registrar verification.
+   Documents marked <strong>Under Review</strong> are awaiting registrar verification.
     Documents marked <strong>To Follow</strong> must be submitted as soon as possible.
   </div>
 </div>

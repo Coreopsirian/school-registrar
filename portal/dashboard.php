@@ -64,11 +64,26 @@ $step1 = !empty($enrollment); // Applied
 $step2 = false; $step3 = false; $step4 = false;
 
 if ($step1) {
-  $doc_check = $conn->query("SELECT COUNT(*) as c FROM student_requirements WHERE student_id=$student_id AND school_year_id=$sy_id AND status='verified'")->fetch_assoc();
-  $step2 = ($doc_check['c'] ?? 0) > 0;
+  // Documents step: ALL required docs must be verified
+  $doc_total = $conn->query("
+    SELECT COUNT(*) as c FROM requirements r
+    WHERE r.is_required=1
+    AND (r.student_type='both' OR r.student_type='{$student['student_type']}')
+  ")->fetch_assoc()['c'] ?? 0;
 
-  $pay_check = $conn->query("SELECT COUNT(*) as c FROM payments WHERE student_id=$student_id AND status IN ('paid','partial')")->fetch_assoc();
-  $step3 = ($pay_check['c'] ?? 0) > 0;
+  $doc_verified = $conn->query("
+    SELECT COUNT(*) as c FROM student_requirements sr
+    JOIN requirements r ON r.id = sr.requirement_id
+    WHERE sr.student_id=$student_id AND sr.school_year_id=$sy_id
+    AND sr.status='verified'
+    AND r.is_required=1
+    AND (r.student_type='both' OR r.student_type='{$student['student_type']}')
+  ")->fetch_assoc()['c'] ?? 0;
+
+  $step2 = ($doc_total > 0 && $doc_verified >= $doc_total);
+
+  $pay_check = $conn->query("SELECT COALESCE(SUM(amount_paid),0) as total FROM payments WHERE student_id=$student_id")->fetch_assoc();
+  $step3 = ($pay_check['total'] ?? 0) > 0;
 
   $step4 = ($enrollment['status'] ?? '') === 'enrolled';
 }
@@ -85,11 +100,23 @@ $req_summary = $conn->query("
   WHERE r.is_required=1 AND (r.student_type='both' OR r.student_type='{$student['student_type']}')
 ")->fetch_assoc();
 
-// Payment summary
+// Payment summary — read directly from payments table
 $pay_summary = $conn->query("
-  SELECT COALESCE(SUM(amount_paid),0) as paid, COALESCE(SUM(balance),0) as balance
+  SELECT COALESCE(SUM(amount_paid),0) as paid
   FROM payments WHERE student_id=$student_id
 ")->fetch_assoc();
+
+// Compute total fees (deduplicated) for balance
+$fees_for_balance = $conn->query("
+  SELECT name, amount FROM fees
+  WHERE grade_level_id = {$student['grade_level_id']} AND school_year_id = $sy_id AND fee_type != 'sped'
+  ORDER BY name
+")->fetch_all(MYSQLI_ASSOC);
+$seen_bal = []; $total_fees_bal = 0;
+foreach ($fees_for_balance as $f) {
+  if (!isset($seen_bal[$f['name']])) { $seen_bal[$f['name']] = true; $total_fees_bal += $f['amount']; }
+}
+$pay_summary['balance'] = max(0, $total_fees_bal - $pay_summary['paid']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -130,7 +157,7 @@ $pay_summary = $conn->query("
     </div>
     <div class="portal-student-info">
       <div class="portal-student-name"><?= htmlspecialchars($student['last_name'] . ', ' . $student['first_name'] . ' ' . ($student['middle_name'] ?? '')) ?></div>
-      <div class="portal-student-meta">LRN: <?= htmlspecialchars($student['lrn']) ?> · <?= htmlspecialchars($student['grade'] ?? '—') ?> · <?= htmlspecialchars($student['section'] ?? '—') ?></div>
+      <div class="portal-student-meta" style="font-size:13px;color:var(--muted);margin-top:3px;"><?= htmlspecialchars($student['grade'] ?? '—') ?></div>
     </div>
     <div>
       <?php $es = $enrollment['status'] ?? 'not enrolled'; ?>

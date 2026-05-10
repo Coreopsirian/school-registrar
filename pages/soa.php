@@ -21,55 +21,65 @@ if (!$student) { header('Location: payments.php'); exit(); }
 
 $enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$student_id AND school_year_id=$sy_id LIMIT 1")->fetch_assoc();
 
-$fees_payments = $conn->query("
-  SELECT f.name as fee_name, f.amount,
+$fees_raw = $conn->query("
+  SELECT f.id as fee_id, f.name as fee_name, f.amount, f.fee_type,
          p.id as payment_id, p.amount_paid, p.balance, p.status,
-         p.paid_at, p.or_number, p.payment_method, p.payment_plan, p.surcharge, p.proof_file
+         p.paid_at, p.payment_method, p.proof_file
   FROM fees f
   LEFT JOIN payments p ON p.fee_id=f.id AND p.student_id=$student_id
-  WHERE f.grade_level_id = {$student['grade_level_id']} AND f.school_year_id = $sy_id
-  ORDER BY f.name
+  WHERE f.grade_level_id = {$student['grade_level_id']}
+    AND f.school_year_id = $sy_id
+    AND (f.fee_type != 'sped' OR {$student['is_sped']})
+  ORDER BY FIELD(f.fee_type,'tuition','miscellaneous','pta_fund','development','books','reservation','other'), f.name
 ")->fetch_all(MYSQLI_ASSOC);
 
-$total_fees = array_sum(array_column($fees_payments, 'amount'));
-$total_paid = array_sum(array_column($fees_payments, 'amount_paid'));
-$total_bal  = array_sum(array_column($fees_payments, 'balance'));
-
-// Auto-apply SPED fee if student is flagged
-if (!empty($student['is_sped'])) {
-  $sped_fee = $conn->query("
-    SELECT f.* FROM fees f
-    WHERE f.fee_type = 'sped' AND f.school_year_id = $sy_id
-    AND f.grade_level_id = {$student['grade_level_id']}
-    LIMIT 1
-  ")->fetch_assoc();
-
-  if ($sped_fee) {
-    // Check if already in payments
-    $already = false;
-    foreach ($fees_payments as $fp) {
-      if ($fp['fee_name'] === $sped_fee['name']) { $already = true; break; }
-    }
-    if (!$already) {
-      $fees_payments[] = [
-        'fee_name' => $sped_fee['name'] . ' (SPED)',
-        'amount'   => $sped_fee['amount'],
-        'amount_paid' => 0,
-        'balance'  => $sped_fee['amount'],
-        'status'   => 'unpaid',
-        'paid_at'  => null,
-        'or_number' => null,
-        'payment_method' => null,
-        'payment_plan' => null,
-        'surcharge' => 0,
-        'proof_file' => null,
-        'payment_id' => null,
-      ];
-      $total_fees += $sped_fee['amount'];
-      $total_bal  += $sped_fee['amount'];
-    }
+// Get actual payment details (method, OR, date) from payments table
+$pay_details = $conn->query("
+  SELECT payment_method, or_number, paid_at, proof_file
+  FROM payments WHERE student_id=$student_id AND amount_paid > 0
+  ORDER BY paid_at DESC LIMIT 1
+")->fetch_assoc();
+// Deduplicate by fee name
+$seen_fees = [];
+$fees_payments = [];
+foreach ($fees_raw as $fp) {
+  if (!isset($seen_fees[$fp['fee_name']])) {
+    $seen_fees[$fp['fee_name']] = true;
+    $fees_payments[] = $fp;
   }
 }
+
+$total_fees = array_sum(array_column($fees_payments, 'amount'));
+
+// Read actual paid amount directly from payments table — bypasses fee ID mapping issues
+$pay_totals = $conn->query("
+  SELECT COALESCE(SUM(amount_paid),0) as paid
+  FROM payments WHERE student_id=$student_id
+")->fetch_assoc();
+$total_paid = $pay_totals['paid'];
+$total_bal  = max(0, $total_fees - $total_paid);
+
+// Distribute paid amount across fee rows proportionally for display
+$remaining = $total_paid;
+foreach ($fees_payments as &$fp) {
+  if ($remaining >= $fp['amount']) {
+    $fp['amount_paid'] = $fp['amount'];
+    $fp['balance']     = 0;
+    $fp['status']      = 'paid';
+    $fp['paid_at']     = $fp['paid_at'] ?? null;
+    $remaining        -= $fp['amount'];
+  } elseif ($remaining > 0) {
+    $fp['amount_paid'] = $remaining;
+    $fp['balance']     = $fp['amount'] - $remaining;
+    $fp['status']      = 'partial';
+    $remaining         = 0;
+  } else {
+    $fp['amount_paid'] = 0;
+    $fp['balance']     = $fp['amount'];
+    $fp['status']      = 'unpaid';
+  }
+}
+unset($fp);
 
 // Discounts
 $discounts = $conn->query("
@@ -150,27 +160,44 @@ include('includes/sidebar.php');
       </div>
 
       <table class="soa-table">
-        <thead><tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Plan</th><th>Surcharge</th><th>Method</th><th>OR #</th><th>Date</th></tr></thead>
+        <thead><tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Method</th><th>Date Paid</th></tr></thead>
         <tbody>
           <?php foreach ($fees_payments as $fp): ?>
           <tr>
             <td style="font-weight:600;"><?= htmlspecialchars($fp['fee_name']) ?></td>
             <td>₱<?= number_format($fp['amount'], 2) ?></td>
             <td>₱<?= number_format($fp['amount_paid'] ?? 0, 2) ?></td>
-            <td style="font-weight:600;color:<?= ($fp['balance'] ?? 0) > 0 ? '#dc2626' : '#16a34a' ?>">₱<?= number_format($fp['balance'] ?? $fp['amount'], 2) ?></td>
+            <td style="font-weight:600;color:<?= ($fp['balance'] ?? $fp['amount']) > 0 ? '#dc2626' : '#16a34a' ?>">₱<?= number_format($fp['balance'] ?? $fp['amount'], 2) ?></td>
             <td><span class="badge-<?= $fp['status'] ?? 'unpaid' ?>"><?= ucfirst($fp['status'] ?? 'Unpaid') ?></span></td>
-            <td><?= $fp['payment_plan'] ? ucfirst(str_replace('_',' ',$fp['payment_plan'])) : '—' ?></td>
-            <td><?= ($fp['surcharge'] ?? 0) > 0 ? '₱'.number_format($fp['surcharge'],2) : '—' ?></td>
-            <td><?= $fp['payment_method'] ? ucfirst(str_replace('_',' ',$fp['payment_method'])) : '—' ?></td>
-            <td><?= htmlspecialchars($fp['or_number'] ?? '—') ?></td>
-            <td><?= $fp['paid_at'] ? date('M j, Y', strtotime($fp['paid_at'])) : '—' ?></td>
+            <td><?= !empty($pay_details['payment_method']) ? ucfirst(str_replace('_',' ',$pay_details['payment_method'])) : '—' ?></td>
+            <td><?= !empty($pay_details['paid_at']) ? date('M j, Y', strtotime($pay_details['paid_at'])) : '—' ?></td>
           </tr>
           <?php endforeach; ?>
           <?php if (empty($fees_payments)): ?>
-          <tr><td colspan="10" style="text-align:center;padding:32px;color:var(--color-muted);">No fee records for this school year.</td></tr>
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--color-muted);">No fee records for this school year.</td></tr>
           <?php endif; ?>
         </tbody>
       </table>
+
+      <?php
+      $proof_file   = $pay_details['proof_file'] ?? null;
+      $proof_method = $pay_details['payment_method'] ?? null;
+      if ($proof_file):
+      ?>
+      <div style="padding:16px 24px;border-top:1px solid var(--color-border);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="font-size:13px;font-weight:600;color:var(--color-text);">
+          <i class="bi bi-receipt" style="color:var(--color-primary);"></i>
+          Proof of Payment
+          <?php if ($proof_method): ?>
+            <span style="font-weight:400;color:var(--color-muted);">via <?= ucfirst(str_replace('_',' ',$proof_method)) ?></span>
+          <?php endif; ?>
+        </div>
+        <a href="uploads/<?= htmlspecialchars($proof_file) ?>" target="_blank"
+           style="padding:6px 16px;background:var(--color-primary);color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">
+          <i class="bi bi-eye-fill"></i> View Receipt
+        </a>
+      </div>
+      <?php endif; ?>
 
       <?php if (!empty($discounts)): ?>
       <div style="padding:16px 32px;border-top:1px solid var(--color-border);">

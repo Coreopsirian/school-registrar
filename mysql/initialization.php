@@ -268,12 +268,11 @@ CREATE TABLE IF NOT EXISTS `requirements` (
 
 -- Seed default requirements
 INSERT IGNORE INTO `requirements` (`name`, `description`, `student_type`, `sort_order`) VALUES
-  ('PSA Birth Certificate', 'Original or certified true copy', 'new', 1),
-  ('Form 138 / Report Card', 'Previous school year report card', 'new', 2),
-  ('Good Moral Certificate', 'From previous school', 'new', 3),
-  ('2x2 ID Photo', '2 pieces, white background', 'both', 4),
-  ('Baptismal Certificate', 'For Catholic students', 'new', 5),
-  ('Certificate of Completion', 'From previous grade level (required for Grade 1 and Grade 7 entrants)', 'new', 6);
+  ('PSA Birth Certificate', NULL, 'new', 1),
+  ('Form 138 / Report Card', NULL, 'new', 2),
+  ('Good Moral Certificate', NULL, 'new', 3),
+  ('2x2 ID Photo', NULL, 'both', 4),
+  ('Certificate of Completion', NULL, 'new', 5);
 
 -- Student document submissions
 CREATE TABLE IF NOT EXISTS `student_requirements` (

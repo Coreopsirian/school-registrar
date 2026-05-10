@@ -4,7 +4,7 @@ require_once __DIR__ . '/mailer.php';
 function notifyEnrollmentReceived($parent_email, $parent_name, $student_name, $ref_number, $plain_password = null) {
   $subject = "Enrollment Application Received - $ref_number";
 
-  $portal_url = 'http://localhost/school-registrar/portal/login.php';
+  $portal_url = getenv('APP_URL') ?: 'http://localhost/school-registrar/portal/login.php';
 
   // Login credentials block — only shown for new accounts
   $credentials_block = '';

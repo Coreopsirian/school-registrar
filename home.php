@@ -11,6 +11,41 @@ if (isset($_GET['check_email'])) {
   echo json_encode(['exists' => (bool)$row]);
   exit();
 }
+
+// Load DB for grade levels and form processing
+require_once './mysql/db.php';
+
+// Fetch grade levels grouped for the form
+$grade_groups = [
+  'Preschool'        => [],
+  'Elementary'       => [],
+  'Junior High School' => [],
+];
+$gl_res = $conn->query("SELECT id, name FROM grade_levels ORDER BY id");
+while ($gl = $gl_res->fetch_assoc()) {
+  $name = $gl['name'];
+  if (in_array($name, ['Nursery','Kinder 1','Kinder 2'])) {
+    $grade_groups['Preschool'][] = $gl;
+  } elseif (in_array($name, ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6'])) {
+    $grade_groups['Elementary'][] = $gl;
+  } else {
+    $grade_groups['Junior High School'][] = $gl;
+  }
+}
+
+function gradeOptions(array $groups): string {
+  $html = '<option value="">Select Grade</option>';
+  foreach ($groups as $label => $grades) {
+    if (empty($grades)) continue;
+    $html .= '<optgroup label="' . htmlspecialchars($label) . '">';
+    foreach ($grades as $g) {
+      $html .= '<option value="' . $g['id'] . '">' . htmlspecialchars($g['name']) . '</option>';
+    }
+    $html .= '</optgroup>';
+  }
+  return $html;
+}
+?>
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -130,7 +165,6 @@ $enroll_error   = '';
 $enroll_results = []; // array of ['ref'=>..., 'child_name'=>...]
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
-  require_once './mysql/db.php';
 
   // ── Parent fields ──
   $p_first      = trim($_POST['p_first']      ?? '');
@@ -264,6 +298,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         $conn->query("INSERT INTO enrollments (ref_number, student_id, school_year_id, grade_level_id, status) VALUES ('$ref_num', $student_id, $school_year_id, $c_grade, 'pending')");
         $enroll_results[] = ['ref' => $ref_num, 'child_name' => "$c_first $c_last"];
       }
+
+      // Save uploaded documents into student_requirements
+      $upload_dir = __DIR__ . '/pages/uploads/';
+      if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+      $allowed_types = ['image/jpeg','image/png','image/webp','application/pdf'];
+      $doc_map = [
+        'doc_form138'  => 'Form 138 / Report Card',
+        'doc_goodmoral' => 'Good Moral Certificate',
+      ];
+      foreach ($doc_map as $field => $req_name) {
+        if (!empty($_FILES[$field]['tmp_name']) && in_array($_FILES[$field]['type'], $allowed_types)) {
+          // Find requirement ID by name
+          $req_row = $conn->query("SELECT id FROM requirements WHERE name LIKE '%Form 138%' OR name LIKE '%Good Moral%' LIMIT 1");
+          $req_stmt = $conn->prepare("SELECT id FROM requirements WHERE name = ? LIMIT 1");
+          $req_stmt->bind_param("s", $req_name);
+          $req_stmt->execute();
+          $req_row = $req_stmt->get_result()->fetch_assoc();
+          if (!$req_row) continue;
+
+          $req_id  = $req_row['id'];
+          $ext     = strtolower(pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION));
+          $fname   = 'req_' . $student_id . '_' . $req_id . '_' . uniqid() . '.' . $ext;
+          if (move_uploaded_file($_FILES[$field]['tmp_name'], $upload_dir . $fname)) {
+            $ins = $conn->prepare("INSERT INTO student_requirements
+              (student_id, requirement_id, school_year_id, file_path, status, submitted_at)
+              VALUES (?,?,?,?,'submitted',NOW())
+              ON DUPLICATE KEY UPDATE file_path=VALUES(file_path), status='submitted', submitted_at=NOW()");
+            $ins->bind_param("iiis", $student_id, $req_id, $school_year_id, $fname);
+            $ins->execute();
+          }
+        }
+      }
     }
 
     if (!empty($enroll_results)) {
@@ -333,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
 <div class="enroll-error"><?= htmlspecialchars($enroll_error) ?></div>
 <?php endif; ?>
 
-<form class="enroll-form" method="POST" action="home.php#enroll" id="enrollForm" novalidate>
+<form class="enroll-form" method="POST" action="home.php#enroll" id="enrollForm" enctype="multipart/form-data" novalidate>
   <input type="hidden" name="enroll_submit" value="1">
 
   <!-- ── Privacy Consent ── -->
@@ -393,26 +459,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         <div class="ef-field">
           <label>Incoming Grade Level *</label>
           <select name="children[0][grade_level_id]" class="ef-input" required>
-            <option value="">Select Grade</option>
-            <optgroup label="Preschool">
-              <option value="1">Nursery</option>
-              <option value="2">Kinder 1</option>
-              <option value="3">Kinder 2</option>
-            </optgroup>
-            <optgroup label="Elementary">
-              <option value="4">Grade 1</option>
-              <option value="5">Grade 2</option>
-              <option value="6">Grade 3</option>
-              <option value="7">Grade 4</option>
-              <option value="8">Grade 5</option>
-              <option value="9">Grade 6</option>
-            </optgroup>
-            <optgroup label="Junior High School">
-              <option value="10">Grade 7</option>
-              <option value="11">Grade 8</option>
-              <option value="12">Grade 9</option>
-              <option value="13">Grade 10</option>
-            </optgroup>
+            <?= gradeOptions($grade_groups) ?>
           </select>
         </div>
         <div class="ef-field">
@@ -455,24 +502,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
           <input type="text" name="children[0][last_school]" class="ef-input"/>
         </div>
         <div class="ef-field" style="grid-column:1/-1;">
-          <label>School Address *</label>
+          <label>School Address</label>
           <input type="text" name="children[0][school_address]" class="ef-input"/>
-        </div>
-        <div class="ef-field">
-          <label>School Year Graduated</label>
-          <select name="children[0][school_year_graduated]" class="ef-input">
-            <option value="">Select</option>
-            <option value="2020-2021">2020-2021</option>
-            <option value="2021-2022">2021-2022</option>
-            <option value="2022-2023">2022-2023</option>
-            <option value="2023-2024">2023-2024</option>
-            <option value="2024-2025">2024-2025</option>
-            <option value="2025-2026">2025-2026</option>
-          </select>
-        </div>
-        <div class="ef-field">
-          <label>General Average</label>
-          <input type="text" name="children[0][general_average]" class="ef-input"/>
         </div>
       </div>
     </div>
@@ -724,6 +755,17 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
+// Grade options HTML for extra child blocks (built from DB)
+const GRADE_OPTIONS_HTML = <?= json_encode('<option value="">Select Grade</option>' . implode('', array_map(function($label, $grades) {
+  if (empty($grades)) return '';
+  $html = '<optgroup label="' . htmlspecialchars($label) . '">';
+  foreach ($grades as $g) {
+    $html .= '<option value="' . $g['id'] . '">' . htmlspecialchars($g['name']) . '</option>';
+  }
+  $html .= '</optgroup>';
+  return $html;
+}, array_keys($grade_groups), array_values($grade_groups)))) ?>;
+
 // ── Hide password row if email already has an account ──────
 (function() {
   const emailField = document.querySelector('input[name="p_email"]');
@@ -805,26 +847,7 @@ function addExtraChild() {
       <div class="ef-field">
         <label>Grade Level *</label>
         <select name="children[${idx}][grade_level_id]" class="ef-input" required>
-          <option value="">Select Grade</option>
-          <optgroup label="Preschool">
-            <option value="1">Nursery</option>
-            <option value="2">Kinder 1</option>
-            <option value="3">Kinder 2</option>
-          </optgroup>
-          <optgroup label="Elementary">
-            <option value="4">Grade 1</option>
-            <option value="5">Grade 2</option>
-            <option value="6">Grade 3</option>
-            <option value="7">Grade 4</option>
-            <option value="8">Grade 5</option>
-            <option value="9">Grade 6</option>
-          </optgroup>
-          <optgroup label="Junior High School">
-            <option value="10">Grade 7</option>
-            <option value="11">Grade 8</option>
-            <option value="12">Grade 9</option>
-            <option value="13">Grade 10</option>
-          </optgroup>
+          ${GRADE_OPTIONS_HTML}
         </select>
       </div>
       <div class="ef-field">

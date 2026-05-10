@@ -70,8 +70,21 @@ $reqs = $conn->query("
 // Enrollment record
 $enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$id AND school_year_id=$sy_id LIMIT 1")->fetch_assoc();
 
-// Payment summary
-$pay = $conn->query("SELECT COALESCE(SUM(amount_paid),0) as paid, COALESCE(SUM(balance),0) as bal FROM payments WHERE student_id=$id")->fetch_assoc();
+// Payment summary — compute correctly using deduplicated fees
+$pay_raw = $conn->query("SELECT COALESCE(SUM(amount_paid),0) as paid FROM payments WHERE student_id=$id")->fetch_assoc();
+$fees_for_bal = $conn->query("
+  SELECT name, amount FROM fees
+  WHERE grade_level_id = {$student['grade_level_id']} AND school_year_id = $sy_id AND fee_type != 'sped'
+  ORDER BY name
+")->fetch_all(MYSQLI_ASSOC);
+$seen_bal = []; $total_fees_bal = 0;
+foreach ($fees_for_bal as $f) {
+  if (!isset($seen_bal[$f['name']])) { $seen_bal[$f['name']] = true; $total_fees_bal += $f['amount']; }
+}
+$pay = [
+  'paid' => $pay_raw['paid'],
+  'bal'  => max(0, $total_fees_bal - $pay_raw['paid']),
+];
 
 $profile_success = $_GET['success'] ?? '';
 $profile_error   = $_GET['error']   ?? '';

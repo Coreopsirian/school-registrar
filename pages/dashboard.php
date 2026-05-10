@@ -90,26 +90,22 @@ $recent = $conn->query("
   <div id="page-container">
 
     <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#dbeafe;"><i class="bi bi-people-fill" style="color:#2563eb;"></i></div>
+      <a href="students.php" class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-people-fill"></i></div>
         <div class="stat-body"><div class="stat-value"><?= $total_students ?></div><div class="stat-label">Total Students</div></div>
-        <a href="students.php" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#dcfce7;"><i class="bi bi-person-check-fill" style="color:#16a34a;"></i></div>
+      </a>
+      <a href="enrollment.php" class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-person-check-fill"></i></div>
         <div class="stat-body"><div class="stat-value"><?= $total_enrolled ?></div><div class="stat-label">Enrolled</div></div>
-        <a href="enrollment.php" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#fef9c3;"><i class="bi bi-hourglass-split" style="color:#ca8a04;"></i></div>
-        <div class="stat-body"><div class="stat-value"><?= $total_pending ?></div><div class="stat-label">Pending Enrollment</div></div>
-        <a href="enrollment.php?status=pending" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap" style="background:#fce7f3;"><i class="bi bi-cash-stack" style="color:#db2777;"></i></div>
+      </a>
+      <a href="enrollment.php?status=pending" class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
+        <div class="stat-body"><div class="stat-value"><?= $total_pending ?></div><div class="stat-label">Pending</div></div>
+      </a>
+      <a href="payments.php" class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-cash-stack"></i></div>
         <div class="stat-body"><div class="stat-value">₱<?= number_format($total_collection, 0) ?></div><div class="stat-label">Total Collection</div></div>
-        <a href="payments.php" class="stat-arrow"><i class="bi bi-arrow-right-short"></i></a>
-      </div>
+      </a>
     </div>
 
     <div class="dash-row">
