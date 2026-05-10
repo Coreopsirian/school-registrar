@@ -13,3 +13,7 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+
+# Composer dependencies — run `composer install` to restore
+vendor/
+composer.lock

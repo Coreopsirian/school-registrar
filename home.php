@@ -38,7 +38,6 @@ if (isset($_GET['check_email'])) {
     <div class="nav-links">
       <a href="#home">Home</a>
       <a href="#about">About</a>
-      <a href="#mission">Mission &amp; Vision</a>
       <a href="#enroll">Enrollment</a>
       <a href="index.php" class="nav-btn">Admin Login</a>
       <a href="portal/login.php" class="nav-btn" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);">Parent Portal</a>
@@ -48,6 +47,14 @@ if (isset($_GET['check_email'])) {
 
 <!-- ── HERO ── -->
 <section class="hero" id="home">
+  <!-- Slideshow backgrounds -->
+  <div class="hero-slides">
+    <div class="hero-slide active" style="background-image:url('./images/school1.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('./images/school2.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('./images/school3.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('./images/school4.jpg')"></div>
+    <div class="hero-slide" style="background-image:url('./images/school5.jpg')"></div>
+  </div>
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <div class="hero-badge">SY 2026&#8211;2027 Enrollment Now Open</div>
@@ -86,10 +93,10 @@ if (isset($_GET['check_email'])) {
 </section>
 
 <!-- ── MISSION & VISION ── -->
-<section class="section section-alt" id="mission">
+<section class="section" id="mission">
   <div class="container">
     <div class="section-label">Our Purpose</div>
-    <h2 class="section-title">Mission &amp; Vision</h2>
+    <h2 class="section-title">Mission and Vision</h2>
     <div class="mv-grid">
       <div class="mv-card">
         <h3>Vision</h3>
@@ -108,7 +115,7 @@ if (isset($_GET['check_email'])) {
 </section>
 
 <!-- ── ONLINE ENROLLMENT ── -->
-<section class="section" id="enroll">
+<section class="section section-alt" id="enroll">
   <div class="container">
     <div class="section-label">Admissions</div>
     <h2 class="section-title">Online Enrollment Form</h2>
@@ -265,9 +272,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
       require_once './mysql/email_notifications.php';
       $guardian_email = trim($p_email ?? '');
       $guardian_name  = trim(($p_first ?? '') . ' ' . ($p_last ?? ''));
+      // Only pass plain password for new accounts so email can show login credentials
+      $plain_pass_for_email = empty($existing_parent) ? $p_password : null;
       if ($guardian_email) {
         foreach ($enroll_results as $er) {
-          notifyEnrollmentReceived($guardian_email, $guardian_name, $er['child_name'], $er['ref']);
+          notifyEnrollmentReceived($guardian_email, $guardian_name, $er['child_name'], $er['ref'], $plain_pass_for_email);
         }
       }
     } else {
@@ -321,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
 <?php else: ?>
 
 <?php if ($enroll_error): ?>
-<div class="enroll-error"><i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($enroll_error) ?></div>
+<div class="enroll-error"><?= htmlspecialchars($enroll_error) ?></div>
 <?php endif; ?>
 
 <form class="enroll-form" method="POST" action="home.php#enroll" id="enrollForm" novalidate>
@@ -331,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
   <div class="ef-section">
     <div class="ef-section-header">Privacy Consent</div>
     <div class="ef-section-body">
-      <p style="font-size:13px;color:#374151;line-height:1.8;margin-bottom:14px;">
+      <p style="font-size:13px;color:#374151;line-height:1.8;margin-bottom:20px;">
         I understand and agree that by filling out this form, I am allowing COJ Catholic Progressive School to use, collect, and disclose my child's personal information for Enrollment Application and to store it as long as necessary for the fulfillment of the stated purpose in accordance with the applicable laws, including the Data Privacy Act of 2012 and its Implementing Rules and Regulations.
       </p>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:600;color:#374151;cursor:pointer;">
@@ -343,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
 
   <div class="ef-notice">
     <i class="bi bi-info-circle-fill"></i>
-    Accomplish the form properly. Give complete and correct information. Do not abbreviate. <strong>(*) Required fields. Please put N/A if not applicable.</strong>
+    Please accomplish the form properly by giving complete and correct information (do not abbreviate). Please put N/A if not applicable
   </div>
 
   <!-- ══════════════════════════════════════════════════════
@@ -368,15 +377,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
       <div class="ef-grid ef-3col">
         <div class="ef-field">
           <label>First Name *</label>
-          <input type="text" name="children[0][first_name]" class="ef-input" required placeholder="Juan"/>
+          <input type="text" name="children[0][first_name]" class="ef-input" required/>
         </div>
         <div class="ef-field">
-          <label>Middle Name *</label>
-          <input type="text" name="children[0][middle_name]" class="ef-input" placeholder="Santos (N/A if none)"/>
+          <label>Middle Name</label>
+          <input type="text" name="children[0][middle_name]" class="ef-input" placeholder="N/A if none"/>
         </div>
         <div class="ef-field">
           <label>Last Name *</label>
-          <input type="text" name="children[0][last_name]" class="ef-input" required placeholder="Dela Cruz"/>
+          <input type="text" name="children[0][last_name]" class="ef-input" required/>
         </div>
       </div>
 
@@ -385,10 +394,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
           <label>Incoming Grade Level *</label>
           <select name="children[0][grade_level_id]" class="ef-input" required>
             <option value="">Select Grade</option>
-            <option value="1">Grade 7</option>
-            <option value="2">Grade 8</option>
-            <option value="3">Grade 9</option>
-            <option value="4">Grade 10</option>
+            <optgroup label="Preschool">
+              <option value="1">Nursery</option>
+              <option value="2">Kinder 1</option>
+              <option value="3">Kinder 2</option>
+            </optgroup>
+            <optgroup label="Elementary">
+              <option value="4">Grade 1</option>
+              <option value="5">Grade 2</option>
+              <option value="6">Grade 3</option>
+              <option value="7">Grade 4</option>
+              <option value="8">Grade 5</option>
+              <option value="9">Grade 6</option>
+            </optgroup>
+            <optgroup label="Junior High School">
+              <option value="10">Grade 7</option>
+              <option value="11">Grade 8</option>
+              <option value="12">Grade 9</option>
+              <option value="13">Grade 10</option>
+            </optgroup>
           </select>
         </div>
         <div class="ef-field">
@@ -401,7 +425,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         </div>
         <div class="ef-field">
           <label>Religion</label>
-          <input type="text" name="children[0][religion]" class="ef-input" placeholder="e.g. Roman Catholic"/>
+          <input type="text" name="children[0][religion]" class="ef-input"/>
         </div>
       </div>
 
@@ -412,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         </div>
         <div class="ef-field">
           <label>Place of Birth</label>
-          <input type="text" name="children[0][birth_place]" class="ef-input" placeholder="e.g. Quezon City"/>
+          <input type="text" name="children[0][birth_place]" class="ef-input"/>
         </div>
       </div>
 
@@ -428,11 +452,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
       <div class="ef-grid ef-2col">
         <div class="ef-field" style="grid-column:1/-1;">
           <label>School Last Attended *</label>
-          <input type="text" name="children[0][last_school]" class="ef-input" placeholder="e.g. San Jose Elementary School"/>
+          <input type="text" name="children[0][last_school]" class="ef-input"/>
         </div>
         <div class="ef-field" style="grid-column:1/-1;">
           <label>School Address *</label>
-          <input type="text" name="children[0][school_address]" class="ef-input" placeholder="e.g. 123 Rizal Ave, Quezon City"/>
+          <input type="text" name="children[0][school_address]" class="ef-input"/>
         </div>
         <div class="ef-field">
           <label>School Year Graduated</label>
@@ -448,7 +472,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         </div>
         <div class="ef-field">
           <label>General Average</label>
-          <input type="text" name="children[0][general_average]" class="ef-input" placeholder="e.g. 88"/>
+          <input type="text" name="children[0][general_average]" class="ef-input"/>
         </div>
       </div>
     </div>
@@ -464,53 +488,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
       <div class="ef-grid ef-3col">
         <div class="ef-field">
           <label>Guardian First Name *</label>
-          <input type="text" name="p_first" class="ef-input" required placeholder="Maria"/>
+          <input type="text" name="p_first" class="ef-input" required/>
         </div>
         <div class="ef-field">
           <label>Middle Name</label>
-          <input type="text" name="p_middle" class="ef-input" placeholder="Santos"/>
+          <input type="text" name="p_middle" class="ef-input"/>
         </div>
         <div class="ef-field">
           <label>Last Name *</label>
-          <input type="text" name="p_last" class="ef-input" required placeholder="Dela Cruz"/>
+          <input type="text" name="p_last" class="ef-input" required/>
         </div>
       </div>
 
       <div class="ef-grid ef-3col" style="margin-top:14px;">
         <div class="ef-field">
-          <label>Mobile Number * <span style="font-size:11px;color:#d97706;">(portal login)</span></label>
-          <input type="tel" name="p_mobile" class="ef-input" required placeholder="09XXXXXXXXX"/>
+          <label>Mobile Number * <span style="font-size:11px;color:#6b7280;">(09XXXXXXXXX)</span></label>
+          <input type="tel" name="p_mobile" class="ef-input" required/>
         </div>
         <div class="ef-field">
-          <label>Email Address * <span style="font-size:11px;color:#d97706;">(portal login)</span></label>
-          <input type="email" name="p_email" class="ef-input" required placeholder="parent@email.com"/>
+          <label>Email Address *</label>
+          <input type="email" name="p_email" class="ef-input" required/>
         </div>
         <div class="ef-field">
           <label>Alternate Contact No.</label>
-          <input type="tel" name="p_contact" class="ef-input" placeholder="09XXXXXXXXX"/>
+          <input type="tel" name="p_contact" class="ef-input"/>
         </div>
       </div>
 
       <!-- Portal password — only shown for new accounts -->
-      <div id="portal-password-row" style="margin-top:14px;">
-        <div style="background:#eef0f8;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#374151;">
-          <i class="bi bi-shield-lock-fill" style="color:#494C8A;"></i>
+      <div id="portal-password-row" style="margin-top:22px;">
+        <div style="background:#eef0f8;border-radius:8px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#374151;">
           <strong>Create your Parent Portal password.</strong>
-          You will use this together with your email to log in and track your child's enrollment.
         </div>
-        <div class="ef-grid ef-2col">
+        <div class="ef-grid ef-2col" style="gap:20px;">
           <div class="ef-field">
             <label>Portal Password * <span style="font-size:11px;color:#d97706;">(min. 6 characters)</span></label>
-            <input type="password" name="p_password" id="p_password" class="ef-input" required minlength="6" placeholder="Create a password"/>
+            <input type="password" name="p_password" id="p_password" class="ef-input" required minlength="6"/>
           </div>
           <div class="ef-field">
             <label>Confirm Password *</label>
-            <input type="password" name="p_password_confirm" id="p_password_confirm" class="ef-input" required minlength="6" placeholder="Repeat your password"/>
+            <input type="password" name="p_password_confirm" id="p_password_confirm" class="ef-input" required minlength="6"
+              oninput="
+                const pw = document.getElementById('p_password').value;
+                const hint = document.getElementById('pw-match-hint');
+                if (this.value && pw && this.value !== pw) {
+                  hint.textContent = 'Passwords do not match.';
+                  hint.style.color = '#b91c1c';
+                } else if (this.value && pw && this.value === pw) {
+                  hint.textContent = '✓ Passwords match.';
+                  hint.style.color = '#16a34a';
+                } else {
+                  hint.textContent = '';
+                }
+              "/>
+            <div id="pw-match-hint" style="font-size:12px;font-weight:500;margin-top:5px;min-height:16px;"></div>
           </div>
         </div>
       </div>
 
-      <div class="ef-grid ef-3col" style="margin-top:14px;">
+      <div class="ef-grid ef-3col" style="margin-top:22px;">
         <div class="ef-field">
           <label>Sex</label>
           <select name="p_sex" class="ef-input">
@@ -531,7 +567,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         </div>
         <div class="ef-field">
           <label>Religion</label>
-          <input type="text" name="p_religion" class="ef-input" placeholder="e.g. Roman Catholic"/>
+          <input type="text" name="p_religion" class="ef-input"/>
         </div>
       </div>
 
@@ -575,11 +611,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         </div>
         <div class="ef-field">
           <label>House #, Block, Lot, Unit, Building</label>
-          <input type="text" name="p_house" class="ef-input" placeholder="e.g. Blk 5 Lot 12, Unit 3A"/>
+          <input type="text" name="p_house" class="ef-input"/>
         </div>
         <div class="ef-field">
           <label>Street, Village / Subdivision</label>
-          <input type="text" name="p_street" class="ef-input" placeholder="e.g. Sampaguita St., Green Meadows"/>
+          <input type="text" name="p_street" class="ef-input"/>
         </div>
       </div>
     </div>
@@ -605,22 +641,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
   <div class="ef-section" id="attachments-section">
     <div class="ef-section-header">Attachments</div>
     <div class="ef-section-body">
-      <div id="new-student-docs" style="background:#e8f4f8;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;">
-        <strong>FOR NEW STUDENTS:</strong> Please attach a clear copy of <strong>Form 138 / Report Card</strong> and <strong>Certificate of Good Moral Character</strong> for evaluation and approval.
+      <div id="new-student-docs" style="background:#eef0f8;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#374151;">
+        For new students, please attach a clear copy of your <strong>Form 138 / Report Card</strong> and <strong>Certificate of Good Moral Character</strong>.
       </div>
-      <div id="old-student-docs" style="background:#e8f4f8;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;display:none;">
-        <strong>FOR RETURNING STUDENTS:</strong> Please attach your most recent <strong>Report Card (Form 138)</strong>.
+      <div id="old-student-docs" style="background:#eef0f8;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#374151;display:none;">
+        For returning students, please attach your most recent <strong>Report Card (Form 138)</strong>.
       </div>
       <div class="ef-grid ef-2col">
-        <div class="ef-field" id="doc-form138-wrap">
+        <div class="ef-field">
           <label>Form 138 / Report Card</label>
           <input type="file" name="doc_form138" class="ef-input" accept="image/*,.pdf" style="padding:6px;"/>
-          <div style="font-size:11px;color:#6b7280;margin-top:3px;">JPG, PNG or PDF · max 3MB</div>
         </div>
         <div class="ef-field" id="doc-goodmoral-wrap">
           <label>Certificate of Good Moral Character</label>
           <input type="file" name="doc_goodmoral" class="ef-input" accept="image/*,.pdf" style="padding:6px;"/>
-          <div style="font-size:11px;color:#6b7280;margin-top:3px;">JPG, PNG or PDF · max 3MB</div>
         </div>
       </div>
     </div>
@@ -631,7 +665,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
     <button type="submit" class="btn-enroll-submit">
       <i class="bi bi-send-fill"></i> Submit Enrollment Application
     </button>
-    <div style="font-size:12px;color:#6b7280;margin-top:10px;">
+    <div style="font-size:12px;color:#6b7280;margin-top:30px;">
       By submitting, you confirm all information provided is accurate and complete.
     </div>
   </div>
@@ -642,6 +676,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
 </section>
 
 <!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand-col">
         <div class="footer-brand">
@@ -658,7 +694,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
           <div class="footer-link-title">Quick Links</div>
           <a href="#home">Home</a>
           <a href="#about">About</a>
-          <a href="#mission">Mission &amp; Vision</a>
+          <a href="#mission">Mission and Vision</a>
           <a href="#enroll">Enrollment</a>
         </div>
         <div class="footer-link-group">
@@ -723,19 +759,20 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 
 // Show/hide Education section and attachment notes based on student type
 function toggleEduSection(val) {
-  const edu = document.getElementById('edu-section');
-  const newDocs = document.getElementById('new-student-docs');
-  const oldDocs = document.getElementById('old-student-docs');
+  const edu       = document.getElementById('edu-section');
+  const newDocs   = document.getElementById('new-student-docs');
+  const oldDocs   = document.getElementById('old-student-docs');
   const goodMoral = document.getElementById('doc-goodmoral-wrap');
+
   if (val === 'old') {
-    if (edu) edu.style.display = 'none';
-    if (newDocs) newDocs.style.display = 'none';
-    if (oldDocs) oldDocs.style.display = 'block';
+    if (edu)       edu.style.display      = 'none';
+    if (newDocs)   newDocs.style.display  = 'none';
+    if (oldDocs)   oldDocs.style.display  = 'block';
     if (goodMoral) goodMoral.style.display = 'none';
   } else {
-    if (edu) edu.style.display = 'block';
-    if (newDocs) newDocs.style.display = 'block';
-    if (oldDocs) oldDocs.style.display = 'none';
+    if (edu)       edu.style.display      = 'block';
+    if (newDocs)   newDocs.style.display  = 'block';
+    if (oldDocs)   oldDocs.style.display  = 'none';
     if (goodMoral) goodMoral.style.display = 'block';
   }
 }
@@ -769,8 +806,25 @@ function addExtraChild() {
         <label>Grade Level *</label>
         <select name="children[${idx}][grade_level_id]" class="ef-input" required>
           <option value="">Select Grade</option>
-          <option value="1">Grade 7</option><option value="2">Grade 8</option>
-          <option value="3">Grade 9</option><option value="4">Grade 10</option>
+          <optgroup label="Preschool">
+            <option value="1">Nursery</option>
+            <option value="2">Kinder 1</option>
+            <option value="3">Kinder 2</option>
+          </optgroup>
+          <optgroup label="Elementary">
+            <option value="4">Grade 1</option>
+            <option value="5">Grade 2</option>
+            <option value="6">Grade 3</option>
+            <option value="7">Grade 4</option>
+            <option value="8">Grade 5</option>
+            <option value="9">Grade 6</option>
+          </optgroup>
+          <optgroup label="Junior High School">
+            <option value="10">Grade 7</option>
+            <option value="11">Grade 8</option>
+            <option value="12">Grade 9</option>
+            <option value="13">Grade 10</option>
+          </optgroup>
         </select>
       </div>
       <div class="ef-field">
@@ -806,12 +860,12 @@ document.getElementById('enrollForm').addEventListener('submit', function(e) {
 
   function markErr(field, msg) {
     field.classList.add('ef-input-error');
-    field.style.borderColor = '#dc2626';
-    field.style.boxShadow = '0 0 0 3px rgba(220,38,38,.12)';
+    field.style.borderColor = '#f87171';
+    field.style.boxShadow = '0 0 0 3px rgba(248,113,113,.15)';
     const err = document.createElement('div');
     err.className = 'ef-error';
-    err.style.cssText = 'color:#dc2626;font-size:11px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:4px;';
-    err.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> ' + msg;
+    err.style.cssText = 'color:#b91c1c;font-size:12px;font-weight:500;margin-top:5px;';
+    err.textContent = msg;
     field.parentElement.appendChild(err);
     field.addEventListener('input', function fix() {
       field.classList.remove('ef-input-error');
@@ -865,6 +919,19 @@ document.getElementById('enrollForm').addEventListener('submit', function(e) {
     }
   });
 
+  // Password validation — client-side so the form never reloads on mismatch
+  const pwField   = document.getElementById('p_password');
+  const confField = document.getElementById('p_password_confirm');
+  const pwRow     = document.getElementById('portal-password-row');
+
+  if (pwRow && pwRow.style.display !== 'none' && pwField && confField) {
+    if (pwField.value.length > 0 && pwField.value.length < 6) {
+      markErr(pwField, 'Password must be at least 6 characters.');
+    } else if (pwField.value && confField.value && pwField.value !== confField.value) {
+      markErr(confField, 'Passwords do not match.');
+    }
+  }
+
   if (!valid) {
     e.preventDefault();
     if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -876,5 +943,20 @@ document.getElementById('enrollForm').addEventListener('submit', function(e) {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <!-- Philippine Address Selector -->
 <script src="./js/ph-address-selector.js"></script>
+
+<script>
+// ── Hero Slideshow ─────────────────────────────────────────
+(function () {
+  const slides = document.querySelectorAll('.hero-slide');
+  if (!slides.length) return;
+  let current = 0;
+
+  setInterval(function () {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+  }, 3000); // 3 seconds per slide (1.2s fade + 1.8s display)
+})();
+</script>
 </body>
 </html>

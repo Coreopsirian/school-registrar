@@ -219,12 +219,11 @@ if (!empty($_GET['edit_id'])) {
           <table id="students-table">
             <thead>
               <tr>
-                <th>Photo</th>
                 <th>Name</th>
                 <th>LRN</th>
                 <th>Grade &amp; Section</th>
                 <th>School Year</th>
-                <th>City</th> 
+                <th>City</th>
                 <th>Contact</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -233,27 +232,18 @@ if (!empty($_GET['edit_id'])) {
 
             <tbody>
             <?php
-              //read data of each row; uses internal id for edit/delete links
               while($row = $result->fetch_assoc()):
                 $badge = $row['student_type'] === 'new' ? 'badge_active' : 'badge_inactive';
-
               ?>
                 <tr>
-                <!-- photo of students -->
                   <td>
-                    <?php if(!empty($row['photo'])): ?>
-                      <img src = "uploads/<?= htmlspecialchars($row['photo'])?>" width="60" class="student-pics"/>
+                    <div class="student-name">
+                      <?= htmlspecialchars($row['last_name'].', '. $row['first_name'].' '. $row['middle_name']) ?>
+                      <?php if (!empty($row['is_sped'])): ?>
+                        <span style="background:#fef9c3;color:#92400e;border-radius:999px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px;vertical-align:middle;">SPED</span>
                       <?php endif; ?>
+                    </div>
                   </td>
-              <!-- students name -->
-              <td>
-                <div class="student-name">
-                  <?= htmlspecialchars($row['last_name'].', '. $row['first_name'].' '. $row['middle_name']) ?>
-                  <?php if (!empty($row['is_sped'])): ?>
-                    <span style="background:#fef9c3;color:#92400e;border-radius:999px;font-size:10px;font-weight:700;padding:1px 7px;margin-left:6px;vertical-align:middle;">SPED</span>
-                  <?php endif; ?>
-                </div>
-              </td>
               <!-- LRN -->
               <td><?= htmlspecialchars($row['lrn']) ?></td>
               <!-- Grade & Section -->

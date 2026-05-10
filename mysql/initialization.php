@@ -55,10 +55,19 @@ CREATE TABLE IF NOT EXISTS `grade_levels` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT IGNORE INTO `grade_levels` (`id`, `name`) VALUES
-  (1, 'Grade 7'),
-  (2, 'Grade 8'),
-  (3, 'Grade 9'),
-  (4, 'Grade 10');
+  (1,  'Nursery'),
+  (2,  'Kinder 1'),
+  (3,  'Kinder 2'),
+  (4,  'Grade 1'),
+  (5,  'Grade 2'),
+  (6,  'Grade 3'),
+  (7,  'Grade 4'),
+  (8,  'Grade 5'),
+  (9,  'Grade 6'),
+  (10, 'Grade 7'),
+  (11, 'Grade 8'),
+  (12, 'Grade 9'),
+  (13, 'Grade 10');
 
 -- ============================================================
 --  SECTIONS
@@ -230,9 +239,9 @@ CREATE TABLE IF NOT EXISTS `payments` (
 --  PHASE 2 — DUAL INTERFACE ADDITIONS
 -- ============================================================
 
--- Expand roles to include finance
+-- Expand roles: superadmin and registrar only
 ALTER TABLE `users`
-  MODIFY COLUMN `role` ENUM('superadmin','registrar','finance') NOT NULL DEFAULT 'registrar';
+  MODIFY COLUMN `role` ENUM('superadmin','registrar') NOT NULL DEFAULT 'registrar';
 
 -- Parent/Guardian accounts (separate from staff users)
 CREATE TABLE IF NOT EXISTS `parent_accounts` (

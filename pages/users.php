@@ -131,8 +131,8 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
             </td>
             <td class="td-muted"><?= htmlspecialchars($u['email']) ?></td>
             <td>
-              <span class="role-badge <?= match($u['role']) { 'superadmin' => 'role-super', 'finance' => 'role-finance', default => 'role-registrar' } ?>">
-                <?= match($u['role']) { 'superadmin' => 'Super Admin', 'finance' => 'Finance', default => 'Registrar' } ?>
+              <span class="role-badge <?= $u['role'] === 'superadmin' ? 'role-super' : 'role-registrar' ?>">
+                <?= $u['role'] === 'superadmin' ? 'Super Admin' : 'Registrar' ?>
               </span>
             </td>
             <td>
@@ -182,7 +182,6 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
             <label>Role</label>
             <select name="role" class="form-input">
               <option value="registrar">Registrar</option>
-              <option value="finance">Finance / Cashier</option>
               <option value="superadmin">Super Admin</option>
             </select>
           </div>
@@ -215,7 +214,6 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC, name ASC");
             <label>Role</label>
             <select name="role" class="form-input">
               <option value="registrar" <?= $edit_user['role'] === 'registrar' ? 'selected' : '' ?>>Registrar</option>
-              <option value="finance"   <?= $edit_user['role'] === 'finance'   ? 'selected' : '' ?>>Finance / Cashier</option>
               <option value="superadmin" <?= $edit_user['role'] === 'superadmin' ? 'selected' : '' ?>>Super Admin</option>
             </select>
           </div>

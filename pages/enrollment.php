@@ -43,12 +43,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
       // Send approval email if parent account exists
       require_once '../mysql/email_notifications.php';
-      $enroll_data = $conn->query("SELECT student_id, school_year_id FROM enrollments WHERE id=$enroll_id")->fetch_assoc();
+      $enroll_data = $conn->query("SELECT student_id FROM enrollments WHERE id=$enroll_id")->fetch_assoc();
       if ($enroll_data) {
         $sid_email = $enroll_data['student_id'];
-        $parent_email_row = $conn->query("SELECT pa.email, pa.name, s.first_name, s.last_name, g.name as grade FROM parent_accounts pa JOIN students s ON s.id=pa.student_id LEFT JOIN grade_levels g ON g.id=s.grade_level_id WHERE pa.student_id=$sid_email LIMIT 1")->fetch_assoc();
+        $parent_email_row = $conn->query("
+          SELECT pa.email, pa.name, s.first_name, s.last_name, g.name as grade
+          FROM parent_accounts pa
+          JOIN parent_student_links psl ON psl.parent_id = pa.id
+          JOIN students s ON s.id = psl.student_id
+          LEFT JOIN grade_levels g ON g.id = s.grade_level_id
+          WHERE psl.student_id = $sid_email
+          LIMIT 1
+        ")->fetch_assoc();
         if ($parent_email_row) {
-          notifyEnrollmentApproved($parent_email_row['email'], $parent_email_row['name'], $parent_email_row['first_name'].' '.$parent_email_row['last_name'], $parent_email_row['grade']);
+          notifyEnrollmentApproved(
+            $parent_email_row['email'],
+            $parent_email_row['name'],
+            $parent_email_row['first_name'] . ' ' . $parent_email_row['last_name'],
+            $parent_email_row['grade']
+          );
         }
       }
     }

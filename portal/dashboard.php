@@ -33,6 +33,30 @@ $student = $conn->query("
   WHERE s.id = $student_id
 ")->fetch_assoc();
 
+// Guard: no student found (deleted test data or orphaned session)
+if (!$student) {
+  // Clear the bad student_id from session
+  $_SESSION['student_id'] = null;
+  echo '<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    </head><body>';
+  include('includes/nav.php');
+  echo '<div class="portal-container" style="text-align:center;padding:60px 20px;">
+    <i class="bi bi-exclamation-circle" style="font-size:48px;color:#d97706;"></i>
+    <h3 style="margin-top:16px;">No Student Record Found</h3>
+    <p style="color:#6b7280;font-size:14px;max-width:400px;margin:0 auto;">
+      Your enrollment application is being processed.<br>
+      Please wait for the registrar to review your submission.<br><br>
+      If you believe this is an error, please contact the school registrar.
+    </p>
+    <a href="logout.php" style="display:inline-block;margin-top:24px;padding:10px 24px;background:#494C8A;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+      Log Out
+    </a>
+  </div></body></html>';
+  exit();
+}
+
 $enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$student_id AND school_year_id=$sy_id LIMIT 1")->fetch_assoc();
 
 // Timeline progress
@@ -102,11 +126,7 @@ $pay_summary = $conn->query("
   <!-- Student card -->
   <div class="portal-student-card">
     <div class="portal-student-avatar">
-      <?php if (!empty($student['photo'])): ?>
-        <img src="../pages/uploads/<?= htmlspecialchars($student['photo']) ?>" alt="Photo"/>
-      <?php else: ?>
-        <i class="bi bi-person-fill"></i>
-      <?php endif; ?>
+      <i class="bi bi-person-fill"></i>
     </div>
     <div class="portal-student-info">
       <div class="portal-student-name"><?= htmlspecialchars($student['last_name'] . ', ' . $student['first_name'] . ' ' . ($student['middle_name'] ?? '')) ?></div>

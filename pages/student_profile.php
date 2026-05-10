@@ -43,23 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   header("Location: student_profile.php?id=$id&success=Document uploaded"); exit();
 }
 
-// Handle parent password reset
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_parent_password') {
-  $pa_id    = intval($_POST['parent_id']);
-  $new_pass = trim($_POST['new_password'] ?? '');
-  if ($pa_id && strlen($new_pass) >= 6) {
-    $hashed = password_hash($new_pass, PASSWORD_DEFAULT);
-    $stmt_r = $conn->prepare("UPDATE parent_accounts SET password=? WHERE id=?");
-    $stmt_r->bind_param("si", $hashed, $pa_id);
-    $stmt_r->execute();
-    $uid = $_SESSION['user_id'] ?? 0;
-    $conn->query("INSERT INTO audit_log (user_id, user_name, action, target, target_id, details) VALUES ($uid, '{$_SESSION['name']}', 'reset_parent_password', 'parent_account', $pa_id, 'Password reset by admin')");
-    header("Location: student_profile.php?id=$id&success=Parent+password+reset+successfully&tab=parent"); exit();
-  } else {
-    header("Location: student_profile.php?id=$id&error=Password+must+be+at+least+6+characters&tab=parent"); exit();
-  }
-}
-
 // Handle document verify/reject from profile
 if (isset($_GET['verify_doc'])) {
   $sr_id = intval($_GET['verify_doc']);
@@ -89,9 +72,6 @@ $enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$id AND s
 
 // Payment summary
 $pay = $conn->query("SELECT COALESCE(SUM(amount_paid),0) as paid, COALESCE(SUM(balance),0) as bal FROM payments WHERE student_id=$id")->fetch_assoc();
-
-// Parent account
-$parent_acct = $conn->query("SELECT pa.* FROM parent_accounts pa JOIN parent_student_links psl ON psl.parent_id=pa.id WHERE psl.student_id=$id LIMIT 1")->fetch_assoc();
 
 $profile_success = $_GET['success'] ?? '';
 $profile_error   = $_GET['error']   ?? '';
@@ -138,8 +118,6 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
       <div class="page-sub"><a href="students.php" class="back-link"><i class="bi bi-arrow-left"></i> Back to Students</a></div>
     </div>
     <div class="topbar-actions">
-      <a href="students.php?edit_id=<?= $student['id'] ?>" class="btn-profile-edit"><i class="bi bi-pencil-fill"></i> Edit</a>
-      <button onclick="window.print()" class="btn-profile-print"><i class="bi bi-printer-fill"></i> Print</button>
     </div>
   </div>
 
@@ -151,11 +129,7 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
       <!-- LEFT card -->
       <div class="profile-card">
         <div class="profile-avatar">
-          <?php if (!empty($student['photo'])): ?>
-            <img src="uploads/<?= htmlspecialchars($student['photo']) ?>" alt="Photo"/>
-          <?php else: ?>
-            <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
-          <?php endif; ?>
+          <div class="avatar-placeholder"><i class="bi bi-person-fill"></i></div>
         </div>
         <div class="profile-name"><?= $fullname ?></div>
         <div class="profile-lrn">LRN: <?= htmlspecialchars($student['lrn']) ?></div>
@@ -172,7 +146,7 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
         <!-- Quick stats -->
         <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;width:100%;">
           <div style="background:var(--color-bg);border-radius:8px;padding:12px 14px;">
-            <div style="font-size:11px;color:var(--color-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Enrollment</div>
+            <div style="font-size:11px;color:var(--color-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Status</div>
             <div style="font-size:14px;font-weight:600;margin-top:4px;">
               <?php if ($enrollment): ?>
                 <span style="color:<?= $enrollment['status']==='enrolled'?'#16a34a':($enrollment['status']==='pending'?'#d97706':'#dc2626') ?>;">
@@ -205,12 +179,11 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
           <button class="tab-btn active" onclick="switchTab('personal',this)">Personal Info</button>
           <button class="tab-btn" onclick="switchTab('academic',this)">Academic</button>
           <button class="tab-btn" onclick="switchTab('documents',this)">Documents</button>
-          <button class="tab-btn" onclick="switchTab('parent',this)">Parent Account</button>
         </div>
 
         <!-- TAB: Personal -->
         <div class="tab-pane active" id="tab-personal">
-          <div class="section-title"><i class="bi bi-person-lines-fill"></i> Basic Information</div>
+          <div class="section-title"> Basic Information</div>
           <div class="info-grid">
             <div class="info-item"><div class="lbl">First Name</div><div class="val"><?= htmlspecialchars($student['first_name']) ?></div></div>
             <div class="info-item"><div class="lbl">Middle Name</div><div class="val"><?= htmlspecialchars($student['middle_name'] ?: '—') ?></div></div>
@@ -222,7 +195,7 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
             <div class="info-item"><div class="lbl">Contact Number</div><div class="val"><?= htmlspecialchars($student['contact_number'] ?? '—') ?></div></div>
           </div>
 
-          <div class="section-title"><i class="bi bi-geo-alt-fill"></i> Address</div>
+          <div class="section-title"> Address</div>
           <div class="info-grid">
             <div class="info-item"><div class="lbl">Province</div><div class="val"><?= htmlspecialchars($student['province'] ?? '—') ?></div></div>
             <div class="info-item"><div class="lbl">City / Municipality</div><div class="val"><?= htmlspecialchars($student['city_municipality'] ?? $student['city'] ?? '—') ?></div></div>
@@ -232,7 +205,7 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
 
         <!-- TAB: Academic -->
         <div class="tab-pane" id="tab-academic">
-          <div class="section-title"><i class="bi bi-mortarboard-fill"></i> Current Enrollment</div>
+          <div class="section-title"> Current Enrollment</div>
           <div class="info-grid">
             <div class="info-item"><div class="lbl">Grade Level</div><div class="val"><?= htmlspecialchars($student['grade_name'] ?? '—') ?></div></div>
             <div class="info-item"><div class="lbl">Section</div><div class="val"><?= htmlspecialchars($student['section_name'] ?? '—') ?></div></div>
@@ -240,7 +213,7 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
             <div class="info-item"><div class="lbl">Student Type</div><div class="val"><?= ucfirst($student['student_type']) ?></div></div>
           </div>
 
-          <div class="section-title"><i class="bi bi-building"></i> Education History</div>
+          <div class="section-title"> Education History</div>
           <div class="info-grid">
             <div class="info-item"><div class="lbl">Last School Attended</div><div class="val"><?= htmlspecialchars($student['last_school'] ?? '—') ?></div></div>
             <div class="info-item"><div class="lbl">School Year Graduated</div><div class="val"><?= htmlspecialchars($student['school_year_graduated'] ?? '—') ?></div></div>
@@ -292,73 +265,6 @@ $fullname = htmlspecialchars($student['last_name'] . ', ' . $student['first_name
           <?php endforeach; ?>
           <?php if (empty($reqs)): ?>
             <div style="text-align:center;padding:32px;color:var(--color-muted);">No requirements defined for this student type.</div>
-          <?php endif; ?>
-        </div>
-
-        <!-- TAB: Parent Account -->
-        <div class="tab-pane" id="tab-parent">
-          <?php if ($parent_acct): ?>
-            <div style="background:var(--color-bg);border-radius:10px;padding:20px;margin-bottom:16px;">
-              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <div style="width:44px;height:44px;border-radius:50%;background:var(--color-primary-bg);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--color-primary);">
-                  <i class="bi bi-person-fill"></i>
-                </div>
-                <div>
-                  <div style="font-size:15px;font-weight:700;"><?= htmlspecialchars($parent_acct['name']) ?></div>
-                  <div style="font-size:12px;color:var(--color-muted);"><?= htmlspecialchars($parent_acct['email']) ?></div>
-                  <?php if (!empty($parent_acct['contact'])): ?>
-                    <div style="font-size:12px;color:var(--color-muted);"><?= htmlspecialchars($parent_acct['contact']) ?></div>
-                  <?php endif; ?>
-                </div>
-                <span style="padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;background:<?= $parent_acct['is_active']?'#dcfce7':'#fdeaea' ?>;color:<?= $parent_acct['is_active']?'#166534':'#dc2626' ?>;">
-                  <?= $parent_acct['is_active']?'Active':'Inactive' ?>
-                </span>
-              </div>
-              <div style="margin-top:14px;font-size:12px;color:var(--color-muted);">
-                Portal: <a href="../portal/login.php" target="_blank" style="color:var(--color-primary);">portal/login.php</a>
-              </div>
-            </div>
-
-            <!-- Reset Password -->
-            <div style="border:1px solid var(--color-border);border-radius:10px;padding:18px;margin-bottom:16px;">
-              <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--color-text);">
-                <i class="bi bi-key-fill" style="color:var(--color-primary);"></i> Reset Portal Password
-              </div>
-              <form method="POST" action="student_profile.php?id=<?= $id ?>" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-                <input type="hidden" name="action" value="reset_parent_password">
-                <input type="hidden" name="parent_id" value="<?= $parent_acct['id'] ?>">
-                <div>
-                  <label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">New Password *</label>
-                  <input type="text" name="new_password" class="form-input" placeholder="Min. 6 characters" style="width:220px;" required minlength="6"/>
-                </div>
-                <button type="submit"
-                  onclick="return confirm('Reset this parent\'s portal password?')"
-                  style="padding:9px 18px;background:#d97706;color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
-                  <i class="bi bi-arrow-repeat"></i> Reset Password
-                </button>
-              </form>
-              <div style="font-size:11px;color:var(--color-muted);margin-top:8px;">
-                <i class="bi bi-info-circle"></i> Tell the parent their new password after resetting. They can change it from their portal profile.
-              </div>
-            </div>
-          <?php else: ?>
-            <p style="font-size:13px;color:var(--color-muted);margin-bottom:16px;">No parent account yet. Create one to give portal access.</p>
-            <form method="POST" action="create_parent.php" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px;">
-              <input type="hidden" name="student_id" value="<?= $student['id'] ?>">
-              <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Parent Name *</label>
-                <input type="text" name="parent_name" class="form-input" required/></div>
-              <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Email *</label>
-                <input type="email" name="parent_email" class="form-input" required/></div>
-              <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Contact</label>
-                <input type="text" name="parent_contact" class="form-input"/></div>
-              <div><label style="font-size:11px;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;">Password *</label>
-                <input type="password" name="parent_password" class="form-input" required/></div>
-              <div style="grid-column:1/-1;">
-                <button type="submit" style="padding:9px 20px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">
-                  <i class="bi bi-person-plus-fill"></i> Create Parent Account
-                </button>
-              </div>
-            </form>
           <?php endif; ?>
         </div>
 

@@ -27,24 +27,41 @@ if (!$student) {
 
 $success = $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $payment_id = intval($_POST['payment_id']);
+  $fee_id     = intval($_POST['fee_id'] ?? 0);
+  $payment_id = intval($_POST['payment_id'] ?? 0);
+
   if (!empty($_FILES['proof']['tmp_name'])) {
     $allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
     if (!in_array($_FILES['proof']['type'], $allowed)) {
       $error = "Only JPG, PNG, WEBP, or PDF allowed.";
+    } elseif ($_FILES['proof']['size'] > 5 * 1024 * 1024) {
+      $error = "File must be under 5MB.";
     } else {
       $fname = 'proof_' . uniqid() . '_' . basename($_FILES['proof']['name']);
       move_uploaded_file($_FILES['proof']['tmp_name'], "../pages/uploads/" . $fname);
-      $conn->query("UPDATE payments SET proof_file='$fname' WHERE id=$payment_id AND student_id=$student_id");
-      $success = "Proof of payment uploaded.";
+
+      if ($payment_id) {
+        // Update existing payment record
+        $conn->query("UPDATE payments SET proof_file='$fname' WHERE id=$payment_id AND student_id=$student_id");
+      } elseif ($fee_id) {
+        // No payment record yet — create one with unpaid status and attach proof
+        $fee_row = $conn->query("SELECT amount FROM fees WHERE id=$fee_id")->fetch_assoc();
+        $fee_amt = $fee_row['amount'] ?? 0;
+        $stmt_ins = $conn->prepare("INSERT INTO payments (student_id, fee_id, amount_paid, balance, status, proof_file) VALUES (?,?,0,?,?,?)");
+        $status_val = 'unpaid';
+        $stmt_ins->bind_param("iidss", $student_id, $fee_id, $fee_amt, $status_val, $fname);
+        $stmt_ins->execute();
+      }
+      $success = "Proof of payment uploaded. The finance staff will verify it shortly.";
     }
   }
 }
 
 $fees_payments = $conn->query("
-  SELECT f.name as fee_name, f.amount,
+  SELECT f.id as fee_id, f.name as fee_name, f.amount, f.fee_type,
          p.id as payment_id, p.amount_paid, p.balance, p.status,
-         p.paid_at, p.or_number, p.payment_method, p.proof_file
+         p.paid_at, p.or_number, p.payment_method, p.proof_file,
+         p.payment_plan, p.surcharge
   FROM fees f
   LEFT JOIN payments p ON p.fee_id=f.id AND p.student_id=$student_id
   WHERE f.grade_level_id = {$student['grade_level_id']} AND f.school_year_id = $sy_id
@@ -129,6 +146,39 @@ if (!empty($student['is_sped'])) {
     </div>
   </div>
 
+  <!-- Payment Instructions -->
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
+    <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px;"><i class="bi bi-bank"></i> Payment Instructions</div>
+    <div style="font-size:13px;color:#374151;line-height:1.8;">
+      <strong>GCash:</strong> 09XX-XXX-XXXX (COJ Catholic Progressive School)<br>
+      <strong>Bank Transfer:</strong> BDO Savings — Account Name: COJ Catholic Progressive School · Account No: 1234-5678-90<br>
+      <strong>Cash:</strong> Pay at the Finance Office, present this SOA as reference.
+    </div>
+    <div style="font-size:12px;color:#6b7280;margin-top:8px;">After payment, upload your receipt/screenshot below next to the corresponding fee.</div>
+  </div>
+
+  <!-- Discounts applied -->
+  <?php
+  $discounts = $conn->query("
+    SELECT d.type, d.percentage, d.fixed_amount, d.label
+    FROM discounts d
+    WHERE d.student_id = $student_id AND d.school_year_id = $sy_id
+  ")->fetch_all(MYSQLI_ASSOC);
+  if (!empty($discounts)):
+  ?>
+  <div style="background:#eef0f8;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#494C8A;margin-bottom:8px;"><i class="bi bi-percent"></i> Discounts / Scholarships Applied</div>
+    <?php foreach ($discounts as $d): ?>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid #e0e4f0;">
+      <span><?= htmlspecialchars($d['label'] ?: ucfirst($d['type'])) ?></span>
+      <span style="color:#16a34a;font-weight:700;">
+        <?= $d['fixed_amount'] ? '-₱'.number_format($d['fixed_amount'],2) : '-'.$d['percentage'].'%' ?>
+      </span>
+    </div>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+
   <!-- Fee breakdown -->
   <div class="soa-table-card">
     <table class="soa-table">
@@ -152,15 +202,21 @@ if (!empty($student['is_sped'])) {
           <td class="td-muted"><?= htmlspecialchars($fp['or_number'] ?? '—') ?></td>
           <td>
             <?php if (!empty($fp['proof_file'])): ?>
-              <a href="../pages/uploads/<?= htmlspecialchars($fp['proof_file']) ?>" target="_blank" class="portal-btn-view">View</a>
-            <?php elseif (!empty($fp['payment_id'])): ?>
-              <form method="POST" action="soa.php" enctype="multipart/form-data" style="display:inline-flex;gap:4px;align-items:center;">
-                <input type="hidden" name="payment_id" value="<?= $fp['payment_id'] ?>">
+              <a href="../pages/uploads/<?= htmlspecialchars($fp['proof_file']) ?>" target="_blank" class="portal-btn-view"><i class="bi bi-eye-fill"></i> View</a>
+              <!-- Allow re-upload -->
+              <form method="POST" action="soa.php" enctype="multipart/form-data" style="display:inline-flex;gap:4px;align-items:center;margin-top:4px;">
+                <input type="hidden" name="fee_id" value="<?= $fp['fee_id'] ?? 0 ?>">
+                <input type="hidden" name="payment_id" value="<?= $fp['payment_id'] ?? 0 ?>">
                 <input type="file" name="proof" accept="image/*,.pdf" class="portal-file-input" required/>
-                <button type="submit" class="portal-btn-upload"><i class="bi bi-upload"></i></button>
+                <button type="submit" class="portal-btn-upload" title="Re-upload proof"><i class="bi bi-arrow-repeat"></i></button>
               </form>
             <?php else: ?>
-              <span class="td-muted">—</span>
+              <form method="POST" action="soa.php" enctype="multipart/form-data" style="display:inline-flex;gap:4px;align-items:center;">
+                <input type="hidden" name="fee_id" value="<?= $fp['fee_id'] ?? 0 ?>">
+                <input type="hidden" name="payment_id" value="<?= $fp['payment_id'] ?? 0 ?>">
+                <input type="file" name="proof" accept="image/*,.pdf" class="portal-file-input" required/>
+                <button type="submit" class="portal-btn-upload"><i class="bi bi-upload"></i> Upload</button>
+              </form>
             <?php endif; ?>
           </td>
         </tr>

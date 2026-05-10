@@ -31,7 +31,7 @@ if ($payments_exist) {
   $total_collection = $conn->query("SELECT COALESCE(SUM(amount_paid),0) as c FROM payments")->fetch_assoc()['c'];
 }
 
-// ── Students per grade ─────────────────────────────────────
+// ── Students per grade (Grade 7–10 only for JHS focus) ────
 $grade_labels = [];
 $grade_counts = [];
 $grade_res = $conn->query("
@@ -43,22 +43,6 @@ $grade_res = $conn->query("
 while ($g = $grade_res->fetch_assoc()) {
   $grade_labels[] = $g['grade'];
   $grade_counts[] = (int)$g['total'];
-}
-
-// ── Section enrollment ─────────────────────────────────────
-$sections_exist = $conn->query("SHOW TABLES LIKE 'sections'")->num_rows > 0;
-$enrollment_table = [];
-if ($sections_exist) {
-  $enroll_res = $conn->query("
-    SELECT g.name as grade, sec.name as section, COUNT(s.id) as total
-    FROM grade_levels g
-    CROSS JOIN sections sec
-    LEFT JOIN students s ON s.grade_level_id = g.id AND s.section_id = sec.id AND s.is_archived = 0
-    GROUP BY g.id, sec.id ORDER BY g.id, sec.id
-  ");
-  while ($row = $enroll_res->fetch_assoc()) {
-    $enrollment_table[$row['grade']][$row['section']] = (int)$row['total'];
-  }
 }
 
 // ── Recent enrollments ─────────────────────────────────────
@@ -129,30 +113,9 @@ $recent = $conn->query("
     </div>
 
     <div class="dash-row">
-      <div class="dash-panel">
-        <div class="panel-header"><div class="panel-title"><i class="bi bi-bar-chart-fill"></i> Students per Grade</div></div>
+      <div class="dash-panel" style="flex:1;">
+        <div class="panel-header"><div class="panel-title"><i class="bi bi-bar-chart-fill"></i> Students per Grade Level</div></div>
         <div class="panel-body"><div class="chart-wrap"><canvas id="gradeChart"></canvas></div></div>
-      </div>
-      <div class="dash-panel">
-        <div class="panel-header"><div class="panel-title"><i class="bi bi-grid-3x3-gap-fill"></i> Section Enrollment</div></div>
-        <div class="panel-body panel-body-flush">
-          <?php if (empty($enrollment_table)): ?>
-            <div class="empty-msg">No section data yet.</div>
-          <?php else: $sections = array_keys(reset($enrollment_table)); ?>
-            <table class="enroll-table">
-              <thead><tr><th>Grade</th><?php foreach ($sections as $sec): ?><th><?= htmlspecialchars($sec) ?></th><?php endforeach; ?><th>Total</th></tr></thead>
-              <tbody>
-                <?php foreach ($enrollment_table as $grade => $secs): $row_total = array_sum($secs); ?>
-                <tr>
-                  <td class="enroll-grade"><?= htmlspecialchars($grade) ?></td>
-                  <?php foreach ($secs as $count): ?><td class="enroll-count"><?= $count ?></td><?php endforeach; ?>
-                  <td class="enroll-total"><?= $row_total ?></td>
-                </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          <?php endif; ?>
-        </div>
       </div>
     </div>
 
@@ -213,14 +176,25 @@ $recent = $conn->query("
     type: 'bar',
     data: {
       labels: <?= json_encode($grade_labels) ?>,
-      datasets: [{ label: 'Students', data: <?= json_encode($grade_counts) ?>, backgroundColor: ['#6366f1','#22c55e','#f59e0b','#ef4444'], borderRadius: 6, borderSkipped: false }]
+      datasets: [{ 
+        label: 'Students', 
+        data: <?= json_encode($grade_counts) ?>, 
+        backgroundColor: [
+          '#818cf8','#a78bfa','#c084fc',
+          '#60a5fa','#34d399','#4ade80',
+          '#86efac','#fbbf24','#fb923c',
+          '#6366f1','#22c55e','#f59e0b','#ef4444'
+        ],
+        borderRadius: 6, 
+        borderSkipped: false 
+      }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.y + ' students' } } },
       scales: {
         y: { beginAtZero: true, ticks: { stepSize: 1, color: '#9ca3af', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } },
-        x: { ticks: { color: '#6b7280', font: { size: 12, weight: '600' } }, grid: { display: false }, border: { display: false } }
+        x: { ticks: { color: '#6b7280', font: { size: 11, weight: '600' }, maxRotation: 45 }, grid: { display: false }, border: { display: false } }
       }
     }
   });

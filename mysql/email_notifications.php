@@ -1,13 +1,42 @@
 <?php
 require_once __DIR__ . '/mailer.php';
 
-function notifyEnrollmentReceived($parent_email, $parent_name, $student_name, $ref_number) {
-  $subject = "Enrollment Application Received — $ref_number";
+function notifyEnrollmentReceived($parent_email, $parent_name, $student_name, $ref_number, $plain_password = null) {
+  $subject = "Enrollment Application Received - $ref_number";
+
+  $portal_url = 'http://localhost/school-registrar/portal/login.php';
+
+  // Login credentials block — only shown for new accounts
+  $credentials_block = '';
+  if ($plain_password) {
+    $credentials_block = "
+    <div style='background:#eef0f8;border-radius:8px;padding:16px 18px;margin:20px 0;'>
+      <div style='font-size:12px;font-weight:700;color:#494C8A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;'>Your Parent Portal Login</div>
+      <table style='font-size:13px;color:#374151;width:100%;'>
+        <tr><td style='padding:4px 0;font-weight:600;width:120px;'>Portal URL:</td><td><a href='$portal_url' style='color:#494C8A;'>$portal_url</a></td></tr>
+        <tr><td style='padding:4px 0;font-weight:600;'>Email:</td><td>$parent_email</td></tr>
+        <tr><td style='padding:4px 0;font-weight:600;'>Password:</td><td><code style='background:#f3f4f6;padding:2px 8px;border-radius:4px;font-size:13px;font-weight:700;'>$plain_password</code></td></tr>
+      </table>
+      <div style='margin-top:10px;font-size:12px;color:#d97706;'>
+        ⚠️ Please save your password. You can change it anytime from the portal.
+      </div>
+    </div>
+    <p style='text-align:center;'>
+      <a href='$portal_url' style='display:inline-block;padding:12px 28px;background:#494C8A;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;'>Login to Parent Portal</a>
+    </p>";
+  } else {
+    $credentials_block = "
+    <p>Log in to the <a href='$portal_url' style='color:#494C8A;font-weight:600;'>Parent Portal</a> using your existing email and password.</p>";
+  }
+
   $body = "
-    <p>Dear <strong>$parent_name</strong>,</p>
-    <p>We have received the enrollment application for <strong>$student_name</strong>.</p>
-    <p><strong>Reference Number:</strong> <span style='font-size:18px;font-weight:800;color:#494C8A;'>$ref_number</span></p>
-    <p>Our registrar will review your application within 2–3 school days. You will receive another email once your application has been processed.</p>
+    <p>Dear <strong>" . htmlspecialchars($parent_name) . "</strong>,</p>
+    <p>We have received the enrollment application for <strong>" . htmlspecialchars($student_name) . "</strong>.</p>
+    <div style='background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin:16px 0;'>
+      <div style='font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.06em;'>Reference Number</div>
+      <div style='font-size:24px;font-weight:800;color:#494C8A;'>$ref_number</div>
+    </div>
+    <p>Our registrar will review your application within <strong>2–3 school days</strong>. You will receive another email once your application has been processed.</p>
     <p>In the meantime, please prepare the following documents:</p>
     <ul>
       <li>PSA Birth Certificate (original or certified true copy)</li>
@@ -15,7 +44,7 @@ function notifyEnrollmentReceived($parent_email, $parent_name, $student_name, $r
       <li>Good Moral Certificate</li>
       <li>2x2 ID Photo (2 pieces, white background)</li>
     </ul>
-    <p>You can upload these documents through the <a href='http://localhost/school-registrar/portal/login.php' style='color:#494C8A;font-weight:600;'>Parent Portal</a>.</p>
+    $credentials_block
     <p>Thank you for choosing COJ Catholic Progressive School.</p>
   ";
   return sendEnrollmentEmail($parent_email, $parent_name, $subject, $body);

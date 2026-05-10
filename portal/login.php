@@ -130,7 +130,7 @@ if ($mode === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST' && empty($success
         <label>Email Address</label>
         <div class="portal-input-wrap">
           <i class="bi bi-envelope"></i>
-          <input type="email" name="email" required placeholder="parent@email.com"
+          <input type="email" name="email" required
                  value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"/>
         </div>
       </div>
@@ -138,20 +138,19 @@ if ($mode === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST' && empty($success
         <label>Password</label>
         <div class="portal-input-wrap">
           <i class="bi bi-lock-fill"></i>
-          <input type="password" name="password" required placeholder="Enter your password"/>
+          <input type="password" name="password" required/>
         </div>
       </div>
       <button type="submit" class="portal-btn-login">Log In</button>
     </form>
     <div style="text-align:center;margin-top:10px;">
       <a href="login.php?mode=reset" style="font-size:13px;color:var(--primary);text-decoration:none;font-weight:500;">
-        <i class="bi bi-key"></i> Forgot your password?
+ Forgot your password?
       </a>
     </div>
     <div class="portal-links">
-      <a href="../home.php">← Back to School Website</a>
-      <span>·</span>
-      <a href="../home.php#enroll">New enrollment? Apply here</a>
+      <a href="../home.php"> Back to School Website</a>
+     
     </div>
     <?php endif; ?>
 
