@@ -1,6 +1,7 @@
 <?php
 $active_portal = 'soa';
 require_once 'includes/auth.php';
+require_once '../mysql/helpers.php';
 
 $active_sy = $conn->query("SELECT * FROM school_years WHERE is_active=1 LIMIT 1")->fetch_assoc();
 $sy_id     = $active_sy['id'] ?? 0;
@@ -61,90 +62,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_proof'])) {
       $success = "Proof of payment uploaded successfully. The finance staff will verify it shortly.";
 
       // Notify all admin staff
-      require_once '../mysql/helpers.php';
-      $student_name = htmlspecialchars($student['first_name'] . ' ' . $student['last_name']);
+      $student_name_notif = $student['first_name'] . ' ' . $student['last_name'];
       $method_label = ucfirst(str_replace('_', ' ', $pay_method));
       notify_staff($conn, ['superadmin','registrar'], 'info',
-        "Payment Receipt Uploaded: $student_name",
-        "$student_name uploaded a proof of payment via $method_label. Please review in Payments.",
+        "Payment Receipt Uploaded: $student_name_notif",
+        "$student_name_notif uploaded a proof of payment via $method_label. Please review in Payments.",
         "payments.php"
       );
     }
   }
 }
 
-// Fetch fees — deduplicate by fee name, exclude SPED unless student is flagged
-$fees_raw = $conn->query("
-  SELECT f.id as fee_id, f.name as fee_name, f.amount, f.fee_type,
-         p.id as payment_id, p.amount_paid, p.balance, p.status,
-         p.paid_at, p.payment_method, p.proof_file
-  FROM fees f
-  LEFT JOIN payments p ON p.fee_id=f.id AND p.student_id=$student_id
-  WHERE f.grade_level_id = {$student['grade_level_id']}
-    AND f.school_year_id = $sy_id
-    AND (f.fee_type != 'sped' OR {$student['is_sped']})
-  ORDER BY FIELD(f.fee_type,'tuition','miscellaneous','pta_fund','development','books','reservation','other'), f.name
-")->fetch_all(MYSQLI_ASSOC);
-
-// Deduplicate by fee_name — keep first occurrence only
-$seen = [];
-$fees_payments = [];
-foreach ($fees_raw as $fp) {
-  if (!isset($seen[$fp['fee_name']])) {
-    $seen[$fp['fee_name']] = true;
-    $fees_payments[] = $fp;
-  }
-}
-
-// Compute totals from deduplicated fees
-$total_fees = array_sum(array_column($fees_payments, 'amount'));
-
-// Read actual paid/balance directly from payments table — not from fee join
-// This ensures it matches what admin recorded regardless of fee ID mapping
-$pay_totals = $conn->query("
-  SELECT COALESCE(SUM(amount_paid),0) as paid, COALESCE(SUM(balance),0) as bal
-  FROM payments WHERE student_id=$student_id
-")->fetch_assoc();
-$total_paid = $pay_totals['paid'];
-$total_bal  = max(0, $total_fees - $total_paid);
-
-// Update each fee row's display values proportionally
-$remaining_paid = $total_paid;
-foreach ($fees_payments as &$fp) {
-  if ($remaining_paid >= $fp['amount']) {
-    $fp['amount_paid'] = $fp['amount'];
-    $fp['balance']     = 0;
-    $fp['status']      = 'paid';
-    $remaining_paid   -= $fp['amount'];
-  } elseif ($remaining_paid > 0) {
-    $fp['amount_paid'] = $remaining_paid;
-    $fp['balance']     = $fp['amount'] - $remaining_paid;
-    $fp['status']      = 'partial';
-    $remaining_paid    = 0;
-  } else {
-    $fp['amount_paid'] = 0;
-    $fp['balance']     = $fp['amount'];
-    $fp['status']      = 'unpaid';
-  }
-}
-unset($fp);
-
-// Get existing proof file (most recent)
-$existing_proof = null;
-$existing_method = null;
-foreach ($fees_payments as $fp) {
-  if (!empty($fp['proof_file'])) {
-    $existing_proof  = $fp['proof_file'];
-    $existing_method = $fp['payment_method'];
-    break;
-  }
-}
+// Use centralized helper — single source of truth
+$soa = get_fee_rows_with_payment($conn, $student_id, $student['grade_level_id'], $sy_id);
+$fees_payments  = $soa['rows'];
+$total_fees     = $soa['total_fees'];
+$total_paid     = $soa['total_paid'];
+$total_bal      = $soa['total_bal'];
+$existing_proof  = $soa['pay_details']['proof_file'] ?? null;
+$existing_method = $soa['pay_details']['payment_method'] ?? null;
 
 // Discounts
 $discounts = $conn->query("
   SELECT d.type, d.percentage, COALESCE(d.fixed_amount,0) as fixed_amount, d.label
-  FROM discounts d
-  WHERE d.student_id = $student_id AND d.school_year_id = $sy_id
+  FROM discounts d WHERE d.student_id = $student_id AND d.school_year_id = $sy_id
 ")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
