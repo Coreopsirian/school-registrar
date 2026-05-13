@@ -201,12 +201,12 @@ function generate_payment_schedule($conn, int $student_id, int $enrollment_id, i
   $config = get_payment_scheme_config($scheme);
   if (empty($config)) return false;
 
-  // Insert downpayment row
-  $dp_label = 'Downpayment (' . $config['label'] . ')';
+  // Insert downpayment row — due June 30 of the current school year
+  $dp_label  = 'Downpayment (' . $config['label'] . ')';
   $dp_amount = $config['downpayment'];
-  $dp_due = date('Y-m-d'); // due immediately
+  $dp_due    = last_day_of(6, (int) date('Y'));  // June 30
   $stmt = $conn->prepare("INSERT INTO payment_schedules (student_id, enrollment_id, school_year_id, installment_no, label, amount_due, due_date) VALUES (?,?,?,1,?,?,?)");
-  $stmt->bind_param("iiissd", $student_id, $enrollment_id, $sy_id, $dp_label, $dp_amount, $dp_due);
+  $stmt->bind_param("iiisss", $student_id, $enrollment_id, $sy_id, $dp_label, $dp_amount, $dp_due);
   $stmt->execute();
 
   // Insert subsequent installments
@@ -255,13 +255,13 @@ function repair_payment_schedule_dates($conn, int $enrollment_id, string $scheme
     }
   }
 
-  // Also fix downpayment row if it has a bad date
+  // Also fix downpayment row if it has a bad date — due date is June 30
   $dp = $conn->query("SELECT id, due_date FROM payment_schedules WHERE enrollment_id=$enrollment_id AND installment_no=1 LIMIT 1")->fetch_assoc();
   if ($dp) {
     $dp_year = (int) substr($dp['due_date'] ?? '', 0, 4);
     if ($dp_year < 2000) {
-      $today = date('Y-m-d');
-      $conn->query("UPDATE payment_schedules SET due_date='$today' WHERE id={$dp['id']}");
+      $june30 = last_day_of(6, (int) date('Y'));
+      $conn->query("UPDATE payment_schedules SET due_date='$june30' WHERE id={$dp['id']}");
     }
   }
 }
