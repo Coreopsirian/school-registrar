@@ -15,6 +15,7 @@ if (isset($parent_id)) {
   <div class="portal-nav-links">
     <a href="dashboard.php" class="<?= $active_portal==='dashboard'?'active':'' ?>"><i class="bi bi-grid-fill"></i> Dashboard</a>
     <a href="requirements.php" class="<?= $active_portal==='requirements'?'active':'' ?>"><i class="bi bi-folder2-open"></i> Requirements</a>
+    <a href="payment_scheme.php" class="<?= $active_portal==='payment_scheme'?'active':'' ?>"><i class="bi bi-calendar3"></i> Payment Scheme</a>
     <a href="soa.php" class="<?= $active_portal==='soa'?'active':'' ?>"><i class="bi bi-receipt"></i> Statement of Account</a>
     <a href="notifications.php" class="<?= $active_portal==='notifications'?'active':'' ?>" style="position:relative;">
       <i class="bi bi-bell-fill"></i> Notifications
@@ -24,7 +25,7 @@ if (isset($parent_id)) {
   <div class="portal-nav-user">
     <i class="bi bi-person-circle"></i>
     <span><?= htmlspecialchars($parent_name) ?></span>
-    <a href="logout.php" class="portal-logout"><i class="bi bi-box-arrow-right"></i></a>
+    <a href="logout.php" class="portal-logout" onclick="return confirm('Are you sure you want to log out?')"><i class="bi bi-box-arrow-right"></i></a>
   </div>
 </nav>
 

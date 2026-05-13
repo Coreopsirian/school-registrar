@@ -136,9 +136,13 @@ if ($mode === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST' && empty($success
       </div>
       <div class="portal-field">
         <label>Password</label>
-        <div class="portal-input-wrap">
+        <div class="portal-input-wrap" style="position:relative;">
           <i class="bi bi-lock-fill"></i>
-          <input type="password" name="password" required/>
+          <input type="password" name="password" id="portal-pw" required/>
+          <button type="button" onclick="togglePortalPw()"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;font-size:16px;padding:0;line-height:1;">
+            <i class="bi bi-eye" id="portal-pw-icon"></i>
+          </button>
         </div>
       </div>
       <button type="submit" class="portal-btn-login">Log In</button>
@@ -156,5 +160,13 @@ if ($mode === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST' && empty($success
 
   </div>
 </div>
+<script>
+function togglePortalPw() {
+  const inp  = document.getElementById('portal-pw');
+  const icon = document.getElementById('portal-pw-icon');
+  if (inp.type === 'password') { inp.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+</script>
 </body>
 </html>

@@ -207,6 +207,10 @@ if (!empty($_GET['edit_id'])) {
 
             </div>
             <div class="toolbar-right">
+              <a href="backup.php?export=students"
+                 style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--color-primary);color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:600;text-decoration:none;">
+                <i class="bi bi-download"></i> Export CSV
+              </a>
             </div>
           </div>
         </form>

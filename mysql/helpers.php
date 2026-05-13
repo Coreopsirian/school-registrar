@@ -60,11 +60,25 @@ function get_balance($conn, int $student_id, int $grade_level_id, int $sy_id): f
 
 /**
  * Get fee rows with paid/balance/status distributed proportionally.
- * Single source of truth used by admin SOA, parent SOA, and student profile.
+ * Discounts are applied to the total before distributing payment.
+ * If total_paid > net_fees, balance is negative (school owes parent).
  */
 function get_fee_rows_with_payment($conn, int $student_id, int $grade_level_id, int $sy_id): array {
   $fee_data   = get_fees($conn, $grade_level_id, $sy_id);
   $total_paid = get_total_paid($conn, $student_id);
+
+  // Fetch discounts and compute total discount amount
+  $discounts_raw = $conn->query("SELECT * FROM discounts WHERE student_id=$student_id AND school_year_id=$sy_id")->fetch_all(MYSQLI_ASSOC);
+  $total_discount = 0;
+  foreach ($discounts_raw as $d) {
+    if (!empty($d['fixed_amount']) && $d['fixed_amount'] > 0) {
+      $total_discount += floatval($d['fixed_amount']);
+    } else {
+      $total_discount += $fee_data['total'] * (floatval($d['percentage']) / 100);
+    }
+  }
+  $total_discount = min($total_discount, $fee_data['total']);
+  $net_fees = $fee_data['total'] - $total_discount;
 
   $pay_details = $conn->query("
     SELECT payment_method, or_number, paid_at, proof_file
@@ -75,39 +89,204 @@ function get_fee_rows_with_payment($conn, int $student_id, int $grade_level_id, 
   $remaining = $total_paid;
   $rows = [];
   foreach ($fee_data['fees'] as $fp) {
-    if ($remaining >= $fp['amount']) {
-      $fp['amount_paid'] = $fp['amount'];
+    // Apply proportional discount to this fee row
+    $fee_discount = $fee_data['total'] > 0
+      ? ($fp['amount'] / $fee_data['total']) * $total_discount
+      : 0;
+    $net_amount = round($fp['amount'] - $fee_discount, 2);
+
+    if ($remaining >= $net_amount) {
+      $fp['amount_paid'] = $net_amount;
       $fp['balance']     = 0;
       $fp['status']      = 'paid';
-      $remaining        -= $fp['amount'];
+      $remaining        -= $net_amount;
     } elseif ($remaining > 0) {
       $fp['amount_paid'] = $remaining;
-      $fp['balance']     = $fp['amount'] - $remaining;
+      $fp['balance']     = $net_amount - $remaining;
       $fp['status']      = 'partial';
       $remaining         = 0;
     } else {
       $fp['amount_paid'] = 0;
-      $fp['balance']     = $fp['amount'];
+      $fp['balance']     = $net_amount;
       $fp['status']      = 'unpaid';
     }
+    $fp['net_amount']     = $net_amount;
     $fp['payment_method'] = $pay_details['payment_method'] ?? null;
     $fp['paid_at']        = $pay_details['paid_at'] ?? null;
     $fp['proof_file']     = $pay_details['proof_file'] ?? null;
     $rows[] = $fp;
   }
 
+  // If overpaid, balance is negative (school owes parent)
+  $total_bal = $net_fees - $total_paid;
+
   return [
-    'rows'        => $rows,
-    'total_fees'  => $fee_data['total'],
-    'total_paid'  => $total_paid,
-    'total_bal'   => max(0, $fee_data['total'] - $total_paid),
-    'pay_details' => $pay_details,
+    'rows'           => $rows,
+    'total_fees'     => $fee_data['total'],
+    'total_discount' => $total_discount,
+    'net_fees'       => $net_fees,
+    'total_paid'     => $total_paid,
+    'total_bal'      => $total_bal,   // can be negative
+    'discounts'      => $discounts_raw,
+    'pay_details'    => $pay_details,
   ];
 }
 
 /**
- * Send a notification to all staff users of given roles.
+ * Return the last day of a given month/year as a Y-m-d string.
  */
+function last_day_of(int $month, int $year): string {
+  return $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . date('t', mktime(0, 0, 0, $month, 1, $year));
+}
+
+/**
+ * Payment scheme definitions — fixed amounts per COJ business rules.
+ * Returns downpayment, installments, due dates for a given scheme.
+ * All installment due dates fall on the last day of their respective month.
+ */
+function get_payment_scheme_config(string $scheme): array {
+  $y  = (int) date('Y');   // current year (school year start)
+  $y1 = $y + 1;            // next calendar year (Jan/Feb payments)
+
+  $schemes = [
+    'annual' => [
+      'label'        => 'Annual',
+      'downpayment'  => 95890.00,
+      'installments' => [],  // fully paid on downpayment
+    ],
+    'semi_annual' => [
+      'label'        => 'Semi-Annual',
+      'downpayment'  => 55855.00,
+      'installments' => [
+        ['label' => '2nd Payment (November)', 'amount' => 42515.00, 'due_date' => last_day_of(11, $y)],
+      ],
+    ],
+    'quarterly' => [
+      'label'        => 'Quarterly',
+      'downpayment'  => 35010.00,
+      'installments' => [
+        ['label' => '2nd Payment (August)',   'amount' => 21670.00, 'due_date' => last_day_of(8,  $y)],
+        ['label' => '3rd Payment (November)', 'amount' => 21670.00, 'due_date' => last_day_of(11, $y)],
+        ['label' => '4th Payment (February)', 'amount' => 21670.00, 'due_date' => last_day_of(2,  $y1)],
+      ],
+    ],
+    'monthly' => [
+      'label'        => 'Monthly',
+      'downpayment'  => 23430.00,
+      'installments' => [
+        ['label' => 'July Payment',      'amount' => 10090.00, 'due_date' => last_day_of(7,  $y)],
+        ['label' => 'August Payment',    'amount' => 10090.00, 'due_date' => last_day_of(8,  $y)],
+        ['label' => 'September Payment', 'amount' => 10090.00, 'due_date' => last_day_of(9,  $y)],
+        ['label' => 'October Payment',   'amount' => 10090.00, 'due_date' => last_day_of(10, $y)],
+        ['label' => 'November Payment',  'amount' => 10090.00, 'due_date' => last_day_of(11, $y)],
+        ['label' => 'December Payment',  'amount' => 10090.00, 'due_date' => last_day_of(12, $y)],
+        ['label' => 'January Payment',   'amount' => 10090.00, 'due_date' => last_day_of(1,  $y1)],
+        ['label' => 'February Payment',  'amount' => 10090.00, 'due_date' => last_day_of(2,  $y1)],
+      ],
+    ],
+  ];
+  return $schemes[$scheme] ?? [];
+}
+
+/**
+ * Generate payment schedule rows for a student enrollment.
+ * Inserts downpayment + installments into payment_schedules.
+ * Scheme is locked once set — will not regenerate if rows exist.
+ */
+function generate_payment_schedule($conn, int $student_id, int $enrollment_id, int $sy_id, string $scheme): bool {
+  // Check if schedule already exists (locked)
+  $existing = $conn->query("SELECT COUNT(*) as c FROM payment_schedules WHERE enrollment_id=$enrollment_id")->fetch_assoc()['c'];
+  if ($existing > 0) return false; // already set, locked
+
+  $config = get_payment_scheme_config($scheme);
+  if (empty($config)) return false;
+
+  // Insert downpayment row
+  $dp_label = 'Downpayment (' . $config['label'] . ')';
+  $dp_amount = $config['downpayment'];
+  $dp_due = date('Y-m-d'); // due immediately
+  $stmt = $conn->prepare("INSERT INTO payment_schedules (student_id, enrollment_id, school_year_id, installment_no, label, amount_due, due_date) VALUES (?,?,?,1,?,?,?)");
+  $stmt->bind_param("iiissd", $student_id, $enrollment_id, $sy_id, $dp_label, $dp_amount, $dp_due);
+  $stmt->execute();
+
+  // Insert subsequent installments
+  foreach ($config['installments'] as $i => $inst) {
+    $no = $i + 2;
+    $stmt2 = $conn->prepare("INSERT INTO payment_schedules (student_id, enrollment_id, school_year_id, installment_no, label, amount_due, due_date) VALUES (?,?,?,?,?,?,?)");
+    $stmt2->bind_param("iiissss", $student_id, $enrollment_id, $sy_id, $no, $inst['label'], $inst['amount'], $inst['due_date']);
+    $stmt2->execute();
+  }
+
+  // Save scheme on enrollment record
+  $conn->query("UPDATE enrollments SET payment_plan='$scheme' WHERE id=$enrollment_id");
+  return true;
+}
+
+/**
+ * Repair bad due_date values in payment_schedules for an enrollment.
+ * Fixes rows that were stored with invalid dates (e.g. 0000-00-00 or year -0001)
+ * by recomputing correct end-of-month dates from the installment label.
+ */
+function repair_payment_schedule_dates($conn, int $enrollment_id, string $scheme): void {
+  $config = get_payment_scheme_config($scheme);
+  if (empty($config)) return;
+
+  // Build label → due_date map from config
+  $date_map = [];
+  foreach ($config['installments'] as $inst) {
+    $date_map[$inst['label']] = $inst['due_date'];
+  }
+
+  // Fetch all non-downpayment rows for this enrollment
+  $rows = $conn->query("
+    SELECT id, label, due_date FROM payment_schedules
+    WHERE enrollment_id=$enrollment_id AND installment_no > 1
+  ");
+  if (!$rows) return;
+
+  while ($row = $rows->fetch_assoc()) {
+    $correct = $date_map[$row['label']] ?? null;
+    if (!$correct) continue;
+
+    // Check if stored date is bad (year < 2000 or null/zero)
+    $stored_year = (int) substr($row['due_date'] ?? '', 0, 4);
+    if ($stored_year < 2000) {
+      $conn->query("UPDATE payment_schedules SET due_date='$correct' WHERE id={$row['id']}");
+    }
+  }
+
+  // Also fix downpayment row if it has a bad date
+  $dp = $conn->query("SELECT id, due_date FROM payment_schedules WHERE enrollment_id=$enrollment_id AND installment_no=1 LIMIT 1")->fetch_assoc();
+  if ($dp) {
+    $dp_year = (int) substr($dp['due_date'] ?? '', 0, 4);
+    if ($dp_year < 2000) {
+      $today = date('Y-m-d');
+      $conn->query("UPDATE payment_schedules SET due_date='$today' WHERE id={$dp['id']}");
+    }
+  }
+}
+
+/**
+ * Check and apply ₱500 late penalty to overdue payment schedule rows.
+ * Call this when loading the SOA or payment schedule.
+ */
+function apply_late_penalties($conn, int $student_id, int $enrollment_id): void {
+  $today = date('Y-m-d');
+  $overdue = $conn->query("
+    SELECT id FROM payment_schedules
+    WHERE enrollment_id=$enrollment_id
+    AND status IN ('unpaid','partial')
+    AND due_date IS NOT NULL
+    AND due_date < '$today'
+    AND penalty = 0
+  ");
+  if (!$overdue) return;
+  while ($row = $overdue->fetch_assoc()) {
+    $conn->query("UPDATE payment_schedules SET penalty=500.00, status='overdue' WHERE id={$row['id']}");
+  }
+}
+
+
 function notify_staff($conn, array $roles, string $type, string $title, string $body = '', string $link = '') {
   $roles_esc = implode("','", array_map(fn($r) => $conn->real_escape_string($r), $roles));
   $admins = $conn->query("SELECT id FROM users WHERE is_active=1 AND role IN ('$roles_esc')");

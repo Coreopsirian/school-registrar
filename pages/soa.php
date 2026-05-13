@@ -21,20 +21,58 @@ $student = $conn->query("
 if (!$student) { header('Location: payments.php'); exit(); }
 
 $enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$student_id AND school_year_id=$sy_id LIMIT 1")->fetch_assoc();
+$enrollment_id = $enrollment['id'] ?? 0;
+
+// Handle installment payment confirmation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'confirm_installment') {
+  $sched_id   = intval($_POST['schedule_id']);
+  $amount     = floatval($_POST['amount_paid']);
+  $or_number  = trim($_POST['or_number'] ?? '');
+  $method     = in_array($_POST['payment_method'] ?? '', ['cash','gcash','bank_transfer','maya','other']) ? $_POST['payment_method'] : 'cash';
+  $paid_at    = $_POST['paid_at'] ?? date('Y-m-d');
+
+  $sched = $conn->query("SELECT * FROM payment_schedules WHERE id=$sched_id AND student_id=$student_id")->fetch_assoc();
+  if ($sched) {
+    $total_due = $sched['amount_due'] + $sched['penalty'];
+    $new_paid  = $sched['amount_paid'] + $amount;
+    $balance   = $total_due - $new_paid;
+    $status    = $balance <= 0 ? 'paid' : ($new_paid > 0 ? 'partial' : 'unpaid');
+
+    $stmt = $conn->prepare("UPDATE payment_schedules SET amount_paid=?, status=?, or_number=?, payment_method=?, paid_at=? WHERE id=?");
+    $stmt->bind_param("dssssi", $new_paid, $status, $or_number, $method, $paid_at, $sched_id);
+    $stmt->execute();
+
+    // If downpayment confirmed, mark enrollment downpayment_confirmed
+    if ($sched['installment_no'] == 1 && $status === 'paid' && $enrollment_id) {
+      $conn->query("UPDATE enrollments SET downpayment_confirmed=1 WHERE id=$enrollment_id");
+    }
+
+    $uid   = $_SESSION['user_id'] ?? 0;
+    $uname = $conn->real_escape_string($_SESSION['name'] ?? '');
+    $conn->query("INSERT INTO audit_log (user_id, user_name, action, target, target_id, details) VALUES ($uid, '$uname', 'confirm_installment', 'payment_schedule', $sched_id, 'Installment #".$sched['installment_no']." confirmed: ₱$amount')");
+  }
+  header("Location: soa.php?student_id=$student_id&success=Installment confirmed"); exit();
+}
+
+// Apply late penalties
+if ($enrollment_id) apply_late_penalties($conn, $student_id, $enrollment_id);
+
+// Load payment schedule
+$schedule = $conn->query("
+  SELECT * FROM payment_schedules WHERE enrollment_id=$enrollment_id ORDER BY installment_no ASC
+")->fetch_all(MYSQLI_ASSOC);
 
 // Use centralized helper — single source of truth
 $soa = get_fee_rows_with_payment($conn, $student_id, $student['grade_level_id'], $sy_id);
-$fees_payments = $soa['rows'];
-$total_fees    = $soa['total_fees'];
-$total_paid    = $soa['total_paid'];
-$total_bal     = $soa['total_bal'];
-$pay_details   = $soa['pay_details'];
+$fees_payments   = $soa['rows'];
+$total_fees      = $soa['total_fees'];
+$net_fees        = $soa['net_fees'];
+$total_paid      = $soa['total_paid'];
+$total_bal       = $soa['total_bal'];
+$pay_details     = $soa['pay_details'];
+$discounts       = $soa['discounts'];
 
-// Discounts
-$discounts = $conn->query("SELECT * FROM discounts WHERE student_id=$student_id AND school_year_id=$sy_id")->fetch_all(MYSQLI_ASSOC);
-$total_discount_pct = array_sum(array_column($discounts, 'percentage'));
-$discount_amount    = $total_fees * ($total_discount_pct / 100);
-$adjusted_total     = max(0, $total_fees - $discount_amount);
+$success_msg = $_GET['success'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,12 +140,68 @@ include('includes/sidebar.php');
         <div class="soa-student-field"><span>LRN</span><?= htmlspecialchars($student['lrn']) ?></div>
         <div class="soa-student-field"><span>Grade & Section</span><?= htmlspecialchars(($student['grade'] ?? '—') . ' — ' . ($student['section'] ?? '—')) ?></div>
         <div class="soa-student-field"><span>Enrollment Status</span><?= ucfirst($enrollment['status'] ?? 'Not enrolled') ?></div>
+        <div class="soa-student-field"><span>Payment Scheme</span><?= $enrollment['payment_plan'] ? ucfirst(str_replace('_',' ',$enrollment['payment_plan'])) : '<em style="color:#d97706;">Not yet selected</em>' ?></div>
         <div class="soa-student-field"><span>Reference #</span><?= htmlspecialchars($enrollment['ref_number'] ?? '—') ?></div>
-        <div class="soa-student-field"><span>Date Generated</span><?= date('F j, Y') ?></div>
       </div>
 
+      <?php if ($success_msg): ?>
+      <div style="margin:16px 24px;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:6px;padding:10px 14px;font-size:13px;color:#166534;">
+        <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($success_msg) ?>
+      </div>
+      <?php endif; ?>
+
+      <?php if (!empty($schedule)): ?>
+      <!-- Payment Schedule -->
+      <div style="padding:16px 24px 0;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-muted);margin-bottom:10px;">Payment Schedule</div>
+      </div>
       <table class="soa-table">
-        <thead><tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Method</th><th>Date Paid</th></tr></thead>
+        <thead>
+          <tr>
+            <th>#</th><th>Description</th><th>Due Date</th>
+            <th>Amount Due</th><th>Penalty</th><th>Paid</th><th>Status</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($schedule as $srow):
+            $total_due = $srow['amount_due'] + $srow['penalty'];
+            $sc = $srow['status'];
+            $sc_colors = ['paid'=>'#166534','partial'=>'#92400e','unpaid'=>'#dc2626','overdue'=>'#dc2626'];
+            $sc_bg     = ['paid'=>'#dcfce7','partial'=>'#fef9c3','unpaid'=>'#fdeaea','overdue'=>'#fdeaea'];
+          ?>
+          <tr>
+            <td><?= $srow['installment_no'] ?></td>
+            <td style="font-weight:600;"><?= htmlspecialchars($srow['label']) ?></td>
+            <td><?= $srow['due_date'] ? date('M j, Y', strtotime($srow['due_date'])) : '—' ?></td>
+            <td>₱<?= number_format($srow['amount_due'], 2) ?></td>
+            <td style="color:<?= $srow['penalty']>0?'#dc2626':'var(--color-muted)' ?>;font-weight:<?= $srow['penalty']>0?'700':'400' ?>;">
+              <?= $srow['penalty']>0 ? '+₱'.number_format($srow['penalty'],2) : '—' ?>
+            </td>
+            <td style="color:#16a34a;font-weight:600;">₱<?= number_format($srow['amount_paid'], 2) ?></td>
+            <td>
+              <span style="padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:<?= $sc_bg[$sc]??'#f3f4f6' ?>;color:<?= $sc_colors[$sc]??'#374151' ?>;">
+                <?= ucfirst($sc) ?>
+              </span>
+            </td>
+            <td>
+              <?php if ($sc !== 'paid'): ?>
+              <button class="btn-view-sm" style="background:#eef0f8;color:var(--color-primary);"
+                onclick="openInstModal(<?= $srow['id'] ?>, '<?= htmlspecialchars(addslashes($srow['label'])) ?>', <?= $total_due ?>, <?= $srow['amount_paid'] ?>)">
+                <i class="bi bi-cash"></i> Confirm
+              </button>
+              <?php else: ?>
+              <span style="font-size:12px;color:#16a34a;font-weight:600;"><i class="bi bi-check-circle-fill"></i> Paid</span>
+              <?php endif; ?>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+      <div style="height:1px;background:var(--color-border);margin:0 24px;"></div>
+      <?php endif; ?>
+
+      <table class="soa-table">
+        <thead><tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Method</th></tr></thead>
         <tbody>
           <?php foreach ($fees_payments as $fp): ?>
           <tr>
@@ -117,7 +211,6 @@ include('includes/sidebar.php');
             <td style="font-weight:600;color:<?= ($fp['balance'] ?? $fp['amount']) > 0 ? '#dc2626' : '#16a34a' ?>">₱<?= number_format($fp['balance'] ?? $fp['amount'], 2) ?></td>
             <td><span class="badge-<?= $fp['status'] ?? 'unpaid' ?>"><?= ucfirst($fp['status'] ?? 'Unpaid') ?></span></td>
             <td><?= !empty($pay_details['payment_method']) ? ucfirst(str_replace('_',' ',$pay_details['payment_method'])) : '—' ?></td>
-            <td><?= !empty($pay_details['paid_at']) ? date('M j, Y', strtotime($pay_details['paid_at'])) : '—' ?></td>
           </tr>
           <?php endforeach; ?>
           <?php if (empty($fees_payments)): ?>
@@ -187,5 +280,71 @@ include('includes/sidebar.php');
   </div>
 </div>
 <script src="../js/nav.js"></script>
+
+<!-- Installment Confirm Modal -->
+<div class="modal-overlay" id="inst-modal">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-header">
+      <h2>Confirm Installment Payment</h2>
+      <button class="modal-close" onclick="document.getElementById('inst-modal').classList.remove('open')">&times;</button>
+    </div>
+    <form method="POST" action="soa.php?student_id=<?= $student_id ?>">
+      <input type="hidden" name="action" value="confirm_installment">
+      <input type="hidden" name="schedule_id" id="inst-sched-id">
+      <div class="modal-body">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;" id="inst-label"></div>
+        <div style="background:#f9fafb;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:var(--color-muted);">Total Due (incl. penalty)</span>
+            <span id="inst-total-due" style="font-weight:600;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--color-muted);">Already Paid</span>
+            <span id="inst-already-paid" style="font-weight:600;color:var(--color-success);"></span>
+          </div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr;">
+          <div class="form-group">
+            <label>Amount Paid *</label>
+            <input type="number" name="amount_paid" id="inst-amount" class="form-input" step="0.01" min="0" required/>
+          </div>
+          <div class="form-group">
+            <label>Payment Method *</label>
+            <select name="payment_method" class="form-input" required>
+              <option value="cash">Cash</option>
+              <option value="gcash">GCash</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="maya">Maya</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>OR Number</label>
+            <input type="text" name="or_number" class="form-input" placeholder="Official Receipt No."/>
+          </div>
+          <div class="form-group">
+            <label>Date Paid</label>
+            <input type="date" name="paid_at" class="form-input" value="<?= date('Y-m-d') ?>"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="document.getElementById('inst-modal').classList.remove('open')">Cancel</button>
+        <button type="submit" class="btn-save">Confirm Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openInstModal(schedId, label, totalDue, alreadyPaid) {
+  document.getElementById('inst-sched-id').value = schedId;
+  document.getElementById('inst-label').textContent = label;
+  document.getElementById('inst-total-due').textContent = '₱' + totalDue.toLocaleString('en-PH', {minimumFractionDigits:2});
+  document.getElementById('inst-already-paid').textContent = '₱' + alreadyPaid.toLocaleString('en-PH', {minimumFractionDigits:2});
+  document.getElementById('inst-amount').value = (totalDue - alreadyPaid).toFixed(2);
+  document.getElementById('inst-modal').classList.add('open');
+}
+</script>
 </body>
 </html>

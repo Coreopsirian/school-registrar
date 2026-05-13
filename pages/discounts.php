@@ -9,28 +9,20 @@ $sy_id     = $active_sy['id'] ?? 0;
 
 // ── Handle add ───────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
-  $student_id = intval($_POST['student_id']);
-  $type       = trim($_POST['type'] ?? '');
-  $percentage = floatval($_POST['percentage'] ?? 0);
+  $student_id   = intval($_POST['student_id']);
+  $type         = trim($_POST['type'] ?? '');
+  $percentage   = floatval($_POST['percentage'] ?? 0);
   $fixed_amount = floatval($_POST['fixed_amount'] ?? 0);
-  $child_number = intval($_POST['child_number'] ?? 1);
-  $label      = trim($_POST['label'] ?? '');
-  $notes      = trim($_POST['notes'] ?? '');
-  $allowed_types = ['employee','sibling','scholarship','reservation','other'];
+  $label        = trim($_POST['label'] ?? '');
+  $allowed_types = ['employee','sibling','scholarship','other'];
 
   if ($student_id > 0 && in_array($type, $allowed_types)) {
-    // Employee 1st child = 100% tuition (stored as percentage=100 but applied only to tuition)
-    if ($type === 'employee' && $child_number == 1) {
+    if ($type === 'employee') {
       $percentage = 100;
-      $label = $label ?: 'Employee Discount (1st Child — 100% Tuition)';
+      $label = $label ?: 'Employee Discount (100% Tuition)';
     }
-    // Reservation fee = fixed 5000
-    if ($type === 'reservation') {
-      $fixed_amount = 5000;
-      $label = $label ?: 'Reservation Fee (₱5,000)';
-    }
-    $stmt = $conn->prepare("INSERT INTO discounts (student_id, school_year_id, type, child_number, percentage, fixed_amount, label, notes) VALUES (?,?,?,?,?,?,?,?)");
-    $stmt->bind_param("iisiddss", $student_id, $sy_id, $type, $child_number, $percentage, $fixed_amount, $label, $notes);
+    $stmt = $conn->prepare("INSERT INTO discounts (student_id, school_year_id, type, percentage, fixed_amount, label) VALUES (?,?,?,?,?,?)");
+    $stmt->bind_param("iisdds", $student_id, $sy_id, $type, $percentage, $fixed_amount, $label);
     $stmt->execute()
       ? header("Location: discounts.php?success=Discount added")
       : header("Location: discounts.php?error=" . urlencode($conn->error));
@@ -117,25 +109,11 @@ $active_page = 'discounts';
     <?php if ($success_message): ?><div class="alert-success-bar"><?= htmlspecialchars($success_message) ?></div><?php endif; ?>
     <?php if ($error_message):   ?><div class="alert-error-bar"><?= htmlspecialchars($error_message) ?></div><?php endif; ?>
 
-    <?php if (!empty($summary)): ?>
-    <!-- Summary cards -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:24px;">
-      <?php foreach ($summary as $sid => $s): ?>
-      <div style="background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius);padding:16px;">
-        <div style="font-size:13px;font-weight:700;color:var(--color-text);"><?= htmlspecialchars($s['name']) ?></div>
-        <div style="font-size:11px;color:var(--color-muted);margin-top:2px;"><?= htmlspecialchars($s['grade'] ?? '—') ?> · LRN <?= htmlspecialchars($s['lrn']) ?></div>
-        <div style="margin-top:10px;font-size:22px;font-weight:800;color:#16a34a;"><?= number_format($s['total_pct'],2) ?>%</div>
-        <div style="font-size:11px;color:var(--color-muted);"><?= $s['count'] ?> discount<?= $s['count']>1?'s':'' ?> applied</div>
-      </div>
-      <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
-
     <!-- Discounts table -->
     <div class="fees-table-card">
       <table class="fees-table">
         <thead>
-          <tr><th>Student</th><th>Grade</th><th>Type</th><th>Label</th><th>Percentage</th><th>Notes</th><th>Actions</th></tr>
+          <tr><th>Student</th><th>Grade</th><th>Type</th><th>Label</th><th>Discount</th><th>Actions</th></tr>
         </thead>
         <tbody>
           <?php $count = 0; foreach ($discounts as $d): $count++; ?>
@@ -147,8 +125,13 @@ $active_page = 'discounts';
             <td><?= htmlspecialchars($d['grade'] ?? '—') ?></td>
             <td><span style="text-transform:capitalize;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--color-bg);border:1px solid var(--color-border);"><?= htmlspecialchars(str_replace('_',' ',$d['type'])) ?></span></td>
             <td><?= htmlspecialchars($d['label'] ?? '—') ?></td>
-            <td style="font-weight:700;color:#16a34a;"><?= number_format($d['percentage'],2) ?>%</td>
-            <td class="td-muted"><?= htmlspecialchars($d['notes'] ?? '—') ?></td>
+            <td style="font-weight:700;color:#16a34a;">
+              <?php if (!empty($d['fixed_amount']) && $d['fixed_amount'] > 0): ?>
+                -₱<?= number_format($d['fixed_amount'], 2) ?>
+              <?php else: ?>
+                <?= number_format($d['percentage'], 2) ?>%
+              <?php endif; ?>
+            </td>
             <td class="actions-cell">
               <a href="discounts.php?delete_id=<?= $d['id'] ?>" class="btn-u-deactivate"
                  onclick="return confirm('Remove this discount?')">Remove</a>
@@ -156,8 +139,11 @@ $active_page = 'discounts';
           </tr>
           <?php endforeach; ?>
           <?php if ($count === 0): ?>
-          <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--color-muted);">No discounts for this school year.</td></tr>
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--color-muted);">No discounts for this school year.</td></tr>
           <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
         </tbody>
       </table>
     </div>
@@ -191,29 +177,16 @@ $active_page = 'discounts';
               <option value="employee">Employee (Staff Child)</option>
               <option value="sibling">Sibling Discount</option>
               <option value="scholarship">Scholarship</option>
-              <option value="reservation">Reservation Fee (₱5,000)</option>
               <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group" id="child-number-field" style="display:none;">
-            <label>Child Number</label>
-            <select name="child_number" class="form-input">
-              <option value="1">1st Child (100% Tuition Free)</option>
-              <option value="2">2nd Child (Sibling Discount)</option>
-              <option value="3">3rd Child+</option>
             </select>
           </div>
           <div class="form-group" id="percentage-field">
             <label>Percentage (%) <span id="pct-note" style="font-size:11px;color:var(--color-muted);"></span></label>
             <input type="number" name="percentage" class="form-input" step="0.01" min="0" max="100" placeholder="e.g. 25.00"/>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="grid-column:1/-1;">
             <label>Label</label>
             <input type="text" name="label" class="form-input" placeholder="e.g. Full Scholarship"/>
-          </div>
-          <div class="form-group">
-            <label>Notes</label>
-            <input type="text" name="notes" class="form-input" placeholder="Optional notes"/>
           </div>
         </div>
       </div>
@@ -234,15 +207,10 @@ $active_page = 'discounts';
 
   function toggleDiscountFields() {
     const type = document.getElementById('discount-type-sel').value;
-    const childField = document.getElementById('child-number-field');
-    const pctField   = document.getElementById('percentage-field');
-    const pctNote    = document.getElementById('pct-note');
-    childField.style.display = (type === 'employee') ? 'block' : 'none';
+    const pctField = document.getElementById('percentage-field');
+    const pctNote  = document.getElementById('pct-note');
     if (type === 'employee') {
-      pctNote.textContent = '(auto: 100% for 1st child tuition)';
-      pctField.style.display = 'none';
-    } else if (type === 'reservation') {
-      pctNote.textContent = '(fixed ₱5,000)';
+      pctNote.textContent = '(auto: 100% tuition)';
       pctField.style.display = 'none';
     } else {
       pctNote.textContent = '';

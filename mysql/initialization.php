@@ -526,3 +526,36 @@ ALTER TABLE `payments`
 ALTER TABLE `sections`
   ADD COLUMN IF NOT EXISTS `adviser_id` INT DEFAULT NULL AFTER `grade_level_id`,
   ADD COLUMN IF NOT EXISTS `capacity`   INT DEFAULT 40 AFTER `adviser_id`;
+
+
+-- ============================================================
+--  PAYMENT SCHEME & SCHEDULE
+-- ============================================================
+
+-- Store the chosen payment scheme per enrollment
+ALTER TABLE `enrollments`
+  ADD COLUMN IF NOT EXISTS `payment_plan` ENUM('annual','semi_annual','quarterly','monthly') DEFAULT NULL AFTER `status`,
+  ADD COLUMN IF NOT EXISTS `downpayment_confirmed` TINYINT(1) NOT NULL DEFAULT 0 AFTER `payment_plan`;
+
+-- Installment schedule rows generated when scheme is selected
+CREATE TABLE IF NOT EXISTS `payment_schedules` (
+  `id`             INT AUTO_INCREMENT PRIMARY KEY,
+  `student_id`     INT NOT NULL,
+  `enrollment_id`  INT NOT NULL,
+  `school_year_id` INT NOT NULL,
+  `installment_no` TINYINT NOT NULL DEFAULT 1,
+  `label`          VARCHAR(100) NOT NULL,
+  `amount_due`     DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `due_date`       DATE DEFAULT NULL,
+  `amount_paid`    DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `status`         ENUM('unpaid','partial','paid','overdue') DEFAULT 'unpaid',
+  `penalty`        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `or_number`      VARCHAR(50) DEFAULT NULL,
+  `payment_method` ENUM('cash','gcash','bank_transfer','maya','other') DEFAULT NULL,
+  `proof_file`     VARCHAR(255) DEFAULT NULL,
+  `paid_at`        DATE DEFAULT NULL,
+  `created_at`     DATETIME DEFAULT current_timestamp(),
+  FOREIGN KEY (`student_id`)    REFERENCES `students`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`enrollment_id`) REFERENCES `enrollments`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`school_year_id`) REFERENCES `school_years`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -61,12 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   header("Location: enrollment.php?success=Status updated"); exit();
 }
 
-// Handle new enrollment
+// Handle new enrollment (walk-in: registrar enrolls student manually)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'enroll') {
   $student_id     = intval($_POST['student_id']);
   $school_year_id = intval($_POST['school_year_id']);
   $grade_level_id = intval($_POST['grade_level_id']);
-  $section_id     = intval($_POST['section_id']) ?: null;
   $status         = 'pending';
 
   // Generate reference number: ENR-YYYY-NNNN
@@ -74,9 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   $count   = $conn->query("SELECT COUNT(*) as c FROM enrollments WHERE YEAR(enrolled_at) = $year")->fetch_assoc()['c'] + 1;
   $ref_num = 'ENR-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
-  $stmt = $conn->prepare("INSERT INTO enrollments (ref_number, student_id, school_year_id, grade_level_id, section_id, status)
-    VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE grade_level_id=VALUES(grade_level_id), section_id=VALUES(section_id), status=VALUES(status)");
-  $stmt->bind_param("siiiis", $ref_num, $student_id, $school_year_id, $grade_level_id, $section_id, $status);
+  $stmt = $conn->prepare("INSERT INTO enrollments (ref_number, student_id, school_year_id, grade_level_id, status)
+    VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE grade_level_id=VALUES(grade_level_id), status=VALUES(status)");
+  $stmt->bind_param("siiis", $ref_num, $student_id, $school_year_id, $grade_level_id, $status);
   $stmt->execute()
     ? header("Location: enrollment.php?success=Student enrolled successfully")
     : header("Location: enrollment.php?error=" . urlencode($conn->error));
@@ -90,9 +89,8 @@ $search      = $_GET['search'] ?? '';
 $searchParam = "%$search%";
 $sy_list     = $conn->query("SELECT * FROM school_years ORDER BY label DESC")->fetch_all(MYSQLI_ASSOC);
 $grade_list  = $conn->query("SELECT * FROM grade_levels ORDER BY id")->fetch_all(MYSQLI_ASSOC);
-$section_list= $conn->query("SELECT * FROM sections ORDER BY grade_level_id, name")->fetch_all(MYSQLI_ASSOC);
 
-// Students not yet enrolled this SY (for enroll modal)
+// Students not yet enrolled this SY (for walk-in enroll modal)
 $unenrolled = $conn->query("
   SELECT s.id, s.first_name, s.last_name, s.lrn, g.name as grade
   FROM students s
@@ -180,7 +178,7 @@ $active_page = 'enrollment';
     <div class="enroll-table-card">
       <table class="enroll-list-table">
         <thead>
-          <tr><th>Ref #</th><th>Student</th><th>LRN</th><th>Grade</th><th>Section</th><th>Status</th><th>Date</th><th>Action</th></tr>
+          <tr><th>Ref #</th><th>Student</th><th>LRN</th><th>Grade</th><th>Status</th><th>Date</th><th>Action</th></tr>
         </thead>
         <tbody>
           <?php $count = 0; while ($e = $enrollments->fetch_assoc()): $count++; ?>
@@ -198,16 +196,15 @@ $active_page = 'enrollment';
             </td>
             <td class="td-muted"><?= htmlspecialchars($e['lrn']) ?></td>
             <td><?= htmlspecialchars($e['grade'] ?? '—') ?></td>
-            <td><?= htmlspecialchars($e['section'] ?? '—') ?></td>
             <td>
               <span class="enroll-status-badge status-<?= $e['status'] ?>"><?= ucfirst($e['status']) ?></span>
             </td>
-            <td class="td-muted"><?= date('M j, Y g:i A', strtotime($e['enrolled_at'])) ?></td>
+            <td class="td-muted"><?= date('M j, Y', strtotime($e['enrolled_at'])) ?></td>
             <td>
               <form method="POST" action="enrollment.php" style="display:inline-flex;gap:4px;">
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="enroll_id" value="<?= $e['id'] ?>">
-                <select name="status" class="status-select" onchange="this.form.submit()">
+                <select name="status" class="status-select" onchange="if(confirm('Change enrollment status to ' + this.options[this.selectedIndex].text + '?')){this.form.submit();}else{this.value='<?= $e['status'] ?>';}">
                   <option value="pending"  <?= $e['status']==='pending'  ? 'selected':'' ?>>Pending</option>
                   <option value="enrolled" <?= $e['status']==='enrolled' ? 'selected':'' ?>>Enrolled</option>
                   <option value="dropped"  <?= $e['status']==='dropped'  ? 'selected':'' ?>>Dropped</option>
@@ -260,15 +257,6 @@ $active_page = 'enrollment';
               <option value="">Select grade</option>
               <?php foreach ($grade_list as $g): ?>
                 <option value="<?= $g['id'] ?>"><?= htmlspecialchars($g['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Section</label>
-            <select name="section_id" class="form-input">
-              <option value="">Select section</option>
-              <?php foreach ($section_list as $sec): ?>
-                <option value="<?= $sec['id'] ?>"><?= htmlspecialchars($sec['name']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>

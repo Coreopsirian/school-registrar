@@ -80,11 +80,8 @@ if (isset($_SESSION['user_id'])) {
     <div class="nav-item <?= $active_page==='users'?'active':'' ?>" data-href="users.php" data-label="Users">
       <span class="nav-icon"><i class="bi bi-shield-lock-fill"></i></span><span class="nav-text">Users</span>
     </div>
-    <div class="nav-item <?= $active_page==='school_years'?'active':'' ?>" data-href="school_years.php" data-label="School Years">
-      <span class="nav-icon"><i class="bi bi-calendar2-range-fill"></i></span><span class="nav-text">School Years</span>
-    </div>
-    <div class="nav-item <?= $active_page==='backup'?'active':'' ?>" data-href="backup.php" data-label="Backup">
-      <span class="nav-icon"><i class="bi bi-database-fill-down"></i></span><span class="nav-text">Backup</span>
+    <div class="nav-item <?= $active_page==='backup'?'active':'' ?>" data-href="backup.php" data-label="Export">
+      <span class="nav-icon"><i class="bi bi-database-fill-down"></i></span><span class="nav-text">Data Export</span>
     </div>
     <?php endif; ?>
 
@@ -99,7 +96,7 @@ if (isset($_SESSION['user_id'])) {
         <div class="sidebar-user-role"><?= $role_label ?></div>
       </div>
     </div>
-    <a href="../logout.php" class="logout-btn">
+    <a href="../logout.php" class="logout-btn" onclick="return confirm('Are you sure you want to log out?')">
       <span class="logout-icon"><i class="bi bi-box-arrow-right"></i></span>
       <span class="btn-text">Log out</span>
     </a>

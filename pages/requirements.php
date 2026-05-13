@@ -109,10 +109,6 @@ if (isset($_GET['to_follow'])) {
     ON DUPLICATE KEY UPDATE status='to_follow'");
   $stmt->bind_param("iii", $sid, $req_id, $sy_id);
   $stmt->execute();
-  // Notify parent
-  $parent = $conn->query("SELECT pa.id FROM parent_accounts pa JOIN parent_student_links psl ON psl.parent_id=pa.id WHERE psl.student_id=$sid LIMIT 1")->fetch_assoc();
-  $req_name = $conn->query("SELECT name FROM requirements WHERE id=$req_id")->fetch_assoc()['name'] ?? 'Document';
-  if ($parent) notify_parent($conn, $parent['id'], $sid, 'warning', 'Document To Follow', "$req_name is marked as 'To Follow'. Please submit it as soon as possible.");
   audit_log($conn, $uid, $uname, 'mark_to_follow', 'student_requirement', $req_id, "Student $sid");
   header("Location: requirements.php?student_id=$sid&success=Marked as To Follow"); exit();
 }
@@ -307,9 +303,6 @@ $active_page = 'requirements';
             <td style="color:var(--color-danger);font-weight:600;"><?= $s['missing'] ?></td>
             <td style="display:flex;gap:6px;flex-wrap:wrap;">
               <a href="requirements.php?student_id=<?= $s['id'] ?>" class="btn-view-sm"><i class="bi bi-folder2-open"></i> View</a>
-              <?php if (($s['missing']+$s['rejected']) > 0): ?>
-                <a href="requirements.php?notify_missing=<?= $s['id'] ?>" class="btn-view-sm" style="background:#fef9c3;color:#92400e;" onclick="return confirm('Notify parent?')"><i class="bi bi-bell"></i> Notify</a>
-              <?php endif; ?>
             </td>
           </tr>
           <?php endwhile; ?>

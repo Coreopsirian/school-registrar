@@ -197,68 +197,35 @@ $pay_summary['balance'] = max(0, $total_fees_bal - $pay_summary['paid']);
   </div>
 
   <!-- Quick links -->
-  <div class="portal-summary-grid">
+  <div class="portal-summary-grid" style="margin-top:20px;">
     <a href="requirements.php" class="portal-summary-card">
       <div class="psc-icon" style="background:#eef0f8;color:var(--primary)"><i class="bi bi-folder2-open"></i></div>
       <div class="psc-body">
         <div class="psc-val"><?= ($req_summary['verified'] ?? 0) ?> / <?= (($req_summary['verified'] ?? 0) + ($req_summary['submitted'] ?? 0) + ($req_summary['missing'] ?? 0)) ?></div>
-        <div class="psc-label">Documents Verified</div>
+        <div class="psc-label">Step 1 · Requirements</div>
       </div>
       <?php if (($req_summary['missing'] ?? 0) > 0): ?>
         <span class="psc-alert"><?= $req_summary['missing'] ?> missing</span>
       <?php endif; ?>
     </a>
+    <a href="payment_scheme.php" class="portal-summary-card">
+      <div class="psc-icon" style="background:#fef9c3;color:#92400e"><i class="bi bi-wallet2"></i></div>
+      <div class="psc-body">
+        <div class="psc-val"><i class="bi bi-arrow-right-circle" style="font-size:20px;"></i></div>
+        <div class="psc-label">Step 2 · Payment Scheme</div>
+      </div>
+    </a>
     <a href="soa.php" class="portal-summary-card">
       <div class="psc-icon" style="background:#dcfce7;color:#166534"><i class="bi bi-cash-coin"></i></div>
       <div class="psc-body">
         <div class="psc-val">₱<?= number_format($pay_summary['paid'] ?? 0, 0) ?></div>
-        <div class="psc-label">Total Paid</div>
+        <div class="psc-label">Step 3 · Statement of Account</div>
       </div>
       <?php if (($pay_summary['balance'] ?? 0) > 0): ?>
         <span class="psc-alert">₱<?= number_format($pay_summary['balance'], 0) ?> balance</span>
       <?php endif; ?>
     </a>
   </div>
-
-  <!-- Fee Preview -->
-  <?php
-  require_once '../mysql/helpers.php';
-  $fee_data = compute_fees($conn, $student_id, $student['grade_level_id'] ?? 0, $sy_id);
-  if ($fee_data['subtotal'] > 0):
-  ?>
-  <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;margin-top:20px;">
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px;"><i class="bi bi-cash-coin" style="color:var(--primary);"></i> Fee Breakdown</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:16px;">
-      <?php foreach ($fee_data['breakdown'] as $type => $amt): if ($amt <= 0) continue; ?>
-      <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:6px;">
-        <span style="text-transform:capitalize;color:var(--muted);"><?= str_replace('_',' ',$type) ?></span>
-        <span style="font-weight:600;">₱<?= number_format($amt,2) ?></span>
-      </div>
-      <?php endforeach; ?>
-    </div>
-    <?php if ($fee_data['discount_amount'] > 0): ?>
-    <div style="display:flex;justify-content:space-between;padding:8px 12px;background:#f0fdf4;border-radius:6px;margin-bottom:8px;font-size:13px;">
-      <span style="color:#16a34a;font-weight:600;">Discount Applied</span>
-      <span style="color:#16a34a;font-weight:700;">-₱<?= number_format($fee_data['discount_amount'],2) ?></span>
-    </div>
-    <?php endif; ?>
-    <div style="border-top:2px solid var(--border);padding-top:12px;margin-top:8px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Payment Plan Options:</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-        <?php foreach ($fee_data['plans'] as $plan_key => $plan): ?>
-        <div style="border:1.5px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;"><?= $plan['label'] ?></div>
-          <div style="font-size:20px;font-weight:800;color:var(--primary);margin:6px 0;">₱<?= number_format($plan['amount'],2) ?></div>
-          <div style="font-size:11px;color:var(--muted);">per installment × <?= $plan['installments'] ?></div>
-        </div>
-        <?php endforeach; ?>
-      </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--muted);background:#fef9c3;border-radius:6px;padding:8px 12px;">
-        <i class="bi bi-info-circle-fill"></i> Reservation fee of ₱<?= number_format($fee_data['reservation'],2) ?> is deducted from your first payment.
-      </div>
-    </div>
-  </div>
-  <?php endif; ?>
 
 </div>
 </body>

@@ -46,7 +46,6 @@ function gradeOptions(array $groups): string {
   return $html;
 }
 ?>
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -74,8 +73,7 @@ function gradeOptions(array $groups): string {
       <a href="#home">Home</a>
       <a href="#about">About</a>
       <a href="#enroll">Enrollment</a>
-      <a href="index.php" class="nav-btn">Admin Login</a>
-      <a href="portal/login.php" class="nav-btn" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);">Parent Portal</a>
+      <a href="portal/login.php" class="nav-btn">Parent Portal</a>
     </div>
   </div>
 </nav>
@@ -201,8 +199,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
     $enroll_error = "Please fill in all required parent fields (First Name, Last Name, Mobile, Email).";
   } elseif (!filter_var($p_email, FILTER_VALIDATE_EMAIL)) {
     $enroll_error = "Please enter a valid email address.";
-  } elseif (!$pre_existing && strlen($p_password) < 6) {
-    $enroll_error = "Portal password must be at least 6 characters.";
+  } elseif (!$pre_existing && strlen($p_password) < 8) {
+    $enroll_error = "Portal password must be at least 8 characters.";
+  } elseif (!$pre_existing && !preg_match('/[0-9]/', $p_password)) {
+    $enroll_error = "Portal password must include at least one number.";
+  } elseif (!$pre_existing && !preg_match('/[@#!$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/', $p_password)) {
+    $enroll_error = "Portal password must include at least one special character (e.g. @, #, !).";
   } elseif (!$pre_existing && $p_password !== $p_password_confirm) {
     $enroll_error = "Passwords do not match. Please re-enter.";
   } elseif (empty($children)) {
@@ -235,7 +237,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
 
     // Get active school year
     $sy = $conn->query("SELECT id FROM school_years WHERE is_active=1 LIMIT 1")->fetch_assoc();
-    $school_year_id = $sy['id'] ?? null;
+    $school_year_id = $sy ? intval($sy['id']) : 0;
+    if (!$school_year_id) {
+      $enroll_error = "No active school year is set. Please contact the school registrar.";
+    } else {
     $year = date('Y');
 
     foreach ($children as $idx => $child) {
@@ -336,20 +341,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
           }
         }
       }
-    }
+    } // end foreach children
 
     if (!empty($enroll_results)) {
       $enroll_success = true;
+      // Send enrollment confirmation email to parent
+      require_once './mysql/email_notifications.php';
+      $guardian_email = trim($p_email ?? '');
+      $guardian_name  = trim(($p_first ?? '') . ' ' . ($p_last ?? ''));
+      $plain_pass_for_email = empty($existing_parent) ? $p_password : null;
+      if ($guardian_email) {
+        foreach ($enroll_results as $er) {
+          notifyEnrollmentReceived($guardian_email, $guardian_name, $er['child_name'], $er['ref'], $plain_pass_for_email);
+        }
+      }
     } else {
       $enroll_error = "No valid children were submitted. Please check the form.";
     }
+    } // end else (school year exists)
   }
 }
 ?>
 
 <?php if ($enroll_success): ?>
 <!-- ── SUCCESS SCREEN ── -->
-<div class="enroll-success" style="max-width:640px;">
+<div class="enroll-success" style="max-width:640px;margin:0 auto;text-align:center;">
   <i class="bi bi-check-circle-fill"></i>
   <h3>Enrollment Submitted!</h3>
   <p>Thank you for applying. Here are your enrollment details:</p>
@@ -548,25 +564,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         </div>
         <div class="ef-grid ef-2col" style="gap:20px;">
           <div class="ef-field">
-            <label>Portal Password * <span style="font-size:11px;color:#d97706;">(min. 6 characters)</span></label>
-            <input type="password" name="p_password" id="p_password" class="ef-input" required minlength="6"/>
+            <label>Portal Password * <span style="font-size:11px;color:#d97706;">(min. 8 characters)</span></label>
+            <div style="position:relative;">
+              <input type="password" name="p_password" id="p_password" class="ef-input" required minlength="8" style="padding-right:42px;"/>
+              <button type="button" onclick="togglePwVis('p_password','eye-pw')" tabindex="-1"
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;padding:0;display:flex;align-items:center;">
+                <i class="bi bi-eye" id="eye-pw" style="font-size:16px;"></i>
+              </button>
+            </div>
+            <div style="font-size:11.5px;color:#6b7280;margin-top:5px;line-height:1.5;">
+              Password must be at least 8 characters and include at least one number and one special character (e.g. @, #, !).
+            </div>
           </div>
           <div class="ef-field">
             <label>Confirm Password *</label>
-            <input type="password" name="p_password_confirm" id="p_password_confirm" class="ef-input" required minlength="6"
-              oninput="
-                const pw = document.getElementById('p_password').value;
-                const hint = document.getElementById('pw-match-hint');
-                if (this.value && pw && this.value !== pw) {
-                  hint.textContent = 'Passwords do not match.';
-                  hint.style.color = '#b91c1c';
-                } else if (this.value && pw && this.value === pw) {
-                  hint.textContent = '✓ Passwords match.';
-                  hint.style.color = '#16a34a';
-                } else {
-                  hint.textContent = '';
-                }
-              "/>
+            <div style="position:relative;">
+              <input type="password" name="p_password_confirm" id="p_password_confirm" class="ef-input" required minlength="8" style="padding-right:42px;"
+                oninput="
+                  const pw = document.getElementById('p_password').value;
+                  const hint = document.getElementById('pw-match-hint');
+                  if (this.value && pw && this.value !== pw) {
+                    hint.textContent = 'Passwords do not match.';
+                    hint.style.color = '#b91c1c';
+                  } else if (this.value && pw && this.value === pw) {
+                    hint.textContent = '✓ Passwords match.';
+                    hint.style.color = '#16a34a';
+                  } else {
+                    hint.textContent = '';
+                  }
+                "/>
+              <button type="button" onclick="togglePwVis('p_password_confirm','eye-pw-confirm')" tabindex="-1"
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;padding:0;display:flex;align-items:center;">
+                <i class="bi bi-eye" id="eye-pw-confirm" style="font-size:16px;"></i>
+              </button>
+            </div>
             <div id="pw-match-hint" style="font-size:12px;font-weight:500;margin-top:5px;min-height:16px;"></div>
           </div>
         </div>
@@ -636,12 +667,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
           <input type="hidden" name="p_barangay_text" id="enroll-barangay-text">
         </div>
         <div class="ef-field">
-          <label>House #, Block, Lot, Unit, Building</label>
-          <input type="text" name="p_house" class="ef-input"/>
+          <label>House #, Block, Lot, Unit, Building *</label>
+          <input type="text" name="p_house" class="ef-input" required/>
         </div>
         <div class="ef-field">
-          <label>Street, Village / Subdivision</label>
-          <input type="text" name="p_street" class="ef-input"/>
+          <label>Street, Village / Subdivision *</label>
+          <input type="text" name="p_street" class="ef-input" required/>
         </div>
       </div>
     </div>
@@ -667,6 +698,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
   <div class="ef-section" id="attachments-section">
     <div class="ef-section-header">Attachments</div>
     <div class="ef-section-body">
+      <div style="background:#fef9c3;border-left:4px solid #d97706;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#92400e;line-height:1.7;">
+        <i class="bi bi-info-circle-fill" style="color:#d97706;margin-right:6px;"></i>
+        <strong>Accepted formats: JPG, PNG, PDF · Max file size: 10MB per file.</strong> Attachments are optional but recommended for faster processing.
+      </div>
       <div id="new-student-docs" style="background:#eef0f8;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#374151;">
         For new students, please attach a clear copy of your <strong>Form 138 / Report Card</strong> and <strong>Certificate of Good Moral Character</strong>.
       </div>
@@ -726,7 +761,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enroll_submit'])) {
         <div class="footer-link-group">
           <div class="footer-link-title">Portals</div>
           <a href="portal/login.php">Parent Portal</a>
-          <a href="index.php">Admin Login</a>
         </div>
         <div class="footer-link-group">
           <div class="footer-link-title">Contact</div>
@@ -769,9 +803,17 @@ const GRADE_OPTIONS_HTML = <?= json_encode('<option value="">Select Grade</optio
   const confInput  = document.getElementById('p_password_confirm');
   if (!emailField || !passRow) return;
 
+  let debounceTimer = null;
+
   function checkEmail() {
     const email = emailField.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      // Not a valid email yet — show password row
+      passRow.style.display = 'block';
+      if (passInput) passInput.setAttribute('required', '');
+      if (confInput) confInput.setAttribute('required', '');
+      return;
+    }
 
     fetch('home.php?check_email=' + encodeURIComponent(email))
       .then(r => r.json())
@@ -780,15 +822,32 @@ const GRADE_OPTIONS_HTML = <?= json_encode('<option value="">Select Grade</optio
           passRow.style.display = 'none';
           if (passInput) passInput.removeAttribute('required');
           if (confInput) confInput.removeAttribute('required');
+          // Show a clear message so the parent knows why
+          let msg = document.getElementById('existing-account-msg');
+          if (!msg) {
+            msg = document.createElement('div');
+            msg.id = 'existing-account-msg';
+            msg.style.cssText = 'background:#eef0f8;border-radius:8px;padding:12px 16px;font-size:13px;color:#374151;margin-top:8px;';
+            passRow.parentNode.insertBefore(msg, passRow.nextSibling);
+          }
+          msg.innerHTML = '<i class="bi bi-info-circle-fill" style="color:#494C8A;"></i> <strong>This email already has a portal account.</strong> Log in with your existing password. <a href="portal/login.php" style="color:#494C8A;font-weight:600;">Go to login →</a>';
+          msg.style.display = 'block';
         } else {
           passRow.style.display = 'block';
           if (passInput) passInput.setAttribute('required', '');
           if (confInput) confInput.setAttribute('required', '');
+          const msg = document.getElementById('existing-account-msg');
+          if (msg) msg.style.display = 'none';
         }
       })
       .catch(() => {}); // silently fail — server will validate
   }
 
+  // Debounce: wait 600ms after user stops typing before checking
+  emailField.addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(checkEmail, 600);
+  });
   emailField.addEventListener('blur', checkEmail);
 })();
 
@@ -831,7 +890,7 @@ function addExtraChild() {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-size:13px;font-weight:700;color:#494C8A;">Child #${num}</div>
       <button type="button" onclick="this.closest('.ef-child-block').remove(); if(!document.querySelector('.ef-child-block')) document.getElementById('extra-children-section').style.display='none';"
-        style="background:#fdeaea;border:none;color:#dc2626;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;">Remove</button>
+        style="background:#dc2626;border:none;color:#fff;border-radius:6px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;">Remove</button>
     </div>
     <div class="ef-grid ef-3col">
       <div class="ef-field"><label>First Name *</label><input type="text" name="children[${idx}][first_name]" class="ef-input" required placeholder="Juan"/></div>
@@ -862,6 +921,20 @@ function addExtraChild() {
     </div>
   `;
   container.appendChild(block);
+}
+
+// Show/hide password toggle helper
+function togglePwVis(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById(iconId);
+  if (!input || !icon) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('bi-eye', 'bi-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('bi-eye-slash', 'bi-eye');
+  }
 }
 
 // Form validation on submit
@@ -943,8 +1016,12 @@ document.getElementById('enrollForm').addEventListener('submit', function(e) {
   const pwRow     = document.getElementById('portal-password-row');
 
   if (pwRow && pwRow.style.display !== 'none' && pwField && confField) {
-    if (pwField.value.length > 0 && pwField.value.length < 6) {
-      markErr(pwField, 'Password must be at least 6 characters.');
+    if (pwField.value.length > 0 && pwField.value.length < 8) {
+      markErr(pwField, 'Password must be at least 8 characters.');
+    } else if (pwField.value && !/[0-9]/.test(pwField.value)) {
+      markErr(pwField, 'Password must include at least one number.');
+    } else if (pwField.value && !/[@#!$%^&*()\-_=+\[\]{};:'"\\|,.<>/?]/.test(pwField.value)) {
+      markErr(pwField, 'Password must include at least one special character (e.g. @, #, !).');
     } else if (pwField.value && confField.value && pwField.value !== confField.value) {
       markErr(confField, 'Passwords do not match.');
     }

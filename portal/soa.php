@@ -22,6 +22,28 @@ if (!$student) {
   exit();
 }
 
+// Gate: require a payment scheme before showing the SOA
+$enrollment = $conn->query("SELECT * FROM enrollments WHERE student_id=$student_id AND school_year_id=$sy_id LIMIT 1")->fetch_assoc();
+$scheme_selected = !empty($enrollment['payment_plan']);
+if (!$scheme_selected) {
+  echo '<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    </head><body>';
+  include('includes/nav.php');
+  echo '<div class="portal-container" style="text-align:center;padding:60px 20px;">
+    <i class="bi bi-wallet2" style="font-size:48px;color:#494C8A;"></i>
+    <h3 style="margin-top:16px;">Payment Scheme Required</h3>
+    <p style="color:#6b7280;font-size:14px;max-width:380px;margin:8px auto 0;">
+      You need to select a payment scheme before you can view your Statement of Account.
+    </p>
+    <a href="payment_scheme.php" style="display:inline-block;margin-top:24px;padding:10px 24px;background:#494C8A;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+      <i class="bi bi-arrow-right-circle-fill"></i> Choose Payment Scheme
+    </a>
+  </div></body></html>';
+  exit();
+}
+
 $success = $error = '';
 
 // Handle single proof upload for entire payment
@@ -87,10 +109,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_proof'])) {
 
 // Use centralized helper — single source of truth
 $soa = get_fee_rows_with_payment($conn, $student_id, $student['grade_level_id'], $sy_id);
-$fees_payments  = $soa['rows'];
-$total_fees     = $soa['total_fees'];
-$total_paid     = $soa['total_paid'];
-$total_bal      = $soa['total_bal'];
+$fees_payments   = $soa['rows'];
+$total_fees      = $soa['total_fees'];
+$total_discount  = $soa['total_discount'];
+$net_fees        = $soa['net_fees'];
+$total_paid      = $soa['total_paid'];
+$total_bal       = $soa['total_bal'];   // can be negative (overpayment)
+$discounts       = $soa['discounts'];
 $existing_proof  = $soa['pay_details']['proof_file'] ?? null;
 $existing_method = $soa['pay_details']['payment_method'] ?? null;
 // Determine if upload is locked: locked when proof exists and payment is pending/confirmed (not rejected)
@@ -145,15 +170,18 @@ $discounts = $conn->query("
   <div class="soa-summary">
     <div class="soa-sum-item">
       <div class="soa-sum-label">Total Fees</div>
-      <div class="soa-sum-val">₱<?= number_format($total_fees, 2) ?></div>
+      <div class="soa-sum-val">₱<?= number_format($net_fees, 2) ?></div>
     </div>
     <div class="soa-sum-item soa-paid">
       <div class="soa-sum-label">Total Paid</div>
       <div class="soa-sum-val">₱<?= number_format($total_paid, 2) ?></div>
     </div>
-    <div class="soa-sum-item soa-balance">
-      <div class="soa-sum-label">Balance</div>
-      <div class="soa-sum-val">₱<?= number_format($total_bal, 2) ?></div>
+    <div class="soa-sum-item <?= $total_bal < 0 ? 'soa-paid' : 'soa-balance' ?>">
+      <div class="soa-sum-label"><?= $total_bal < 0 ? 'Overpayment' : 'Balance' ?></div>
+      <div class="soa-sum-val" style="color:<?= $total_bal < 0 ? 'var(--portal-success)' : 'var(--portal-danger)' ?>;">
+        <?= $total_bal < 0 ? '-' : '' ?>₱<?= number_format(abs($total_bal), 2) ?>
+        <?php if ($total_bal < 0): ?><div style="font-size:11px;font-weight:500;margin-top:2px;">School owes you this amount</div><?php endif; ?>
+      </div>
     </div>
   </div>
 
@@ -166,7 +194,8 @@ $discounts = $conn->query("
       <thead>
         <tr>
           <th>Fee</th>
-          <th>Amount</th>
+          <th>Original</th>
+          <th>After Discount</th>
           <th>Paid</th>
           <th>Balance</th>
           <th>Status</th>
@@ -177,9 +206,10 @@ $discounts = $conn->query("
         <tr>
           <td style="font-weight:600;"><?= htmlspecialchars($fp['fee_name']) ?></td>
           <td>₱<?= number_format($fp['amount'], 2) ?></td>
+          <td style="font-weight:600;">₱<?= number_format($fp['net_amount'] ?? $fp['amount'], 2) ?></td>
           <td style="color:var(--portal-success);font-weight:600;">₱<?= number_format($fp['amount_paid'] ?? 0, 2) ?></td>
-          <td style="color:<?= ($fp['balance'] ?? $fp['amount']) > 0 ? 'var(--portal-danger)' : 'var(--portal-success)' ?>;font-weight:600;">
-            ₱<?= number_format($fp['balance'] ?? $fp['amount'], 2) ?>
+          <td style="color:<?= ($fp['balance'] ?? 0) > 0 ? 'var(--portal-danger)' : 'var(--portal-success)' ?>;font-weight:600;">
+            ₱<?= number_format($fp['balance'] ?? 0, 2) ?>
           </td>
           <td>
             <span class="soa-badge soa-<?= $fp['status'] ?? 'unpaid' ?>"><?= ucfirst($fp['status'] ?? 'Unpaid') ?></span>
@@ -187,17 +217,24 @@ $discounts = $conn->query("
         </tr>
         <?php endforeach; ?>
         <?php if (!empty($discounts)): ?>
+          <tr style="background:#f0fdf4;">
+            <td colspan="6" style="padding:10px 16px;">
+              <strong style="color:#16a34a;font-size:12px;text-transform:uppercase;letter-spacing:.04em;">Discounts Applied</strong>
+            </td>
+          </tr>
           <?php foreach ($discounts as $d): ?>
           <tr style="background:#f0fdf4;">
-            <td style="color:#16a34a;font-weight:600;"><?= htmlspecialchars($d['label'] ?: ucfirst($d['type'])) ?></td>
-            <td colspan="4" style="color:#16a34a;font-weight:700;">
-              — <?= $d['fixed_amount'] > 0 ? '-₱'.number_format($d['fixed_amount'],2) : $d['percentage'].'% off' ?>
+            <td style="color:#16a34a;font-weight:600;padding-left:24px;"><?= htmlspecialchars($d['label'] ?: ucfirst($d['type'])) ?></td>
+            <td colspan="3"></td>
+            <td style="color:#16a34a;font-weight:700;">
+              -<?= !empty($d['fixed_amount']) && $d['fixed_amount'] > 0 ? '₱'.number_format($d['fixed_amount'],2) : $d['percentage'].'%' ?>
             </td>
+            <td></td>
           </tr>
           <?php endforeach; ?>
         <?php endif; ?>
         <?php if (empty($fees_payments)): ?>
-        <tr><td colspan="5" style="text-align:center;padding:32px;color:#6b7280;">No fee records found for this school year.</td></tr>
+        <tr><td colspan="6" style="text-align:center;padding:32px;color:#6b7280;">No fee records found for this school year.</td></tr>
         <?php endif; ?>
         <!-- Totals row -->
         <?php if (!empty($fees_payments)): ?>
@@ -226,8 +263,18 @@ $discounts = $conn->query("
   <!-- Single Upload Section -->
   <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;">
     <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Upload Proof of Payment</div>
-    <div style="font-size:13px;color:#6b7280;margin-bottom:20px;">
+    <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">
       Upload one receipt/screenshot that covers your payment. The finance staff will verify and update your balance.
+    </div>
+
+    <!-- File requirements notice -->
+    <div style="background:#eef0f8;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#374151;display:flex;align-items:flex-start;gap:10px;">
+      <i class="bi bi-info-circle-fill" style="color:#494C8A;flex-shrink:0;margin-top:2px;"></i>
+      <div>
+        <strong>Accepted formats:</strong> JPG, PNG, WEBP, PDF<br>
+        <strong>Maximum file size:</strong> 5MB<br>
+        <strong>Tip:</strong> Make sure the receipt clearly shows the amount, date, and reference number.
+      </div>
     </div>
 
     <?php if ($existing_proof): ?>

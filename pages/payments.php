@@ -216,7 +216,7 @@ $active_page = 'payments';
               )">
                 <i class="bi bi-cash"></i> Record Payment
               </button>
-              <?php if ($p['total_paid'] > 0): ?>
+              <?php if ($p['total_paid'] > 0 && in_array($_SESSION['role'] ?? '', ['superadmin','registrar'])): ?>
               <form method="POST" action="payments.php" style="display:inline;">
                 <input type="hidden" name="action" value="reset_payment">
                 <input type="hidden" name="student_id" value="<?= $p['id'] ?>">

@@ -6,7 +6,7 @@
 
 ## SLIDE 1 — INTRODUCTION / BACKGROUND OF THE STUDY
 
-COJ Catholic Progressive School is a private Catholic institution offering Preschool, Elementary, and Junior High School education. Prior to this system, the school managed student enrollment and records entirely through:
+COJ Catholic Progressive School is a private Catholic institution offering Preschool, Elementary, and Junior High School education. Prior to this systemx, the school managed student enrollment and records entirely through:
 
 - **Google Forms** for enrollment applications
 - **Manual spreadsheets** for student records and payment tracking
