@@ -302,12 +302,23 @@ function notify_staff($conn, array $roles, string $type, string $title, string $
 }
 
 /**
- * Send a notification to a parent account.
+ * Send a notification to a parent account (portal bell + automatic email).
  */
 function notify_parent($conn, int $parent_id, int $student_id, string $type, string $title, string $body = '') {
   $title_esc = $conn->real_escape_string($title);
   $body_esc  = $conn->real_escape_string($body);
   $conn->query("INSERT INTO parent_notifications (parent_id, student_id, type, title, body) VALUES ($parent_id, $student_id, '$type', '$title_esc', '$body_esc')");
+
+  // Also send to parent's email automatically
+  $parent = $conn->query("SELECT pa.email, pa.name FROM parent_accounts pa WHERE pa.id = $parent_id LIMIT 1")->fetch_assoc();
+  $student = $conn->query("SELECT CONCAT(first_name,' ',last_name) as n FROM students WHERE id = $student_id LIMIT 1")->fetch_assoc();
+  if ($parent && !empty($parent['email'])) {
+    $email_file = __DIR__ . '/email_notifications.php';
+    if (file_exists($email_file)) {
+      require_once $email_file;
+      notifyParentCustom($parent['email'], $parent['name'], $student['n'] ?? '', $title, $body);
+    }
+  }
 }
 
 /**

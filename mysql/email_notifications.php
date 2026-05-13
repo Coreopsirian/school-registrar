@@ -102,3 +102,53 @@ function notifyPaymentReceived($parent_email, $parent_name, $student_name, $amou
   ";
   return sendEnrollmentEmail($parent_email, $parent_name, $subject, $body);
 }
+
+/**
+ * Congratulations email sent when enrollment status is set to 'enrolled'.
+ */
+function notifyEnrollmentConfirmed($parent_email, $parent_name, $student_name, $grade, $sy_label) {
+  $portal_url = getenv('APP_URL') ?: 'http://localhost/school-registrar/portal/login.php';
+  $subject = "🎉 Enrollment Confirmed — " . $student_name;
+  $body = "
+    <div style='text-align:center;padding:8px 0 24px;'>
+      <div style='font-size:48px;'>🎉</div>
+      <h2 style='color:#494C8A;margin:8px 0 4px;font-size:22px;'>Congratulations!</h2>
+      <p style='color:#6b7280;font-size:14px;margin:0;'>Enrollment has been officially confirmed.</p>
+    </div>
+    <p>Dear <strong>" . htmlspecialchars($parent_name) . "</strong>,</p>
+    <p>We are delighted to inform you that <strong>" . htmlspecialchars($student_name) . "</strong> is now officially enrolled for <strong>" . htmlspecialchars($grade) . "</strong> — SY <strong>" . htmlspecialchars($sy_label) . "</strong>.</p>
+    <div style='background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:18px 20px;margin:20px 0;'>
+      <div style='font-size:13px;font-weight:700;color:#166534;margin-bottom:10px;'>✅ What's next?</div>
+      <ul style='margin:0;padding-left:18px;font-size:13px;color:#374151;line-height:2;'>
+        <li>Log in to the Parent Portal to view your <strong>Statement of Account</strong></li>
+        <li>Select your <strong>Payment Scheme</strong> (Annual, Semi-Annual, Quarterly, or Monthly)</li>
+        <li>Upload your <strong>Proof of Payment</strong> once you've settled the downpayment</li>
+        <li>Ensure all required <strong>documents</strong> are submitted and verified</li>
+      </ul>
+    </div>
+    <p style='text-align:center;'>
+      <a href='$portal_url' style='display:inline-block;padding:13px 32px;background:#494C8A;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;'>Go to Parent Portal</a>
+    </p>
+    <p style='font-size:13px;color:#6b7280;margin-top:24px;'>If you have any questions, please don't hesitate to contact the registrar's office. We look forward to a wonderful school year with your child!</p>
+  ";
+  return sendEnrollmentEmail($parent_email, $parent_name, $subject, $body);
+}
+
+/**
+ * Generic notification email — sent when admin manually sends a notification to a parent.
+ */
+function notifyParentCustom($parent_email, $parent_name, $student_name, $title, $message) {
+  $portal_url = getenv('APP_URL') ?: 'http://localhost/school-registrar/portal/login.php';
+  $subject = $title;
+  $body = "
+    <p>Dear <strong>" . htmlspecialchars($parent_name) . "</strong>,</p>
+    <p>You have a new message from the school regarding <strong>" . htmlspecialchars($student_name) . "</strong>:</p>
+    <div style='background:#f8f9ff;border-left:4px solid #494C8A;border-radius:6px;padding:16px 18px;margin:16px 0;font-size:14px;color:#374151;line-height:1.7;'>
+      " . nl2br(htmlspecialchars($message)) . "
+    </div>
+    <p style='text-align:center;'>
+      <a href='$portal_url' style='display:inline-block;padding:11px 28px;background:#494C8A;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;'>View in Parent Portal</a>
+    </p>
+  ";
+  return sendEnrollmentEmail($parent_email, $parent_name, $subject, $body);
+}

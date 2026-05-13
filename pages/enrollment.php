@@ -37,10 +37,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       }
 
       // Notify parent if exists
-      $parent = $conn->query("SELECT pa.id FROM parent_accounts pa JOIN parent_student_links psl ON psl.parent_id=pa.id WHERE psl.student_id=$sid LIMIT 1")->fetch_assoc();
-      // (parent notifications handled via portal — no users table link needed)
+      $parent = $conn->query("
+        SELECT pa.id, pa.email, pa.name
+        FROM parent_accounts pa
+        JOIN parent_student_links psl ON psl.parent_id = pa.id
+        WHERE psl.student_id = $sid LIMIT 1
+      ")->fetch_assoc();
 
-      // Email notifications not active in current deployment (no SMTP configured)
+      if ($parent) {
+        $active_sy_row = $conn->query("SELECT * FROM school_years WHERE is_active=1 LIMIT 1")->fetch_assoc();
+        $sy_label   = $active_sy_row['label'] ?? '';
+        $grade_name = $conn->query("SELECT g.name FROM students s LEFT JOIN grade_levels g ON g.id=s.grade_level_id WHERE s.id=$sid")->fetch_assoc()['name'] ?? '';
+
+        // In-portal notification
+        $p_id = $parent['id'];
+        $p_title = $conn->real_escape_string("🎉 Congratulations! Enrollment Confirmed");
+        $p_body  = $conn->real_escape_string("$student_name is now officially enrolled for $grade_name — SY $sy_label. Please log in to select your payment scheme and view your Statement of Account.");
+        $conn->query("INSERT INTO parent_notifications (parent_id, student_id, type, title, body) VALUES ($p_id, $sid, 'success', '$p_title', '$p_body')");
+
+        // Email notification
+        require_once '../mysql/email_notifications.php';
+        notifyEnrollmentConfirmed($parent['email'], $parent['name'], $student_name, $grade_name, $sy_label);
+      }
     }
 
     if ($status === 'dropped' && $enroll) {
